@@ -855,14 +855,22 @@ class InputHandler {
         const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
 
         zones.forEach(zone => {
+            // TOUCH EVENTS
             zone.addEventListener('touchstart', (e) => {
                 if (!this.game.isPlaying) return;
-                e.preventDefault(); // Prevent default ONLY in control zones
-                // Check which zone was clicked
+                e.preventDefault();
+                // Enable Fullscreen & Lock Landscape on first touch interaction
+                this.enableMobileMode();
+
                 if (zone.id === 'left-zone') this.game.handleAction('jump');
                 else this.game.handleAction('switch');
             }, { passive: false });
 
+            zone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+            zone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+
+
+            // MOUSE EVENTS (Fallback)
             zone.addEventListener('mousedown', (e) => {
                 if (!this.game.isPlaying) return;
                 if (zone.id === 'left-zone') this.game.handleAction('jump');
@@ -876,6 +884,26 @@ class InputHandler {
             if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) this.game.handleAction('jump');
             if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD'].includes(e.code)) this.game.handleAction('switch');
         });
+
+        // GLOBAL TOUCH LISTENER FOR ORIENTATION LOCK (If user touches anywhere)
+        document.body.addEventListener('touchstart', () => {
+            this.enableMobileMode();
+        }, { once: true });
+    }
+
+    enableMobileMode() {
+        // Request Fullscreen
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+            docEl.requestFullscreen().catch(err => console.log("Fullscreen request failed", err));
+        } else if (docEl.webkitRequestFullscreen) { /* Safari */
+            docEl.webkitRequestFullscreen();
+        }
+
+        // Lock Orientation
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(err => console.log("Orientation lock failed/not supported", err));
+        }
     }
 }
 
@@ -1478,8 +1506,55 @@ const gameInterface = {
 };
 const inputHandler = new InputHandler(gameInterface);
 
+// ASSET PRELOADER
+const ASSETS_TO_LOAD = [
+    // Themes
+    'assets/Noir_plan.webp', 'assets/Radyoaktif_Lab.webp', 'assets/Simülasyon_plan.webp', 'assets/Neon Gelecek.webp', 'assets/Kuantum_plan.webp',
+    // Shop Icons
+    'assets/shop_icon_life.webp', 'assets/shop_icon_shield.webp', 'assets/shop_icon_wormhole.webp', 'assets/shop_icon_booster.webp',
+    'assets/noir.webp', 'assets/laboratuvar.webp', 'assets/simülasyon.webp', 'assets/neon.webp', 'assets/Kuantum.webp',
+    // Story Panels
+    'assets/story_panel_1.webp', 'assets/story_panel_2.webp', 'assets/story_panel_3.webp', 'assets/story_panel_4.webp', 'assets/story_panel_5.webp'
+];
+
+function preloadAssets(callback) {
+    let loadedCount = 0;
+    const total = ASSETS_TO_LOAD.length;
+
+    // Show Preloader UI (Optional or just rely on Loading Text)
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#39FF14";
+    ctx.font = "20px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("YÜKLENİYOR...", canvas.width / 2, canvas.height / 2);
+
+    ASSETS_TO_LOAD.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+            loadedCount++;
+            // Update Loading Bar if needed
+            if (loadedCount >= total) callback();
+        };
+        img.onerror = () => {
+            console.error("Asset Failed:", src);
+            loadedCount++; // Continue anyway
+            if (loadedCount >= total) callback();
+        };
+    });
+}
+
 // Initialize Game
 function initGame() {
+    // PRELOAD FIRST
+    preloadAssets(() => {
+        _initGameInternal();
+    });
+}
+
+function _initGameInternal() {
     initEconomy();
     const settings = DIFFICULTY_SETTINGS[currentDifficulty];
 
