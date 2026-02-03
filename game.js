@@ -1,0 +1,2282 @@
+class AudioManager {
+    constructor() {
+        this.ctx = null;
+        this.isMusicPlaying = false;
+        this.musicOscillators = [];
+        this.masterGain = null;
+        this.rhythmInterval = null;
+        this.currentTheme = 'CITY';
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = 0.3; // Master volume
+            this.masterGain.connect(this.ctx.destination);
+        }
+
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    // --- SFX METHODS ---
+    playJump() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playSwitch() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        gain.connect(this.masterGain);
+        osc.connect(gain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    playCoin() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1000, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playGameOver() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 1.0);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.0);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 1.0);
+        this.stopMusic();
+    }
+
+    // --- MUSIC ENGINE ---
+    startMusic(theme = 'CITY') {
+        if (!this.ctx) { this.init(); }
+        if (this.isMusicPlaying && this.currentTheme === theme) return; // Already playing same theme
+
+        this.stopMusic(); // Stop previous
+        this.isMusicPlaying = true;
+        this.currentTheme = theme;
+
+        this.playDrone(theme);
+        this.startRhythm(theme);
+    }
+
+    stopMusic() {
+        this.isMusicPlaying = false;
+
+        // Stop Drones
+        this.musicOscillators.forEach(node => {
+            try {
+                node.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.5);
+                node.osc.stop(this.ctx.currentTime + 1.0);
+                if (node.lfo) node.lfo.stop(this.ctx.currentTime + 1.0);
+            } catch (e) { console.log(e); }
+        });
+        this.musicOscillators = [];
+
+        // Stop Rhythm
+        if (this.rhythmInterval) {
+            clearInterval(this.rhythmInterval);
+            this.rhythmInterval = null;
+        }
+    }
+
+    playDrone(theme) {
+        const now = this.ctx.currentTime;
+        let freqs = [];
+        let type = 'sine';
+
+        if (theme === 'CITY') { // Noir - Low, jazzy, dark
+            freqs = [55, 110]; // Low A
+            type = 'sawtooth'; // Brass-like
+        } else if (theme === 'LAB') { // Toxic - Dissonant
+            freqs = [60, 87, 93]; // Tritones
+            type = 'square';
+        } else if (theme === 'MATRIX') { // Digital - Pure
+            freqs = [220, 440];
+            type = 'square';
+        } else if (theme === 'SYNTHWAVE') { // Neon - Rich
+            freqs = [65.4, 130.8, 131.5]; // C2 + Detune
+            type = 'sawtooth';
+        } else if (theme === 'VOID') { // Quantum - Abstract
+            freqs = [150, 200, 250];
+            type = 'triangle';
+        } else {
+            freqs = [55, 110]; // Default
+        }
+
+        freqs.forEach(f => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = type;
+            osc.frequency.value = f;
+
+            // LFO for breathing effect
+            const lfo = this.ctx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.1 + Math.random() * 0.2;
+            const lfoGain = this.ctx.createGain();
+            lfoGain.gain.value = 0.05;
+
+            lfo.connect(lfoGain);
+            lfoGain.connect(gain.gain); // Modulate volume
+
+            // Lowpass filter for distinct sounds (Muffle the harsh waves)
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = theme === 'CITY' ? 400 : (theme === 'SYNTHWAVE' ? 1000 : 800);
+            if (theme === 'MATRIX') filter.frequency.value = 3000; // Bright
+
+            gain.gain.value = 0.05; // Base Volume
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start();
+            lfo.start();
+
+            this.musicOscillators.push({ osc, lfo, gain });
+        });
+    }
+
+    startRhythm(theme) {
+        let bpm = 90;
+        if (theme === 'CITY') bpm = 60; // Slow Jazz
+        if (theme === 'LAB') bpm = 100; // Tense
+        if (theme === 'MATRIX') bpm = 140; // Fast
+        if (theme === 'SYNTHWAVE') bpm = 120; // Driving
+        if (theme === 'VOID') bpm = 0; // No Rhythm
+
+        if (bpm === 0) return;
+
+        const stepTime = (60 / bpm) * 1000;
+        let step = 0;
+
+        this.rhythmInterval = setInterval(() => {
+            if (!this.isMusicPlaying) return;
+
+            // -- RHYTHM LOGIC --
+            if (theme === 'CITY') {
+                // Double Bass Pluck simulation
+                if (step % 4 === 0) this.playNoise(100, 0.1, 'lowpass'); // Bass
+                if (step % 4 === 2) this.playNoise(2000, 0.05, 'highpass'); // Hihat brush
+            }
+            else if (theme === 'LAB') {
+                // Geiger counter ticks
+                if (Math.random() > 0.7) this.playTone(800 + Math.random() * 200, 'square', 0.05);
+                if (step % 4 === 0) this.playTone(60, 'sawtooth', 0.1); // Low pulse
+            }
+            else if (theme === 'MATRIX') {
+                // Glitchy
+                if (step % 1 === 0) this.playTone(440, 'square', 0.05, true); // Arp tick
+                if (step % 4 === 0) this.playTone(110, 'sawtooth', 0.1);
+            }
+            else if (theme === 'SYNTHWAVE') {
+                // Four on the floor
+                if (step % 1 === 0) this.playKick(); // Kick every beat
+                if (step % 2 === 1) this.playTone(200, 'sawtooth', 0.1, true); // Snare-ish
+            }
+
+            step++;
+        }, stepTime / 2); // 8th notes resolution mostly
+    }
+
+    // Helpers for Rhythm
+    playNoise(freq, dur, filterType) {
+        if (!this.ctx) return;
+        const bufferSize = this.ctx.sampleRate * dur;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = filterType;
+        filter.frequency.value = freq;
+
+        const gain = this.ctx.createGain();
+        gain.gain.value = 0.05;
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start();
+    }
+
+    playTone(freq, type, dur, slide = false) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slide) osc.frequency.exponentialRampToValueAtTime(freq / 2, this.ctx.currentTime + dur);
+
+        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + dur);
+    }
+
+    playKick() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playGameOver() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 1.0);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.0);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 1.0);
+    }
+}
+
+class BackgroundLayer {
+    constructor(speedModifier, theme = 'CITY') {
+        this.x = 0;
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.speedModifier = speedModifier;
+        this.speed = 0;
+        this.theme = theme;
+
+        // ASSET MAPPING - Using Validated Filenames
+        const themeAssets = {
+            'CITY': 'assets/Noir_plan.png',
+            'LAB': 'assets/Radyoaktif_Lab.png',
+            'MATRIX': 'assets/Simülasyon_plan.png', // Ensure UTF-8 saved
+            'SYNTHWAVE': 'assets/Neon Gelecek.png', // Space is part of filename
+            'VOID': 'assets/Kuantum_plan.png'
+        };
+
+        this.image = new Image();
+        // Explicitly encode ONLY the filename part if needed, but modern browsers usually handle spaces in src.
+        // However, we will use a safe approach:
+        // If it fails, we fall back.
+
+        let assetPath = themeAssets[this.theme] || 'assets/Noir_plan.png';
+        this.image.src = assetPath;
+
+        // Debug log
+        console.log(`Initializing Background: ${this.theme} -> ${assetPath}`);
+        this.image.onerror = () => {
+            console.error("Background Image Failed to Load:", assetPath);
+            // Fallback to City - ONLY on critical failure
+            if (this.theme !== 'CITY') {
+                // Optional: Maybe try encoded version only on failure?
+                // For now just fallback to ensure game doesn't look broken (white/black screen)
+                // this.image.src = 'assets/Noir_plan.png'; 
+
+                // Let's NOT fallback immediately to see if it eventually loads or use a different strategy?
+                // User says "Vienna opens" implies fallback works.
+                // We will keep fallback for safety.
+                this.image.src = 'assets/Noir_plan.png';
+            }
+        };
+    }
+
+    update(speed, dt) {
+        this.speed = speed * this.speedModifier;
+        this.x -= this.speed * dt;
+        if (this.x <= -this.width) {
+            this.x = 0;
+        }
+    }
+
+    draw(ctx, canvasWidth, canvasHeight, groundY) {
+        ctx.imageSmoothingEnabled = false;
+
+        // Always try to draw image
+        if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
+            ctx.drawImage(this.image, this.x, 0, this.width, this.height);
+            ctx.drawImage(this.image, this.x + this.width, 0, this.width, this.height);
+        } else {
+            // Fallback to Solid Color if image missing/loading
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            // Loading text to debug
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.font = '20px monospace';
+            ctx.fillText("LOADING THEME...", 20, 40);
+        }
+    }
+}
+
+class Ground {
+    constructor(x, width, type) {
+        this.x = x;
+        this.width = width;
+        this.type = type;
+    }
+}
+
+class Obstacle {
+    constructor(x, type, groundY) {
+        this.x = x;
+        this.type = type;
+        this.width = 30;
+        this.height = 50;
+        this.y = groundY - this.height;
+    }
+}
+
+class ObstacleManager {
+    constructor() {
+        this.groundSegments = [];
+        this.obstacles = [];
+    }
+
+    reset(width, groundY) {
+        this.groundSegments = [];
+        this.obstacles = [];
+        this.groundSegments.push(new Ground(0, width * 1.5, 'white'));
+    }
+
+    update(speed, width, groundY, deltaTime) {
+        // Update Ground
+        if (this.groundSegments[0].x + this.groundSegments[0].width < -100) {
+            this.groundSegments.shift();
+        }
+
+        const lastG = this.groundSegments[this.groundSegments.length - 1];
+        if (lastG.x + lastG.width < width + 200) {
+            const newX = lastG.x + lastG.width;
+
+            let nextType = lastG.type;
+            if (Math.random() < 0.85) {
+                nextType = lastG.type === 'white' ? 'black' : 'white';
+            }
+
+            const minLen = 500 + (speed * 15);
+            const newW = minLen + Math.random() * 500;
+
+            this.groundSegments.push(new Ground(newX, newW, nextType));
+
+            const safeMargin = 235;
+            let currentSpawnX = newX + safeMargin;
+            const limitX = newX + newW - safeMargin;
+
+            while (currentSpawnX < limitX) {
+                if (Math.random() < 0.9) {
+                    this.obstacles.push(new Obstacle(currentSpawnX, 'spike', groundY));
+                }
+                // FIX: Increase spacing to ensure jump distance < gap
+                // Player Jump Distance approx = speed * 24.44;
+                // We set gap to be slightly larger than max jump distance to allow landing.
+                const jumpDistance = 100 + (speed * 26);
+                currentSpawnX += jumpDistance + (Math.random() * 200);
+            }
+        }
+
+        // Update Obstacles
+        for (let i = this.obstacles.length - 1; i >= 0; i--) {
+            let obs = this.obstacles[i];
+            obs.x -= speed * deltaTime;
+
+            // Check if passed
+            // Check if passed
+            if (!obs.passed && obs.x + obs.width < player.x) {
+                obs.passed = true;
+
+                // TRACKING: Obstacles Per Second
+                const now = Date.now();
+                obstaclesPassedTimestamps.push(now);
+                // Filter last 1 second
+                obstaclesPassedTimestamps = obstaclesPassedTimestamps.filter(t => now - t <= 1000);
+                if (obstaclesPassedTimestamps.length > maxObstaclesPerSecond) {
+                    maxObstaclesPerSecond = obstaclesPassedTimestamps.length;
+                }
+
+                // Also track total obstacles passed in run
+                obstaclesPassedCount++;
+            }
+
+            if (obs.x < -100) this.obstacles.splice(i, 1);
+        }
+
+        // Move ground
+        for (let g of this.groundSegments) {
+            g.x -= speed * deltaTime;
+        }
+    }
+
+    draw(ctx, height, groundY) {
+        // Zemin Çizimi
+        for (let g of this.groundSegments) {
+            const isWhite = g.type === 'white';
+
+            // Base Colors
+            ctx.fillStyle = isWhite ? '#b0b0b0' : '#080808';
+            ctx.fillRect(g.x, groundY, g.width, height - groundY);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(g.x, groundY, g.width, height - groundY);
+            ctx.clip(); // Keep patterns inside ground segment
+
+            // COBBLESTONE / TILE PATTERN
+            const tileSize = 40;
+            const rows = Math.ceil((height - groundY) / tileSize);
+            // Use Math.floor/ceil based on g.x offset to lock texture to world, not screen
+            // Texture should move with ground: startX should be aligned to world grid
+            // g.x is moving, so we draw relative to g.x
+
+            const cols = Math.ceil(g.width / tileSize);
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isWhite ? 'rgba(255,255,255,0.3)' : 'rgba(50,50,50,0.5)';
+            ctx.fillStyle = isWhite ? 'rgba(255,255,255,0.1)' : 'rgba(20,20,20,0.5)';
+
+            for (let r = 0; r < rows; r++) {
+                const yPos = groundY + (r * tileSize);
+                // Row offset for brick pattern
+                const offset = (r % 2 === 0) ? 0 : tileSize / 2;
+
+                // We iterate coverage of the segment width
+                // Start drawing slightly before 0 to cover scrolling edge if needed, 
+                // but here we are drawing inside the segment coordinate space relative to g.x?
+                // Actually, just iterating 0 to width is fine since we translate or just fill rects at x + ...
+
+                for (let c = -1; c < cols + 1; c++) {
+                    const xPos = g.x + (c * tileSize) + offset;
+
+                    // Random slight variation
+                    // const randomColor = Math.random() > 0.8 ? (isWhite ? '#ccc' : '#111') : (isWhite ? '#bbb' : '#0a0a0a');
+                    // ctx.fillStyle = randomColor; 
+
+                    // Draw Tile rect
+                    ctx.beginPath();
+                    // Slightly smaller to show mortar
+                    ctx.roundRect(xPos + 2, yPos + 2, tileSize - 4, tileSize - 4, 4);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+
+            // Top Highlight Line
+            ctx.fillStyle = isWhite ? '#fff' : '#333';
+            ctx.fillRect(g.x, groundY, g.width, 10);
+
+            // Gradient Fade at bottom for "blending"
+            const grad = ctx.createLinearGradient(0, height - 50, 0, height);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.8)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(g.x, height - 50, g.width, 50);
+
+            ctx.restore();
+        }
+
+        // --- URANIUM FLASK OBSTACLES (Uranyum Şişeleri) ---
+        for (let obs of this.obstacles) {
+            ctx.save();
+            ctx.translate(obs.x, obs.y);
+
+            // Şişe Boyutları
+            const w = obs.width;
+            const h = obs.height;
+
+            // 1. Şişe İçindeki Sıvı (Uranyum)
+            ctx.fillStyle = '#39FF14'; // Neon Yeşil
+            ctx.shadowColor = '#39FF14';
+            ctx.shadowBlur = 20;
+
+            ctx.beginPath();
+            // Sıvı seviyesi (hafif dalgalanma efekti)
+            const liquidLevel = h * 0.4 + Math.sin(Date.now() / 200) * 2;
+
+            ctx.moveTo(w * 0.2, h); // Sol alt
+            ctx.lineTo(w * 0.8, h); // Sağ alt
+            ctx.lineTo(w * 0.65, h - liquidLevel); // Sağ üst sıvı sınırı
+            ctx.lineTo(w * 0.35, h - liquidLevel); // Sol üst sıvı sınırı
+            ctx.fill();
+
+            // 2. Şişe Camı (Erlenmeyer Şekli)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 0; // Cam parlamasın
+
+            ctx.beginPath();
+            ctx.moveTo(w * 0.35, 0); // Ağız sol
+            ctx.lineTo(w * 0.65, 0); // Ağız sağ
+            ctx.lineTo(w * 0.65, h * 0.3); // Boyun sağ
+            ctx.lineTo(w * 0.9, h); // Taban sağ köşe
+            ctx.quadraticCurveTo(w * 0.5, h + 5, w * 0.1, h); // Hafif kavisli taban
+            ctx.lineTo(w * 0.35, h * 0.3); // Boyun sol
+            ctx.closePath();
+            ctx.stroke();
+
+            // 3. Kabarcıklar (Radyasyon efekti)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            if (Math.random() > 0.8) {
+                ctx.beginPath();
+                ctx.arc(w / 2 + (Math.random() - 0.5) * 10, h - liquidLevel + Math.random() * 10, 1 + Math.random() * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 4. Kafatası / Tehlike Sembolü (İsteğe bağlı, çok küçük detay boğabilir ama deneyelim)
+            ctx.fillStyle = '#000';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('☢', w / 2, h - 5);
+
+            ctx.restore();
+        }
+        ctx.restore();
+    }
+
+    checkCollision(cat) {
+        if (cat.isInvulnerable) return null;
+
+        // Ground Collision
+        if (cat.y + cat.height >= GROUND_Y) {
+            // Find the ground segment the cat is on
+            const currentGround = this.groundSegments.find(g => cat.x + cat.width > g.x && cat.x < g.x + g.width);
+            if (currentGround && cat.grounded) {
+                if (cat.color !== currentGround.type) {
+                    return { type: 'ground', reason: `YANLIŞ RENK! <br>${currentGround.type === 'white' ? 'BEYAZ' : 'SİYAH'} ZEMİNE BASTIN.` };
+                }
+            }
+        }
+
+        // Obstacle Collision
+        for (let obs of this.obstacles) {
+            // Basit AABB çarpışma testi (Kare)
+            if (
+                cat.x < obs.x + obs.width &&
+                cat.x + cat.width > obs.x &&
+                cat.y < obs.y + obs.height &&
+                cat.y + cat.height > obs.y
+            ) {
+                // HIT!
+                if (activePowerups.shield) {
+                    activePowerups.shield = false; // Kalkanı tüket
+                    cat.isInvulnerable = true;
+                    cat.invulnerableTimer = 1000; // 1 sn koruma
+                    audioManager.playJump(); // Geçici ses efekt, kalkan kırılma sesi eklenebilir
+                    updateBuffsDisplay(); // UI güncelle
+                    return null; // Ölme
+                }
+
+                return { type: 'obstacle', reason: "RADYOAKTİF TEMAS!" };
+            }
+        }
+
+        // Track passed obstacles
+        if (obstacleManager) {
+            // We need to count passed in a safer place usually, but let's check ObstacleManager.update for specific logic
+        }
+
+        return null;
+    }
+}
+
+class Player {
+    constructor(groundY) {
+        this.width = 44;
+        this.height = 44;
+        this.x = 80;
+        this.y = groundY - this.height;
+        this.dy = 0;
+        this.gravity = 1.8;
+        this.jumpForce = -22;
+        this.grounded = true;
+        this.color = 'white'; // Başlangıç rengi
+        this.isInvulnerable = false;
+        this.invulnerableTimer = 0;
+    }
+
+    reset() {
+        this.x = 80;
+        this.y = (window.innerHeight - 100) - this.height;
+        this.dy = 0;
+        this.grounded = true;
+        this.color = 'white';
+        this.isInvulnerable = false;
+        this.invulnerableTimer = 0;
+    }
+
+    update(groundY, dt) {
+        // Invulnerability Timer
+        if (this.isInvulnerable) {
+            this.invulnerableTimer -= dt * 16.66; // Approx ms
+            if (this.invulnerableTimer <= 0) {
+                this.isInvulnerable = false;
+            }
+        }
+
+        this.dy += this.gravity * dt;
+        this.y += this.dy * dt;
+
+        if (this.y + this.height > groundY) {
+            this.y = groundY - this.height;
+            this.dy = 0;
+            this.grounded = true;
+        } else {
+            this.grounded = false;
+        }
+    }
+
+    jump() {
+        if (this.grounded) {
+            this.dy = this.jumpForce;
+            this.grounded = false;
+            this.jumpColor = this.color; // Track color at jump start
+            return true;
+        }
+        return false;
+    }
+
+    switchColor() {
+        this.color = this.color === 'white' ? 'black' : 'white';
+        this.lastSwitchTime = gameTime; // Track time for perfect landing
+    }
+
+    draw(ctx, frames, name, gameTime) {
+
+        // --- GHOST TRAIL (Hayalet İzi) ---
+        if (this.dy < 0 || Math.abs(this.dy) > 10) {
+            ctx.save();
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+            ctx.globalAlpha = 0.2; // Silik
+            const trailOffset = this.color === 'white' ? -10 : 10;
+            ctx.translate(trailOffset, 5);
+            ctx.fillStyle = this.color === 'white' ? '#fff' : '#000';
+            ctx.fillRect(-20, -15, 40, 30);
+            ctx.restore();
+        }
+        // ---------------------------------
+
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+
+        if (this.isInvulnerable) {
+            ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 50) * 0.3; // Flashing effect
+        } else {
+            ctx.globalAlpha = 1.0;
+        }
+
+        // KALKAN GÖRSELİ
+        if (activePowerups.shield) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(59, 130, 246, ${0.5 + Math.sin(Date.now() / 200) * 0.3})`; // Mavi Titrek
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.fillStyle = "rgba(59, 130, 246, 0.1)";
+            ctx.fill();
+            ctx.restore();
+        }
+
+        const isWhite = this.color === 'white';
+
+        // --- MODERN VEKTÖR KEDİ ÇİZİMİ (Clean Version) ---
+
+        ctx.fillStyle = isWhite ? '#fff' : '#000';
+        ctx.strokeStyle = isWhite ? '#000' : '#fff';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        // Animasyon Değişkenleri
+        const runCycle = Math.sin(frames * 0.4); // Koşu döngüsü
+        const t = gameTime;
+
+        // 1. GÖVDE (Akıcı silüet)
+        // Kedi şekli, hafif esneyen bir yapı
+        ctx.beginPath();
+        // Arka ayak hizası
+        ctx.moveTo(-15, 10);
+        // Sırt kavisi (Hızlanınca biraz daha uzayabilir)
+        ctx.quadraticCurveTo(0, -10 + (runCycle * 2), 20, 0);
+        // Göğüs
+        ctx.quadraticCurveTo(25, 15, 5, 15);
+        // Karın (Nefes alma/koşma etkisi)
+        ctx.lineTo(-15, 12);
+        ctx.fill();
+
+        // 2. KAFA
+        ctx.beginPath();
+        // Kafa dairemsi ama biraz basık
+        ctx.ellipse(22, -8, 10, 8, Math.PI / 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Kulaklar
+        ctx.beginPath();
+        ctx.moveTo(18, -14); ctx.lineTo(16, -24); ctx.lineTo(24, -15);
+        ctx.moveTo(26, -14); ctx.lineTo(32, -22); ctx.lineTo(30, -12);
+        ctx.fill();
+
+        // 3. GÖZLER (Keskin bakış)
+        ctx.fillStyle = isWhite ? '#000' : '#fff';
+        ctx.beginPath();
+        if (this.dy > 5) { // Düşerken gözler biraz büyür
+            ctx.ellipse(26, -8, 3, 3, 0, 0, Math.PI * 2);
+        } else if (Math.floor(gameTime) % 150 > 140) { // Göz kırpma
+            ctx.rect(24, -8, 6, 1);
+        } else {
+            // Normal badem göz
+            ctx.moveTo(22, -8);
+            ctx.quadraticCurveTo(26, -11, 29, -9);
+            ctx.quadraticCurveTo(26, -5, 22, -8);
+        }
+        ctx.fill();
+
+        // 4. KUYRUK (S Sinus Hareketi)
+        ctx.strokeStyle = isWhite ? '#fff' : '#000';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-15, 0);
+        // Kuyruk ucu hareketi
+        const tailWag = Math.sin(frames * 0.2) * 10;
+        ctx.bezierCurveTo(-25, -10, -30 + tailWag, -20, -25 + tailWag, -30);
+        ctx.stroke();
+
+        // 5. BACAKLAR (Prosedürel Koşu Animasyonu)
+        ctx.fillStyle = isWhite ? '#fff' : '#000';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = isWhite ? '#fff' : '#000';
+
+        // Bacak çizim fonksiyonu
+        const drawLeg = (x, y, phase) => {
+            const angle = Math.sin(frames * 0.5 + phase) * 0.8;
+            const len = 14;
+
+            // Havadaysa bacakları uzat
+            let extension = 0;
+            if (!this.grounded) {
+                extension = 5;
+                // Zıplama pozu
+                if (phase === 0) return { x2: x - 5, y2: y + 15 }; // Arka bacak gergin
+                if (phase > 1) return { x2: x + 10, y2: y + 10 }; // Ön bacak ileri
+            }
+
+            const x2 = x + Math.sin(angle) * (len + extension);
+            const y2 = y + Math.cos(angle) * (len + extension);
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        };
+
+        // Arka Bacaklar
+        drawLeg(-12, 10, 0); // Sol Arka
+        drawLeg(-12, 10, Math.PI); // Sağ Arka (Ters faz)
+
+        // Ön Bacaklar
+        drawLeg(18, 12, Math.PI * 1.5); // Sol Ön
+        drawLeg(18, 12, Math.PI * 0.5); // Sağ Ön (Ters faz)
+
+        // İsim Etiketi (Hafif yukarı alındı)
+        ctx.fillStyle = "#666";
+        ctx.font = "bold 10px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(name, 5, -50);
+
+        ctx.restore();
+    }
+}
+
+class InputHandler {
+    constructor(game) {
+        this.game = game;
+        this.width = window.innerWidth;
+        this.setupListeners();
+    }
+
+    updateWidth(width) {
+        this.width = width;
+    }
+
+    setupListeners() {
+        // Bind to ZONES only, not document. This prevents UI blocking.
+        const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
+
+        zones.forEach(zone => {
+            zone.addEventListener('touchstart', (e) => {
+                if (!this.game.isPlaying) return;
+                e.preventDefault(); // Prevent default ONLY in control zones
+                // Check which zone was clicked
+                if (zone.id === 'left-zone') this.game.handleAction('jump');
+                else this.game.handleAction('switch');
+            }, { passive: false });
+
+            zone.addEventListener('mousedown', (e) => {
+                if (!this.game.isPlaying) return;
+                if (zone.id === 'left-zone') this.game.handleAction('jump');
+                else this.game.handleAction('switch');
+            });
+        });
+
+        // Helper for keyboard (Global is fine)
+        document.addEventListener('keydown', (e) => {
+            if (!this.game.isPlaying) return;
+            if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) this.game.handleAction('jump');
+            if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD'].includes(e.code)) this.game.handleAction('switch');
+        });
+    }
+}
+
+
+
+const scoreEl = document.getElementById('score-display');
+// REMOVED comboEl
+const highScoreEl = document.getElementById('high-score');
+const livesDisplayEl = document.getElementById('lives-display');
+const activeBuffsEl = document.getElementById('active-buffs-display'); // NEW
+
+const startScreen = document.getElementById('start-screen');
+const storyScreen = document.getElementById('story-screen');
+const scoreboardScreen = document.getElementById('scoreboard-screen');
+const shopScreen = document.getElementById('shop-screen');
+const atomDisplayEl = document.getElementById('atom-display');
+const earnedAtomsEl = document.getElementById('earned-atoms');
+const btnRevive = document.getElementById('btn-revive');
+
+// Shop Buttons & Stock Displays
+const btnBuyLife = document.getElementById('btn-buy-life');
+const btnBuyShield = document.getElementById('btn-buy-shield');
+const btnBuyWorm = document.getElementById('btn-buy-wormhole');
+const btnBuyBoost = document.getElementById('btn-buy-booster');
+
+const stockLifeEl = document.getElementById('stock-life');
+const stockShieldEl = document.getElementById('stock-shield');
+const stockWormEl = document.getElementById('stock-wormhole');
+const stockBoostEl = document.getElementById('stock-booster');
+
+const leaderboardList = document.getElementById('leaderboard-list');
+const gameOverScreen = document.getElementById('game-over-screen');
+const finalScoreEl = document.getElementById('final-score');
+const deathReasonEl = document.getElementById('death-reason');
+const playerNameInput = document.getElementById('player-name');
+const gameMsgEl = document.getElementById('game-message');
+const leftZone = document.getElementById('left-zone');
+const rightZone = document.getElementById('right-zone');
+
+// CANVAS SETUP - CRITICAL MISSING PART RESTORED
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let WIDTH = window.innerWidth;
+let HEIGHT = window.innerHeight;
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+
+let GROUND_Y = HEIGHT - 100;
+
+// Handle Resize
+window.addEventListener('resize', () => {
+    WIDTH = window.innerWidth;
+    HEIGHT = window.innerHeight;
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    GROUND_Y = HEIGHT - 100;
+    if (player) player.y = Math.min(player.y, GROUND_Y - player.height);
+    if (inputHandler) inputHandler.updateWidth(WIDTH);
+    if (backgroundLayers) backgroundLayers.forEach(l => l.width = WIDTH);
+});
+
+
+
+const SPEED_START = 8;
+const SPEED_MAX = 20;
+
+const DIFFICULTY_SETTINGS = {
+    'EASY': { speedStart: 6, speedMax: 15, accelInterval: 800, scoreMultiplier: 1.0 },
+    'NORMAL': { speedStart: 8, speedMax: 20, accelInterval: 600, scoreMultiplier: 1.5 },
+    'HARD': { speedStart: 10, speedMax: 25, accelInterval: 400, scoreMultiplier: 2.0 }
+};
+
+// Leaderboard Initial Data
+let leaderboardData = { 'EASY': [], 'NORMAL': [], 'HARD': [] };
+try {
+    const savedLb = localStorage.getItem('schrodinger_leaderboard');
+    if (savedLb) leaderboardData = JSON.parse(savedLb);
+} catch (e) { console.error("Skor yüklenemedi", e); }
+
+
+// SHOP & ECONOMY SYSTEM
+const THEMES = {
+    CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.png" },
+    LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.png" },
+    MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.png" },
+    SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.png" },
+    VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.png" }
+};
+
+let economyData = {
+    atoms: 0,
+    extraLives: 0,
+    inventory: { shield: 0, wormhole: 0, booster: 0 },
+    highScore: { EASY: 0, NORMAL: 0, HARD: 0 },
+    ownedThemes: ['CITY'],
+    equippedTheme: 'CITY',
+    // Achievements
+    unlockedAchievements: [],
+    unlockedBadges: [], // Rozetler için yeni dizi
+    stats: {
+        totalGames: 0,
+        totalDeaths: 0,
+        totalScore: 0, // Career Score
+        bestScore: 0,
+        totalTimePlayed: 0, // seconds
+        totalItemsBought: 0,
+        totalAtomsEarned: 0,
+        totalAtomsSpent: 0,
+        totalColorSwitches: 0,
+        totalShieldsUsed: 0,
+        totalWormholesUsed: 0,
+        totalBoostersUsed: 0,
+        totalRevives: 0,
+        consecutiveDays: 0,
+        lastLoginDate: null,
+        visitedShop: false,
+        visitedScores: false,
+        visitedStory: false,
+        ownedThemes: ['CITY'], // Helper mirror
+        playedThemes: []
+    },
+    // Specific flags
+    boughtShield: false,
+    boughtWormhole: false,
+    boughtBooster: false,
+    boughtLife: false
+};
+
+// ACHIEVEMENTS CONSTANTS
+const ACHIEVEMENTS = {
+    FIRST_MILESTONE: { id: 'FIRST_MILESTONE', title: "İLK KİLOMETRE", msg: "1000 Puan Barajı Aşıldı!", reward: 100, icon: "fa-flag-checkered" },
+    QUANTUM_LEAP: { id: 'QUANTUM_LEAP', title: "KUANTUM ATLAYIŞI", msg: "5000 Puan! Efsanevi!", reward: 500, icon: "fa-rocket" },
+    FIRST_COLLAPSE: { id: 'FIRST_COLLAPSE', title: "İLK ÇÖKÜŞ", msg: "Her Deney Başarılı Olmaz.", reward: 50, icon: "fa-skull" },
+    DETERMINATION: { id: 'DETERMINATION', title: "KARARLILIK", msg: "10 Kez Oynadın!", reward: 200, icon: "fa-rotate-right" }
+};
+
+// --- EXPANDED BADGES DEFINITION (60+ Items) ---
+const BADGES = [
+    // A) MESAFE & SKOR
+    { id: 'score_100', title: 'İLK ADIM', desc: '100 puana ulaş.', icon: 'fa-baby', targetScore: 100, category: 'DISTANCE' },
+    { id: 'score_1000', title: 'İLK KİLOMETRE', desc: '1.000 puana ulaş.', icon: 'fa-flag', targetScore: 1000, category: 'DISTANCE' },
+    { id: 'score_5000', title: 'MARATON KOŞUCUSU', desc: '5.000 puana ulaş.', icon: 'fa-person-running', targetScore: 5000, category: 'DISTANCE' },
+    { id: 'score_10000', title: 'UZUN MESAFE', desc: '10.000 puana ulaş.', icon: 'fa-road', targetScore: 10000, category: 'DISTANCE' },
+    { id: 'score_25000', title: 'EFSANE YOLCULUK', desc: '25.000 puana ulaş.', icon: 'fa-map-location-dot', targetScore: 25000, category: 'DISTANCE' },
+    { id: 'score_50000', title: 'KUANTUM ATLAYIŞI', desc: '50.000 puana ulaş.', icon: 'fa-rocket', targetScore: 50000, category: 'DISTANCE' },
+    { id: 'total_score_100k', title: 'ZAMAN YOLCUSU', desc: 'Toplam 100.000 kariyer puanı yap.', icon: 'fa-hourglass-half', targetTotalScore: 100000, category: 'DISTANCE' },
+    { id: 'single_10000', title: 'SONSUZ KOŞUCU', desc: 'Tek seferde 10.000 puan yap (ZOR mod değilse bile).', icon: 'fa-infinity', targetScore: 10000, category: 'DISTANCE' }, // check logic same
+    { id: 'peak_15000', title: 'ZİRVE', desc: 'Tek oyunda 15.000+ puan yap.', icon: 'fa-mountain', targetScore: 15000, category: 'DISTANCE' },
+    // "Mükemmeliyetçi" requires logic per diff, will simplify to "Win hard w/ 5k" for now or custom logic
+
+    // B) HAYATTA KALMA
+    { id: 'first_death', title: 'İLK CAN KAYBI', desc: 'İlk kez öl.', icon: 'fa-skull', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 1 },
+    { id: 'nine_lives', title: 'DOKUZ CANLI KEDİ', desc: 'Toplam 9 kez öl.', icon: 'fa-cat', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 9 },
+    { id: 'immortal_5k', title: 'ÖLÜMSÜZ', desc: '5.000 puanı hiç ölmeden geç (Revive kullanmadan).', icon: 'fa-heart-pulse', category: 'SURVIVAL', targetScore: 5000, noRevive: true },
+    { id: 'ghost_3', title: 'HAYALET', desc: 'Kalkan kullanarak 3 kez kurtul (Toplam).', icon: 'fa-shield-cat', category: 'SURVIVAL', customCheck: (s) => s.totalShieldsUsed >= 3 },
+    { id: 'wormhole_10', title: 'ZAMAN GEZGİNİ', desc: 'Wormhole ile 10 oyun başlat.', icon: 'fa-worm', category: 'SURVIVAL', customCheck: (s) => s.totalWormholesUsed >= 10 },
+    { id: 'revive_5', title: 'İKİNCİ ŞANS', desc: 'Revive ile 5 kez hayata dön (Toplam).', icon: 'fa-suitcase-medical', category: 'SURVIVAL', customCheck: (s) => s.totalRevives >= 5 },
+    { id: 'survivor_combo', title: 'SURVIVOR', desc: 'Aynı oyunda Shield, Wormhole ve Booster kullan.', icon: 'fa-kit-medical', category: 'SURVIVAL', customCheck: (s, run) => run.usedShield && run.usedWormhole && run.usedBooster },
+    { id: 'obstacle_100', title: 'DAYANIKLI', desc: 'Tek oyunda 100 engel geç.', icon: 'fa-person-hurdles', category: 'SURVIVAL', customCheck: (s, run) => run.obstaclesPassed >= 100 },
+
+    // C) TEKNİK USTALIK
+    { id: 'fast_fingers', title: 'HIZLI PARMAKLAR', desc: '1 saniyede 5 kez renk değiştir.', icon: 'fa-bolt', category: 'TECH', customCheck: (s, run) => run.maxClicksPerSecond >= 5 },
+    { id: 'color_world', title: 'RENKLİ DÜNYA', desc: 'Toplam 100 kez renk değiştir.', icon: 'fa-palette', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 100 },
+    { id: 'color_master', title: 'RENK CAMBAZI', desc: 'Toplam 1.000 kez renk değiştir.', icon: 'fa-brush', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 1000 },
+    { id: 'speed_demon', title: 'HIZ CANAVARI', desc: 'Maksimum hıza (20+) ulaş.', icon: 'fa-gauge-high', category: 'TECH', customCheck: (s, run) => run.maxSpeedReached >= 20 },
+    { id: 'careful_easy', title: 'YAVAŞ VE DİKKATLİ', desc: 'KOLAY modda ölmeden 5.000 puan.', icon: 'fa-feather', category: 'TECH', customCheck: (s, run) => run.difficulty === 'EASY' && run.score >= 5000 && run.revives === 0 },
+    { id: 'hard_journey', title: 'ZOR YOLCULUK', desc: 'ZOR modda ölmeden 5.000 puan.', icon: 'fa-skull-crossbones', category: 'TECH', customCheck: (s, run) => run.difficulty === 'HARD' && run.score >= 5000 && run.revives === 0 },
+    { id: 'brave', title: 'CESUR', desc: 'Hiç power-up kullanmadan 3.000 puan yap (Loadout boş).', icon: 'fa-fist-raised', category: 'TECH', customCheck: (s, run) => run.score >= 3000 && !run.usedLoadout },
+
+    // D) TEMA KEŞFİ
+    { id: 'theme_vienna', title: 'VİYANA GEZGİNİ', desc: 'Viyana temasının sahibi ol.', icon: 'fa-city', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('CITY') },
+    { id: 'theme_lab', title: 'RADYASYON UZMANI', desc: 'Lab temasının sahibi ol.', icon: 'fa-flask', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('LAB') },
+    { id: 'theme_matrix', title: 'GERÇEKLİK KIRICI', desc: 'Matrix temasının sahibi ol.', icon: 'fa-terminal', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('MATRIX') },
+    { id: 'theme_neon', title: 'NEON RÜYALARI', desc: 'Synthwave temasının sahibi ol.', icon: 'fa-sun', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('SYNTHWAVE') },
+    { id: 'theme_void', title: 'BOŞLUK GEZGİNİ', desc: 'Void temasının sahibi ol.', icon: 'fa-infinity', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('VOID') },
+    { id: 'theme_collector', title: 'EVREN KOLEKSİYONCUSU', desc: 'Tüm temaların sahibi ol.', icon: 'fa-layer-group', category: 'THEME', customCheck: (s) => s.ownedThemes.length >= 5 },
+    { id: 'versatile', title: 'ÇOK YÖNLÜ', desc: '5 farklı temada oyun oyna.', icon: 'fa-shuffle', category: 'THEME', customCheck: (s) => s.playedThemes && s.playedThemes.length >= 5 },
+
+    // E) EKONOMİ
+    { id: 'first_shop', title: 'İLK ALIŞVERİŞ', desc: 'Mağazadan bir şey satın al.', icon: 'fa-cart-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 1 },
+    { id: 'shopaholic', title: 'ALIŞVERİŞ ÇILGINI', desc: '10 item satın al.', icon: 'fa-bags-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 10 },
+    { id: 'rich', title: 'ZENGİN', desc: '5.000 atom biriktir (Cüzdan).', icon: 'fa-sack-dollar', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 5000 },
+    { id: 'quantum_rich', title: 'KUANTUM ZENGİNİ', desc: '25.000 atom biriktir (Cüzdan).', icon: 'fa-coins', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 25000 },
+    { id: 'emperor', title: 'ATOM İMPARATORU', desc: 'Toplam 100.000 atom kazan (Kariyer).', icon: 'fa-crown', category: 'ECONOMY', customCheck: (s) => s.totalAtomsEarned >= 100000 },
+    { id: 'generous', title: 'CÖMERT', desc: '50.000 atom harca.', icon: 'fa-hand-holding-dollar', category: 'ECONOMY', customCheck: (s) => s.totalAtomsSpent >= 50000 },
+    { id: 'collector_power', title: 'KOLEKSİYONCU', desc: 'Her power-up tipinden en az 1 tane al.', icon: 'fa-box-open', category: 'ECONOMY', customCheck: (s) => s.boughtShield && s.boughtWormhole && s.boughtBooster && s.boughtLife },
+    { id: 'prepared', title: 'HAZIRLIKLI', desc: 'Stokta 10 shield, 10 wormhole, 10 booster olsun.', icon: 'fa-warehouse', category: 'ECONOMY', customCheck: (s) => s.inventory.shield >= 10 && s.inventory.wormhole >= 10 && s.inventory.booster >= 10 },
+    { id: 'consumer', title: 'TÜKETİCİ', desc: 'Toplam 100 item kullan.', icon: 'fa-recycle', category: 'ECONOMY', customCheck: (s) => (s.totalShieldsUsed + s.totalWormholesUsed + s.totalBoostersUsed) >= 100 },
+
+    // F) SOSYAL & ÖZEL
+    { id: 'curious', title: 'MERAKLI', desc: 'Mağaza, Skorlar ve Hikaye ekranlarını ziyaret et.', icon: 'fa-eye', category: 'SOCIAL', customCheck: (s) => s.visitedShop && s.visitedScores && s.visitedStory },
+    { id: 'patient', title: 'SABIRLI', desc: '7 gün üst üste giriş yap.', icon: 'fa-calendar-check', category: 'SOCIAL', customCheck: (s) => s.consecutiveDays >= 7 },
+    { id: 'marathon', title: 'MARATON', desc: 'Tek oturumda 1 saat oyna (Toplam süre).', icon: 'fa-stopwatch', category: 'SOCIAL', customCheck: (s) => (s.sessionTime && s.sessionTime >= 3600) || (s.currentSessionTime && s.currentSessionTime >= 3600) },
+    { id: 'night_owl', title: 'GECE KUŞU', desc: '00:00 - 04:00 arası oyun oyna.', icon: 'fa-moon', category: 'SOCIAL', customCheck: (s, run) => run.hour >= 0 && run.hour < 4 },
+    { id: 'lucky', title: 'ŞANSLI', desc: 'Ayın 13\'ü ve Cuma günü oyun oyna.', icon: 'fa-clover', category: 'SOCIAL', customCheck: (s, run) => run.isFriday13 },
+
+    // G) GİZLİ
+    { id: 'respect', title: 'SCHRÖDINGER\'E SAYGI', desc: 'İsmini "ERWIN" yap ve oyna.', icon: 'fa-user-graduate', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'ERWIN' },
+    { id: 'honor_1935', title: '1935 ONURU', desc: 'Tam olarak 1935 skor yapıp öl.', icon: 'fa-award', category: 'SECRET', customCheck: (s, run) => Math.floor(run.score) === 1935 },
+    { id: 'cat_love', title: 'KEDİ SEVGİSİ', desc: 'İsmini "KEDİ" yapıp 50 oyun oyna.', icon: 'fa-heart', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'KEDI' && s.totalGames >= 50 },
+    { id: 'quantum_leap_sec', title: 'KUANTUM SIÇRAMASI', desc: '1 saniyede 3 engel geç.', icon: 'fa-forward', category: 'SECRET', customCheck: (s, run) => run.maxObstaclesPerSecond >= 3 }
+];
+
+// Loadout State
+let selectedLoadout = { shield: false, wormhole: false, booster: false };
+let activePowerups = { shield: false, wormhole: false, booster: false };
+
+window.initEconomy = () => {
+    let saved = localStorage.getItem('schrodinger_economy_v3');
+    // Migration/Fallback: If v3 empty, check old key
+    if (!saved) saved = localStorage.getItem('schrodinger_economy');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        economyData = { ...economyData, ...parsed };
+        if (!economyData.inventory) economyData.inventory = { shield: 0, wormhole: 0, booster: 0 };
+        // Migration for themes
+        if (!economyData.ownedThemes) economyData.ownedThemes = ['CITY'];
+        if (!economyData.equippedTheme) economyData.equippedTheme = 'CITY';
+
+        // Init Achievement Data if missing
+        if (!economyData.unlockedAchievements) economyData.unlockedAchievements = [];
+        if (!economyData.unlockedBadges) economyData.unlockedBadges = [];
+
+        // DATA MIGRATION: Ensure all new stats fields exist
+        const defaultStats = {
+            totalGames: 0, totalDeaths: 0, totalScore: 0, bestScore: 0,
+            totalTimePlayed: 0, totalItemsBought: 0, totalAtomsEarned: 0, totalAtomsSpent: 0,
+            totalColorSwitches: 0, totalShieldsUsed: 0, totalWormholesUsed: 0, totalBoostersUsed: 0,
+            totalRevives: 0, consecutiveDays: 0, lastLoginDate: null,
+            visitedShop: false, visitedScores: false, visitedStory: false,
+            ownedThemes: ['CITY'], playedThemes: []
+        };
+
+        // If stats missing entirely, use default. If exists, merge to preserve old data while adding new fields.
+        if (!economyData.stats) {
+            economyData.stats = defaultStats;
+        } else {
+            economyData.stats = { ...defaultStats, ...economyData.stats };
+        }
+    }
+    // ----------------------------------
+    // DAILY LOGIN LOGIC (Consolidated)
+    checkDailyLogin();
+
+    if (economyData.atoms < 50000) {
+        economyData.atoms = 50000;
+        saveEconomy();
+        setTimeout(() => alert("🐈 TESTER HEDİYESİ: 50.000 Atom hesabına yüklendi! Bol harcamalar!"), 500);
+    }
+    // ----------------------------------
+
+    // Periodic Passive Check
+    if (!window.passiveCheckInterval) {
+        window.passiveCheckInterval = setInterval(checkPassiveBadges, 30000); // Check every 30s
+    }
+
+    updateShopUI();
+    updateLoadoutUI();
+    checkPassiveBadges(); // Check on load (days played etc)
+};
+
+// Initialize immediately on load
+setTimeout(initEconomy, 100);
+
+window.toggleLoadout = (type) => {
+    if (economyData.inventory[type] > 0) {
+        selectedLoadout[type] = !selectedLoadout[type];
+        updateLoadoutUI();
+    }
+};
+
+window.updateLoadoutUI = () => {
+    const types = ['shield', 'wormhole', 'booster'];
+    types.forEach(type => {
+        // START SCREEN
+        const el = document.getElementById(`loadout-${type}`);
+        const countEl = document.getElementById(`count-${type}`);
+        // GAME OVER SCREEN (QUICK)
+        const quickEl = document.getElementById(`quick-${type}`);
+        const quickCountEl = document.getElementById(`quick-count-${type}`);
+
+        const count = economyData.inventory[type];
+        if (countEl) countEl.innerText = count;
+        if (quickCountEl) quickCountEl.innerText = count;
+
+        // Sync Visuals
+        [el, quickEl].forEach(element => {
+            if (element) {
+                if (count > 0) {
+                    element.classList.remove('opacity-30');
+                    if (selectedLoadout[type]) {
+                        element.classList.add('selected');
+                        element.classList.remove('owned');
+                    } else {
+                        element.classList.remove('selected');
+                        element.classList.add('owned');
+                    }
+                } else {
+                    element.classList.remove('selected', 'owned');
+                    element.classList.add('opacity-30');
+                    // If we ran out, deselect
+                    if (selectedLoadout[type] && count === 0) selectedLoadout[type] = false;
+                }
+            }
+        });
+    });
+};
+
+updateLoadoutUI();
+
+// DEV TOOLS
+window.resetProgress = () => {
+    if (confirm("TÜM İLERLEME SİLİNECEK! Rozetler, skorlar, satın alımlar... Emin misin?")) {
+        localStorage.removeItem('schrodinger_economy_v3');
+        localStorage.removeItem('schrodinger_economy');
+        localStorage.removeItem('schrodinger_leaderboard');
+        location.reload();
+    }
+};
+
+window.addDebugAtoms = () => {
+    economyData.atoms += 50000;
+    saveEconomy();
+    updateShopUI();
+    showToast("DEV MODU", "50.000 Atom Eklendi!", "fa-radiation");
+};
+
+// ACHIEVEMENT SYSTEM
+function unlockAchievement(key) {
+    const ach = ACHIEVEMENTS[key];
+    if (!ach) return;
+    if (economyData.unlockedAchievements.includes(key)) return;
+
+    // Unlock
+    economyData.unlockedAchievements.push(key);
+
+    // Reward
+    if (ach.reward > 0) {
+        economyData.atoms += ach.reward;
+        saveEconomy(); // Save immediately
+    }
+
+    // Notify
+    showToast(ach.title, ach.msg, ach.icon);
+    // Also show mini reward text if needed, but toast covers it.
+}
+
+function showToast(title, msg, iconClass) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+                <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${msg}</div>
+                </div>
+            `;
+    // ARROWS_ICON_HTML is undefined, strictly simplified HTML
+
+    container.appendChild(toast);
+
+    // Remove logic handled by CSS animation delay mostly, but safe to remove from DOM
+    setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 4000);
+
+    // Limit max toasts
+    // Limit max toasts
+    while (container.children.length > 3) {
+        container.removeChild(container.firstChild);
+    }
+}
+
+// --- BADGES LOGIC (NO PAGINATION) ---
+
+// 1. ACTIVE RUN CHECK (Called on Game Over)
+function checkBadges(finalScore, currentTheme) {
+    let newUnlock = false;
+
+    // Safety Defaults
+    const safePowerups = activePowerups || { shield: false, wormhole: false, booster: false };
+    const safeStats = economyData.stats || {};
+    const safeDifficulty = currentDifficulty || 'NORMAL';
+
+    // Create Merged Context for Badges
+    // This allows badges to access s.totalScore (stats) AND s.inventory (root) AND s.boughtShield (root)
+    const statsContext = {
+        ...safeStats,
+        inventory: economyData.inventory || { shield: 0, wormhole: 0, booster: 0 },
+        boughtShield: economyData.boughtShield,
+        boughtWormhole: economyData.boughtWormhole,
+        boughtBooster: economyData.boughtBooster,
+        boughtLife: economyData.boughtLife,
+        ownedThemes: economyData.ownedThemes || [],
+        atoms: economyData.atoms || 0,
+        // Special mapping for 'currentAtoms' used in badge definition
+        currentAtoms: economyData.atoms || 0
+    };
+
+    const runStats = {
+        score: finalScore,
+        difficulty: safeDifficulty,
+        hour: new Date().getHours(),
+        isFriday13: (new Date().getDate() === 13 && new Date().getDay() === 5),
+        playerName: playerName || "",
+        revives: runRevives || 0,
+        usedShield: safePowerups.shield,
+        usedWormhole: safePowerups.wormhole,
+        usedBooster: safePowerups.booster,
+        usedBooster: safePowerups.booster,
+        usedLoadout: (safePowerups.shield || safePowerups.wormhole || safePowerups.booster),
+        obstaclesPassed: obstaclesPassedCount, // Live count
+        maxSpeedReached: speed || 0,
+        maxClicksPerSecond: (inputHandler && inputHandler.maxCps) ? inputHandler.maxCps : 0,
+        maxObstaclesPerSecond: maxObstaclesPerSecond // Live count
+    };
+
+    BADGES.forEach(badge => {
+        if (economyData.unlockedBadges.includes(badge.id)) return;
+
+        let unlocked = false;
+
+        // 1. Target Score Check
+        if (badge.targetScore) {
+            if (finalScore >= badge.targetScore) {
+                let failedConstraint = false;
+                if (badge.theme && badge.theme !== currentTheme) failedConstraint = true;
+                if (badge.noRevive && runStats.revives > 0) failedConstraint = true;
+
+                if (!failedConstraint) unlocked = true;
+            }
+        }
+
+        // 2. Custom Logic Check (Run Dependent)
+        else if (badge.customCheck && typeof badge.customCheck === 'function') {
+            // Only run checks that depend on RunStats here if needed, or run all.
+            // Ideally we separate, but running all is safe if runStats is provided.
+            try {
+                if (badge.customCheck(statsContext, runStats)) {
+                    unlocked = true;
+                }
+            } catch (e) { console.warn("Badge check failed for", badge.id, e); }
+        }
+
+        // 3. Total Score Check (Fallback if not caught by passive)
+        else if (badge.targetTotalScore) {
+            if (safeStats.totalScore >= badge.targetTotalScore) unlocked = true;
+        }
+
+        if (unlocked) {
+            economyData.unlockedBadges.push(badge.id);
+            showToast("ROZET KAZANILDI!", badge.title, badge.icon);
+            newUnlock = true;
+        }
+    });
+
+    if (newUnlock) {
+        saveEconomy();
+    }
+
+    // Also check passive badges just in case
+    checkPassiveBadges();
+}
+
+// 2. PASSIVE CHECK (Called on Shop, Init, Open Menu)
+function checkPassiveBadges() {
+    let newUnlock = false;
+    const safeStats = economyData.stats || {};
+
+    // Create Merged Context
+    const statsContext = {
+        ...safeStats,
+        inventory: economyData.inventory || { shield: 0, wormhole: 0, booster: 0 },
+        boughtShield: economyData.boughtShield,
+        boughtWormhole: economyData.boughtWormhole,
+        boughtBooster: economyData.boughtBooster,
+        boughtLife: economyData.boughtLife,
+        ownedThemes: economyData.ownedThemes || [],
+        atoms: economyData.atoms || 0,
+        currentAtoms: economyData.atoms || 0,
+        // Add current session time
+        currentSessionTime: (Date.now() - sessionStartTime) / 1000
+    };
+
+    // Dummy run stats for passive checks (avoids crash if customCheck expects it)
+    const dummyRun = {
+        score: 0, difficulty: 'NORMAL', hour: new Date().getHours(),
+        isFriday13: false, playerName: playerName || "KEDI",
+        revives: 0, usedShield: false, usedWormhole: false, usedBooster: false, usedLoadout: false,
+        obstaclesPassed: 0, maxSpeedReached: 0, maxClicksPerSecond: 0, maxObstaclesPerSecond: 0
+    };
+
+    BADGES.forEach(badge => {
+        if (economyData.unlockedBadges.includes(badge.id)) return;
+
+        // SKIPPED: Score badges are Run-Only.
+        if (badge.targetScore) return;
+
+        let unlocked = false;
+
+        // Total Score / Passive Checks
+        if (badge.targetTotalScore) {
+            if (safeStats.totalScore >= badge.targetTotalScore) unlocked = true;
+        }
+        else if (badge.customCheck && typeof badge.customCheck === 'function') {
+            try {
+                if (badge.customCheck(statsContext, dummyRun)) unlocked = true;
+            } catch (e) { }
+        }
+
+        if (unlocked) {
+            economyData.unlockedBadges.push(badge.id);
+            showToast("ROZET KAZANILDI!", badge.title, badge.icon);
+            newUnlock = true;
+        }
+    });
+
+    if (newUnlock) {
+        saveEconomy();
+        // If badges screen is open, re-render
+        const badgesScreen = document.getElementById('badges-screen');
+        if (badgesScreen && !badgesScreen.classList.contains('hidden')) {
+            renderBadges();
+        }
+    }
+}
+
+window.openBadges = () => {
+    checkPassiveBadges(); // Ensure update on open
+    renderBadges();
+    document.getElementById('badges-screen').classList.remove('hidden');
+    document.getElementById('start-screen').classList.add('hidden');
+};
+
+window.closeBadges = () => {
+    document.getElementById('badges-screen').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+};
+
+function renderBadges() {
+    const list = document.getElementById('badges-list');
+    list.innerHTML = '';
+
+    BADGES.forEach(badge => {
+        const isUnlocked = economyData.unlockedBadges.includes(badge.id);
+
+        const badgeEl = document.createElement('div');
+        badgeEl.className = `badge-grid-item ${isUnlocked ? 'unlocked' : ''}`;
+
+        badgeEl.innerHTML = `
+                    <div class="badge-icon" style="${isUnlocked ? '' : 'filter:grayscale(1); opacity:0.3;'}">
+                        <i class="fa-solid ${badge.icon}"></i>
+                    </div>
+                    <div class="badge-info">
+                        <div class="badge-title" style="${isUnlocked ? '' : 'color:#555;'}">${badge.title}</div>
+                        <div class="badge-desc">${badge.desc}</div>
+                    </div>
+                `;
+
+        list.appendChild(badgeEl);
+    });
+}
+
+// GAME VARIABLES
+let currentDifficulty = 'NORMAL';
+let isPlaying = false;
+let score = 0;
+let atomsClaimedThisRun = 0;
+let highScore = 0;
+
+let speed = SPEED_START;
+let frames = 0;
+let playerName = "KEDI";
+let gameTime = 0;
+let lastTime = 0;
+let shake = 0;
+
+// TRACKING VARIABLES
+let obstaclesPassedTimestamps = [];
+let maxObstaclesPerSecond = 0;
+let obstaclesPassedCount = 0;
+let runRevives = 0;
+
+// SESSION TRACKING
+let sessionStartTime = Date.now();
+
+let rainDrops = [];
+let particles = [];
+let backgroundLayers = [];
+
+const player = new Player(GROUND_Y);
+const obstacleManager = new ObstacleManager();
+const audioManager = new AudioManager();
+
+const gameInterface = {
+    get isPlaying() { return isPlaying; },
+    handleAction: (action) => handleAction(action)
+};
+const inputHandler = new InputHandler(gameInterface);
+
+// Initialize Game
+function initGame() {
+    initEconomy();
+    const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+
+
+    // RESET
+    score = 0;
+    atomsClaimedThisRun = 0;
+    speed = settings.speedStart;
+    frames = 0;
+    gameTime = 0;
+    lastTime = 0;
+    gameTime = 0;
+    lastTime = 0;
+    shake = 0;
+
+    // Reset Tracking
+    obstaclesPassedTimestamps = [];
+    maxObstaclesPerSecond = 0;
+    maxObstaclesPerSecond = 0;
+    obstaclesPassedCount = 0;
+    runRevives = 0;
+
+    // ACTIVATING POWERUPS logic
+    activePowerups = { shield: false, wormhole: false, booster: false };
+
+    // Consume selected loadout items
+    if (selectedLoadout.shield && economyData.inventory.shield > 0) {
+        economyData.inventory.shield--;
+        activePowerups.shield = true;
+        economyData.stats.totalShieldsUsed++;
+    }
+    if (selectedLoadout.wormhole && economyData.inventory.wormhole > 0) {
+        economyData.inventory.wormhole--;
+        activePowerups.wormhole = true;
+        economyData.stats.totalWormholesUsed++;
+    }
+    if (selectedLoadout.booster && economyData.inventory.booster > 0) {
+        economyData.inventory.booster--;
+        activePowerups.booster = true;
+        economyData.stats.totalBoostersUsed++;
+    }
+
+    saveEconomy();
+    updateBuffsDisplay();
+
+    // WORMHOLE EFFECT
+    if (activePowerups.wormhole) {
+        score = 1000;
+        speed += 2;
+        atomsClaimedThisRun = 0;
+    }
+
+    // Intro Message
+    const gameMsgEl = document.getElementById('game-message');
+    gameMsgEl.innerHTML = `<span class="text-xl font-bold text-white bg-black/70 px-6 py-2 border-l-4 border-white tracking-widest font-mono">DENEY BAŞLIYOR...</span>`;
+    gameMsgEl.style.opacity = 1;
+    setTimeout(() => { gameMsgEl.style.opacity = 0; }, 2000);
+
+    // Load best score for display
+    highScore = 0;
+    if (leaderboardData[currentDifficulty].length > 0) {
+        highScore = leaderboardData[currentDifficulty][0].score;
+    }
+    highScoreEl.innerText = "HI: " + String(Math.floor(highScore)).padStart(5, '0');
+
+    // Show lives if any
+    if (economyData.extraLives > 0) {
+        livesDisplayEl.innerText = "❤️ x " + economyData.extraLives;
+        livesDisplayEl.classList.remove('hidden');
+    } else {
+        livesDisplayEl.classList.add('hidden');
+    }
+
+    player.reset();
+    obstacleManager.reset(window.innerWidth, GROUND_Y);
+
+    backgroundLayers = [];
+    // Pass the equipped theme to the BackgroundLayer
+    backgroundLayers.push(new BackgroundLayer(0.2, economyData.equippedTheme));
+    createRain();
+
+    audioManager.startMusic(economyData.equippedTheme);
+    if (!isPlaying) { // Only start loop if not already running (though initGame usually starts it)
+        loop(0);
+    }
+}
+
+function handleAction(action) {
+    if (audioManager.ctx && audioManager.ctx.state === 'suspended') {
+        audioManager.ctx.resume();
+    }
+
+    if (!isPlaying) return;
+
+    if (action === 'jump') {
+        if (player.jump()) {
+            audioManager.playJump();
+            createDust(player.x + 20, player.y + 40);
+            leftZone.classList.add('active');
+            setTimeout(() => leftZone.classList.remove('active'), 100);
+        }
+    } else if (action === 'switch') {
+        player.switchColor();
+
+        // TRACKING: Color Switches
+        economyData.stats.totalColorSwitches++;
+        // Check fast clicks (simplistic approach: clicks in last sec)
+        if (!inputHandler.clickHistory) inputHandler.clickHistory = [];
+        const now = Date.now();
+        inputHandler.clickHistory.push(now);
+        inputHandler.clickHistory = inputHandler.clickHistory.filter(t => now - t < 1000);
+        if (inputHandler.clickHistory.length > (inputHandler.maxCps || 0)) inputHandler.maxCps = inputHandler.clickHistory.length;
+
+        audioManager.playSwitch();
+        shake = 5;
+        let flashColor = player.color === 'white' ? '#222' : '#333';
+        document.body.style.backgroundColor = flashColor;
+        setTimeout(() => document.body.style.backgroundColor = '#000', 50);
+        rightZone.classList.add('active');
+        setTimeout(() => rightZone.classList.remove('active'), 100);
+    }
+}
+
+function createRain() {
+    for (let i = 0; i < 80; i++) {
+        rainDrops.push({
+            x: Math.random() * WIDTH,
+            y: Math.random() * HEIGHT,
+            l: Math.random() * 20 + 10,
+            v: Math.random() * 10 + 15
+        });
+    }
+}
+
+function updateRain(dt) {
+    for (let p of rainDrops) {
+        p.y += p.v * dt;
+        p.x -= (speed * 0.5) * dt;
+        if (p.y > HEIGHT) {
+            p.y = -20;
+            p.x = Math.random() * WIDTH + (speed * 20);
+        }
+    }
+}
+
+function createDust(x, y) {
+    for (let i = 0; i < 5; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random()) * -2,
+            life: 1.0,
+            size: Math.random() * 4 + 2,
+            color: '#888'
+        });
+    }
+}
+
+function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= 0.05 * dt;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+}
+
+function update(dt) {
+    if (!isPlaying) return;
+    frames++;
+    gameTime += dt;
+
+    if (shake > 0) {
+        shake -= 15 * dt;
+        if (shake < 0) shake = 0;
+    }
+
+    const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+
+    if (frames % settings.accelInterval === 0 && speed < settings.speedMax) {
+        speed += 1;
+        showMessage("HIZLANIYOR...");
+    }
+
+    score += (1 * settings.scoreMultiplier);
+    scoreEl.innerText = Math.floor(score).toString().padStart(5, '0');
+
+    // MILESTONE CHECKS
+    if (score >= 1000) unlockAchievement('FIRST_MILESTONE');
+    if (score >= 5000) unlockAchievement('QUANTUM_LEAP');
+
+    player.update(GROUND_Y, dt);
+    backgroundLayers.forEach(layer => layer.update(speed, dt));
+    obstacleManager.update(speed, WIDTH, GROUND_Y, dt);
+    updateParticles(dt);
+    updateRain(dt);
+
+    const collision = obstacleManager.checkCollision(player);
+    if (collision) {
+        if (collision.type === 'obstacle' || collision.type === 'ground') {
+            gameOver(collision.reason);
+        }
+    }
+}
+
+function draw() {
+    ctx.save();
+    if (shake > 0) {
+        const dx = (Math.random() - 0.5) * shake;
+        const dy = (Math.random() - 0.5) * shake;
+        ctx.translate(dx, dy);
+    }
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    backgroundLayers.forEach(layer => layer.draw(ctx, WIDTH, HEIGHT, GROUND_Y));
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.moveTo(0, GROUND_Y);
+    ctx.lineTo(WIDTH, GROUND_Y);
+    ctx.stroke();
+
+    obstacleManager.draw(ctx, HEIGHT, GROUND_Y);
+    player.draw(ctx, frames, playerName, gameTime);
+
+    for (let p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+        ctx.globalAlpha = 1.0;
+    }
+
+    ctx.strokeStyle = 'rgba(150, 150, 150, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let p of rainDrops) {
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - 2, p.y + p.l);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function loop(timeStamp) {
+    if (!isPlaying) return;
+    if (!lastTime) lastTime = timeStamp;
+    const deltaTimeMs = timeStamp - lastTime;
+    lastTime = timeStamp;
+    const dt = deltaTimeMs / 16.66;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function showMessage(msg) {
+    gameMsgEl.querySelector('span').innerText = msg;
+    gameMsgEl.style.opacity = 1;
+    setTimeout(() => gameMsgEl.style.opacity = 0, 1500);
+}
+
+function gameOver(reason) {
+    try {
+        isPlaying = false;
+        if (audioManager && typeof audioManager.playGameOver === 'function') {
+            audioManager.playGameOver();
+        }
+
+        // Update Stats
+        if (!economyData.stats) economyData.stats = { totalGames: 0, totalDeaths: 0, totalScore: 0 };
+        economyData.stats.totalGames++;
+        economyData.stats.totalDeaths++;
+
+        // CAREER & SESSION STATS
+        economyData.stats.totalScore += score;
+        economyData.stats.totalTimePlayed += gameTime; // seconds
+
+        // Max Speed Track
+        // speed is current max speed of this run roughly
+
+        // Consecutive Days Logic (Consolidated)
+        checkDailyLogin();
+
+        saveEconomy();
+
+        // Achievement Checks (Post-Game)
+        // if (economyData.stats.totalDeaths === 1) unlockAchievement('FIRST_COLLAPSE'); // Old system support
+
+        deathReasonEl.innerHTML = reason;
+        const finalScoreVal = Math.floor(score);
+        finalScoreEl.innerText = finalScoreVal.toString().padStart(5, '0');
+
+        // Calculate and Save Atoms (Incremental Fix + Booster)
+        const totalAtomsForRun = Math.floor(finalScoreVal / 10);
+
+        let newAtoms = Math.max(0, totalAtomsForRun - atomsClaimedThisRun);
+
+        // APPLY BOOSTER MULTIPLIER to the NEWLY earned atoms
+        if (activePowerups.booster) {
+            newAtoms *= 2;
+        }
+
+        if (newAtoms > 0) {
+            economyData.atoms += newAtoms;
+            economyData.stats.totalAtomsEarned += newAtoms;
+            atomsClaimedThisRun = totalAtomsForRun;
+
+            saveEconomy();
+        }
+
+        // UI shows earned THIS DEATH segment usually? Or total?
+        // Let's show just "KAZANILAN: X"
+        earnedAtomsEl.innerText = newAtoms;
+        if (activePowerups.booster) {
+            earnedAtomsEl.innerHTML += " <span class='text-yellow-400 font-bold'>(2x)</span>";
+        }
+
+        // Save to Leaderboard
+        saveScoreToLeaderboard(finalScoreVal);
+
+        // Check Badges
+        checkBadges(finalScoreVal, economyData.equippedTheme);
+
+        if (finalScoreVal > highScore) {
+            highScore = finalScoreVal;
+            highScoreEl.innerText = "HI: " + String(highScore).padStart(5, '0');
+        }
+
+        // Revive Logic
+        if (economyData.extraLives > 0) {
+            btnRevive.innerText = `HAYATA DÖN (${economyData.extraLives} ❤️)`;
+            btnRevive.classList.remove('hidden');
+        } else {
+            btnRevive.classList.add('hidden');
+        }
+
+        gameOverScreen.classList.remove('hidden');
+    } catch (err) {
+        console.error("GAMEOVER ERROR:", err);
+        alert("Oyun sonu hatası oluştu: " + err.message);
+        // Force show screen anyway
+        if (gameOverScreen) gameOverScreen.classList.remove('hidden');
+    }
+}
+
+function revivePlayer() {
+    if (economyData.extraLives > 0) {
+        economyData.extraLives--;
+
+        // TRACKING
+        if (!economyData.stats.totalRevives) economyData.stats.totalRevives = 0;
+        economyData.stats.totalRevives++;
+        runRevives++;
+
+        livesDisplayEl.innerText = "❤️ x " + economyData.extraLives;
+        if (economyData.extraLives === 0) livesDisplayEl.classList.add('hidden');
+        saveEconomy();
+
+        // Resume Game
+        gameOverScreen.classList.add('hidden');
+        isPlaying = true;
+        lastTime = 0;
+
+        // Give invulnerability
+        player.isInvulnerable = true;
+        player.invulnerableTimer = 3000; // 3 seconds
+
+        // Lift player slightly to avoid immediate ground collision issues if sunk
+        player.y = Math.min(player.y, GROUND_Y - player.height - 10);
+        player.dy = 0;
+
+        requestAnimationFrame(loop);
+    }
+}
+
+function drawStatic() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    // Show best of current difficulty
+    let best = 0;
+    if (leaderboardData[currentDifficulty] && leaderboardData[currentDifficulty].length > 0) {
+        best = leaderboardData[currentDifficulty][0].score;
+    }
+    highScoreEl.innerText = "HI: " + Math.floor(best).toString().padStart(5, '0');
+
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    for (let i = 0; i < 50; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * WIDTH, Math.random() * HEIGHT, Math.random() * 1, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function saveData() {
+    // Deprecated func kept for safety, but real save hooks are in setScore
+    localStorage.setItem('schrodinger_leaderboard', JSON.stringify(leaderboardData));
+}
+
+function saveEconomy() {
+    localStorage.setItem('schrodinger_economy_v3', JSON.stringify(economyData));
+}
+
+function checkDailyLogin() {
+    const today = new Date().toISOString().split('T')[0];
+    const lastLogin = economyData.stats.lastLoginDate;
+
+    if (lastLogin !== today) {
+        if (lastLogin) {
+            const d1 = new Date(today);
+            // Handle potential Date string format differences
+            const d2 = new Date(lastLogin);
+
+            // Reset hours to compare dates only
+            d1.setHours(0, 0, 0, 0);
+            d2.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(d1 - d2);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                economyData.stats.consecutiveDays++;
+            } else {
+                economyData.stats.consecutiveDays = 1;
+            }
+        } else {
+            economyData.stats.consecutiveDays = 1;
+        }
+        economyData.stats.lastLoginDate = today;
+        saveEconomy();
+    }
+}
+
+function saveScoreToLeaderboard(newScore) {
+    const list = leaderboardData[currentDifficulty];
+    list.push({
+        name: playerNameInput.value || "KEDI",
+        score: newScore,
+        date: new Date().toLocaleDateString()
+    });
+
+    // Sort Descending
+    list.sort((a, b) => b.score - a.score);
+
+    // Keep Top 5
+    leaderboardData[currentDifficulty] = list.slice(0, 5);
+
+    saveData();
+}
+
+window.startGame = () => {
+    audioManager.init();
+
+    playerName = playerNameInput.value || "KEDI";
+
+    // TRACK PLAYED THEMES
+    const currentTheme = economyData.equippedTheme;
+    if (!economyData.stats.playedThemes) economyData.stats.playedThemes = [];
+    if (!economyData.stats.playedThemes.includes(currentTheme)) {
+        economyData.stats.playedThemes.push(currentTheme);
+        saveEconomy();
+    }
+
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    scoreboardScreen.classList.add('hidden');
+    storyScreen.classList.add('hidden');
+    shopScreen.classList.add('hidden');
+    isPlaying = true;
+    lastTime = 0;
+    initGame();
+    requestAnimationFrame(loop);
+};
+
+window.setDifficulty = (diff) => {
+    currentDifficulty = diff;
+    document.querySelectorAll('.btn-difficulty').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText === (diff === 'EASY' ? 'KOLAY' : diff === 'NORMAL' ? 'NORMAL' : 'ZOR')) {
+            btn.classList.add('active');
+        }
+    });
+    drawStatic(); // Hangi zorluktaysak onun high score'unu göster
+};
+
+window.resetGame = () => { window.startGame(); };
+let currentStoryPage = 1;
+const totalStoryPages = 5;
+
+window.openStory = () => {
+    economyData.stats.visitedStory = true;
+    startScreen.classList.add('hidden');
+    storyScreen.classList.remove('hidden');
+    currentStoryPage = 1;
+    updateStoryDisplay();
+};
+
+window.changeStoryPage = (dir) => {
+    currentStoryPage += dir;
+    if (currentStoryPage < 1) currentStoryPage = 1;
+    if (currentStoryPage > totalStoryPages) currentStoryPage = totalStoryPages;
+    updateStoryDisplay();
+};
+
+window.updateStoryDisplay = () => {
+    for (let i = 1; i <= totalStoryPages; i++) {
+        const el = document.getElementById(`scene-${i}`);
+        if (el) el.classList.remove('active');
+    }
+    const activeEl = document.getElementById(`scene-${currentStoryPage}`);
+    if (activeEl) activeEl.classList.add('active');
+
+    // Prev Button
+    const prevBtn = document.getElementById('btn-prev-story');
+    if (prevBtn) {
+        prevBtn.disabled = (currentStoryPage === 1);
+        prevBtn.style.opacity = (currentStoryPage === 1) ? 0.3 : 1;
+    }
+
+    // Next Button logic
+    const nextBtn = document.getElementById('btn-next-story');
+    if (nextBtn) {
+        if (currentStoryPage === totalStoryPages) {
+            nextBtn.innerText = "OYUNA DÖN";
+            nextBtn.onclick = closeStory;
+            nextBtn.classList.add('btn-secondary'); // Make it look different
+        } else {
+            nextBtn.innerText = "İLERİ";
+            nextBtn.onclick = () => changeStoryPage(1);
+            nextBtn.classList.remove('btn-secondary');
+        }
+    }
+
+    const indicator = document.getElementById('story-page-num');
+    if (indicator) indicator.innerText = `${currentStoryPage} / ${totalStoryPages}`;
+};
+
+window.closeStory = () => {
+    storyScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+};
+
+window.openScoreboard = () => {
+    economyData.stats.visitedScores = true;
+    startScreen.classList.add('hidden');
+    scoreboardScreen.classList.remove('hidden');
+    showLeaderboardTab(currentDifficulty);
+};
+
+window.closeScoreboard = () => {
+    scoreboardScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+};
+
+window.showLeaderboardTab = (diff) => {
+    // Tab Buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const tabBtn = document.getElementById('tab-' + diff);
+    if (tabBtn) tabBtn.classList.add('active');
+
+    // List Content
+    const container = document.getElementById('leaderboard-list');
+    if (container) {
+        container.innerHTML = "";
+        const scores = leaderboardData[diff] || [];
+        if (scores.length === 0) {
+            container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
+        } else {
+            scores.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'score-row';
+                row.innerHTML = `
+                        <span>${index + 1}. ${item.name}</span>
+                        <span>${Math.floor(item.score).toString().padStart(5, '0')}</span>
+                    `;
+                container.appendChild(row);
+            });
+        }
+    }
+};
+
+window.openShop = () => {
+    economyData.stats.visitedShop = true;
+    startScreen.classList.add('hidden');
+    shopScreen.classList.remove('hidden');
+    updateShopUI();
+};
+window.closeShop = () => {
+    shopScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+};
+
+window.updateShopUI = () => {
+    if (atomDisplayEl) atomDisplayEl.innerText = economyData.atoms;
+
+    // Update Buttons
+    if (btnBuyLife) btnBuyLife.disabled = economyData.atoms < 500;
+    if (btnBuyShield) btnBuyShield.disabled = economyData.atoms < 1000;
+    if (btnBuyWorm) btnBuyWorm.disabled = economyData.atoms < 300;
+    if (btnBuyBoost) btnBuyBoost.disabled = economyData.atoms < 200;
+
+    // Update Stocks
+    if (stockLifeEl) stockLifeEl.innerText = economyData.extraLives;
+    if (stockShieldEl) stockShieldEl.innerText = economyData.inventory.shield;
+    if (stockWormEl) stockWormEl.innerText = economyData.inventory.wormhole;
+    if (stockBoostEl) stockBoostEl.innerText = economyData.inventory.booster;
+
+    // Render Themes
+    const themesList = document.getElementById('themes-list');
+    if (themesList) {
+        themesList.innerHTML = "";
+        Object.keys(THEMES).forEach(key => {
+            const theme = THEMES[key];
+            const isOwned = economyData.ownedThemes.includes(key);
+            const isEquipped = economyData.equippedTheme === key;
+
+            const item = document.createElement('div');
+            item.className = "shop-item";
+            if (isEquipped) item.style.borderColor = theme.color;
+
+            let btnHtml = "";
+            if (isEquipped) {
+                btnHtml = `<button class="btn-secondary" style="color:${theme.color}; border-color:${theme.color}" disabled>SEÇİLDİ</button>`;
+            } else if (isOwned) {
+                btnHtml = `<button class="btn-secondary" onclick="equipTheme('${key}')">SEÇ</button>`;
+            } else {
+                btnHtml = `<button class="buy-btn" onclick="buyTheme('${key}')" style="color:${theme.color}">${theme.cost} ⚛</button>`;
+            }
+
+            const iconHtml = theme.img ?
+                `<img src="${theme.img}" class="shop-icon-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #333;">` :
+                `<div class="item-icon" style="color:${theme.color};"><i class="fa-solid ${theme.icon}"></i></div>`;
+
+            item.innerHTML = `
+                            <div class="mb-4">${iconHtml}</div>
+                            <div class="item-info">
+                                <div class="item-title" style="color:${theme.color}">${theme.name}</div>
+                                <div class="item-desc">${theme.desc}</div>
+                            </div>
+                            ${btnHtml}
+                        `;
+            themesList.appendChild(item);
+        });
+    }
+    updateMenuBackground();
+};
+
+window.updateMenuBackground = () => {
+    const bgLayer = document.getElementById('menu-background-layer');
+    if (!bgLayer) return;
+
+    let bgUrl = 'assets/Noir_plan.png'; // Default
+    const t = economyData.equippedTheme;
+
+    if (t === 'CITY') bgUrl = 'assets/Noir_plan.png';
+    else if (t === 'LAB') bgUrl = 'assets/Radyoaktif_Lab.png';
+    else if (t === 'MATRIX') bgUrl = 'assets/Simülasyon_plan.png';
+    else if (t === 'SYNTHWAVE') bgUrl = 'assets/Neon Gelecek.png';
+    else if (t === 'VOID') bgUrl = 'assets/Kuantum_plan.png';
+
+    bgLayer.style.backgroundImage = `url('${bgUrl}')`;
+};
+
+window.updateBuffsDisplay = () => {
+    if (!activeBuffsEl) return;
+    activeBuffsEl.innerHTML = "";
+    if (activePowerups.shield) activeBuffsEl.innerHTML += "<div class='buff-icon buff-shield'>SHIELD</div>";
+    if (activePowerups.wormhole) activeBuffsEl.innerHTML += "<div class='buff-icon buff-worm'>WARP</div>";
+    if (activePowerups.booster) activeBuffsEl.innerHTML += "<div class='buff-icon buff-booster'>2X</div>";
+};
+
+window.buyTheme = (themeKey) => {
+    const theme = THEMES[themeKey];
+    if (!theme) return;
+
+    if (economyData.atoms >= theme.cost) {
+        if (!economyData.ownedThemes.includes(themeKey)) {
+            economyData.atoms -= theme.cost;
+            economyData.ownedThemes.push(themeKey);
+            economyData.stats.totalItemsBought++;
+            economyData.stats.totalAtomsSpent += theme.cost;
+            saveEconomy();
+            updateShopUI();
+            checkPassiveBadges(); // Hook
+        }
+    } else {
+        alert("Yetersiz Atom!");
+    }
+};
+
+window.equipTheme = (themeKey) => {
+    if (economyData.ownedThemes.includes(themeKey)) {
+        economyData.equippedTheme = themeKey;
+        saveEconomy();
+        updateShopUI();
+        checkPassiveBadges(); // Check theme collector etc
+    }
+};
+
+window.buyItem = (itemType) => {
+
+    let cost = 0;
+    if (itemType === 'LIFE') cost = 500;
+    if (itemType === 'SHIELD') cost = 1000;
+    if (itemType === 'WORMHOLE') cost = 300;
+    if (itemType === 'BOOSTER') cost = 200;
+
+    if (economyData.atoms >= cost) {
+        economyData.atoms -= cost;
+        economyData.stats.totalItemsBought++;
+        economyData.stats.totalAtomsSpent += cost;
+
+        if (itemType === 'LIFE') { economyData.extraLives++; economyData.boughtLife = true; }
+        if (itemType === 'SHIELD') { economyData.inventory.shield++; economyData.boughtShield = true; }
+        if (itemType === 'WORMHOLE') { economyData.inventory.wormhole++; economyData.boughtWormhole = true; }
+        if (itemType === 'BOOSTER') { economyData.inventory.booster++; economyData.boughtBooster = true; }
+
+        saveEconomy();
+        // Recalculate UI
+        updateShopUI();
+        checkPassiveBadges(); // Check shopaholic etc
+
+        // Show floating text instead of alert for better UX
+        const btn = document.getElementById(
+            itemType === 'LIFE' ? 'btn-buy-life' :
+                itemType === 'SHIELD' ? 'btn-buy-shield' :
+                    itemType === 'WORMHOLE' ? 'btn-buy-wormhole' : 'btn-buy-booster'
+        );
+        if (btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "ALINDI!";
+            btn.style.borderColor = "#39FF14";
+            btn.style.color = "#39FF14";
+            setTimeout(() => {
+                updateShopUI(); // Reset text via UI update (since it reads cost mostly, actually buttons had hardcoded cost text in HTML, updateShopUI disables them but doesn't set text)
+                // Wait, updateShopUI doesn't reset text. We need to restore original.
+                btn.innerText = originalText;
+                btn.style.borderColor = "";
+                btn.style.color = "";
+            }, 1000);
+        }
+    } else {
+        // Shake effect on the item? Or just alert.
+        // Alert is reliable for "Not Enough"
+        alert("Yetersiz Atom! Daha fazla oyna.");
+    }
+};
+
+window.showLeaderboardTab = (diff) => {
+    // Tab Buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab-' + diff).classList.add('active');
+
+    // List Content
+    const container = document.getElementById('leaderboard-list');
+    container.innerHTML = "";
+
+    const scores = leaderboardData[diff] || [];
+    if (scores.length === 0) {
+        container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
+    } else {
+        scores.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'score-row';
+            row.innerHTML = `
+                        <span>${index + 1}. ${item.name}</span>
+                        <span>${Math.floor(item.score).toString().padStart(5, '0')}</span>
+                    `;
+            container.appendChild(row);
+        });
+    }
+};
+
+window.showMenu = () => {
+    gameOverScreen.classList.add('hidden');
+    storyScreen.classList.add('hidden');
+    scoreboardScreen.classList.add('hidden');
+    shopScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    isPlaying = false;
+    drawStatic();
+};
+
+window.addEventListener('resize', () => {
+    WIDTH = window.innerWidth;
+    HEIGHT = window.innerHeight;
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    GROUND_Y = HEIGHT - 100;
+    inputHandler.updateWidth(WIDTH);
+    if (!isPlaying) drawStatic();
+});
+
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+drawStatic();
