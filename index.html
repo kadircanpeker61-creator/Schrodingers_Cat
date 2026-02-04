@@ -121,7 +121,8 @@
             background: transparent;
             z-index: 30;
             /* Enable interactions in screens */
-            touch-action: auto;
+            /* Enable interactions in screens */
+            touch-action: pan-y;
             pointer-events: auto;
 
             /* SCROLL AYARLARI */
@@ -1524,40 +1525,50 @@
     </div>
 
     <script>
-        // WEBP SUPPORT CHECK (Step 8)
-        let supportsWebP = true; // Assume TRUE initially to prevent flash of wrong content
+        // GLOBALS
+        // isPlaying, gameTime, score are defined later, removing duplicate declarations here to fix lint errors
 
-        function checkWebPSupport() {
-            const elem = document.createElement('canvas');
-            if (!!(elem.getContext && elem.getContext('2d'))) {
-                // Was able to create canvas, now check toDataURL
-                supportsWebP = elem.toDataURL('image/webp').indexOf('data:image/webp') == 0;
-            } else {
-                supportsWebP = false;
+        // WEBP SUPPORT CHECK (Step 8) - WRAPPED IN TRY-CATCH
+        let supportsWebP = true;
+        try {
+            function checkWebPSupport() {
+                const elem = document.createElement('canvas');
+                if (!!(elem.getContext && elem.getContext('2d'))) {
+                    supportsWebP = elem.toDataURL('image/webp').indexOf('data:image/webp') == 0;
+                } else {
+                    supportsWebP = false;
+                }
+                console.log("WebP Support:", supportsWebP);
+                if (!supportsWebP) convertStaticImagesToPng();
             }
-            console.log("WebP Support:", supportsWebP);
-            if (!supportsWebP) convertStaticImagesToPng();
+            checkWebPSupport();
+        } catch (e) {
+            console.error("WebP Check Failed:", e);
         }
 
-        // Helper to get correct extension
         function getAssetPath(filename) {
-            if (supportsWebP) return filename; // Filename already has .webp
+            if (supportsWebP) return filename;
             return filename.replace('.webp', '.png');
         }
 
         function convertStaticImagesToPng() {
-            // Convert all <img> tags currently in DOM
             document.querySelectorAll('img').forEach(img => {
                 if (img.src.includes('.webp')) {
                     img.src = img.src.replace('.webp', '.png');
                 }
             });
-            // Convert background images if needed (complex, usually handled by JS re-render)
             updateMenuBackground();
         }
 
-        // Run Check Immediately
-        checkWebPSupport();
+        // IOS AUDIO UNLOCK INITIALIZATION (Step 11) - FIXED PASSIVE
+        function unlockIOSAudio() {
+            if (audioManager) audioManager.unlockAudio();
+            document.removeEventListener('touchstart', unlockIOSAudio);
+            document.removeEventListener('click', unlockIOSAudio);
+        }
+        // Use passive: true to ensure we never block clicks/scrolls
+        document.addEventListener('touchstart', unlockIOSAudio, { passive: true });
+        document.addEventListener('click', unlockIOSAudio);
 
         class AudioManager {
             constructor() {
