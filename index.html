@@ -3957,11 +3957,43 @@
             drawStatic();
         };
 
-        // REMOVED DUPLICATE RESIZE LISTENER HERE
-        // It was overwriting WIDTH/HEIGHT logic without DPR support
+        // RESTORED OPTIMIZATION: Ensure Landscape & High-DPI Scaling (Step 1 & 2)
+        let scaleRatio = 1;
+        function resizeCanvas() {
+            const targetWidth = window.innerWidth;
+            const targetHeight = window.innerHeight;
 
-        canvas.width = WIDTH;
-        canvas.height = HEIGHT;
+            // Performance limiting for High-DPI screens
+            const MAX_WIDTH = 1920;
+
+            if (targetWidth > MAX_WIDTH) {
+                scaleRatio = MAX_WIDTH / targetWidth;
+                canvas.width = MAX_WIDTH;
+                canvas.height = targetHeight * scaleRatio;
+            } else {
+                scaleRatio = 1;
+                canvas.width = targetWidth; // Default to full width
+                canvas.height = targetHeight;
+            }
+
+            // CSS always fills screen
+            canvas.style.width = targetWidth + 'px';
+            canvas.style.height = targetHeight + 'px';
+
+            if (ctx) ctx.scale(scaleRatio, scaleRatio);
+
+            // Update Global Logic Vars
+            WIDTH = targetWidth;
+            HEIGHT = targetHeight;
+            GROUND_Y = HEIGHT - 100;
+
+            if (typeof player !== 'undefined' && player) player.y = Math.min(player.y, GROUND_Y - player.height);
+            if (typeof inputHandler !== 'undefined' && inputHandler) inputHandler.updateWidth(WIDTH);
+            if (typeof backgroundLayers !== 'undefined' && backgroundLayers) backgroundLayers.forEach(l => l.width = WIDTH);
+            if (!isPlaying) drawStatic();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Trigger immediately
         drawStatic();
 
         // IOS AUDIO UNLOCK INITIALIZATION (Step 11)
