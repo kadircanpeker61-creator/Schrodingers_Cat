@@ -1734,6 +1734,18 @@
             // --- MUSIC ENGINE ---
             async startMusic(theme = 'CITY') {
                 if (!this.ctx) { this.init(); }
+
+                // FORCE RESUME for Mobile: Ensure context is running whenever music is requested
+                // This usually works if the call stack originated from a user click (like "Start Game")
+                if (this.ctx.state === 'suspended') {
+                    try {
+                        await this.ctx.resume();
+                        console.log("Audio Context Force Resumed in startMusic");
+                    } catch (e) {
+                        console.warn("Could not resume audio context - wait for user interaction", e);
+                    }
+                }
+
                 if (this.isMusicPlaying && this.currentTheme === theme) return;
 
                 this.stopMusic();
