@@ -56,23 +56,38 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            color: rgba(255, 255, 255, 0.02);
-            pointer-events: none;
-            transition: background 0.1s;
+            font-size: 6rem;
+            /* 4rem -> 6rem */
+            color: rgba(255, 255, 255, 0.15);
+            /* 0.02 -> 0.15 */
+            pointer-events: auto;
+            /* FIX: Changed from none to auto to allow clicks */
+            transition: background 0.1s, color 0.1s;
         }
 
         #left-zone {
             left: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 2px solid rgba(255, 255, 255, 0.2);
+            /* 1px -> 2px */
+            background: linear-gradient(to right, rgba(57, 255, 20, 0.05), transparent);
         }
 
         #right-zone {
             right: 0;
+            background: linear-gradient(to left, rgba(255, 0, 255, 0.05), transparent);
         }
 
         .control-zone.active {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.2);
+            /* 0.05 -> 0.2 */
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Mobil için daha büyük ikonlar */
+        @media (max-width: 768px) {
+            .control-zone {
+                font-size: 8rem;
+            }
         }
 
         /* Menüler */
@@ -2247,26 +2262,29 @@
             }
 
             setupListeners() {
-                // Bind to ZONES only, not document. This prevents UI blocking.
+                const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
                 const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
 
                 zones.forEach(zone => {
-                    zone.addEventListener('touchstart', (e) => {
-                        if (!this.game.isPlaying) return;
-                        e.preventDefault(); // Prevent default ONLY in control zones
-                        // Check which zone was clicked
-                        if (zone.id === 'left-zone') this.game.handleAction('jump');
-                        else this.game.handleAction('switch');
-                    }, { passive: false });
-
-                    zone.addEventListener('mousedown', (e) => {
-                        if (!this.game.isPlaying) return;
-                        if (zone.id === 'left-zone') this.game.handleAction('jump');
-                        else this.game.handleAction('switch');
-                    });
+                    if (isMobile) {
+                        // Sadece touch eventleri
+                        zone.addEventListener('touchstart', (e) => {
+                            if (!this.game.isPlaying) return;
+                            e.preventDefault(); // Prevent default touch actions (scroll/zoom)
+                            if (zone.id === 'left-zone') this.game.handleAction('jump');
+                            else this.game.handleAction('switch');
+                        }, { passive: false });
+                    } else {
+                        // Desktop için mouse
+                        zone.addEventListener('mousedown', (e) => {
+                            if (!this.game.isPlaying) return;
+                            if (zone.id === 'left-zone') this.game.handleAction('jump');
+                            else this.game.handleAction('switch');
+                        });
+                    }
                 });
 
-                // Helper for keyboard (Global is fine)
+                // Keyboard her zaman (desktop için)
                 document.addEventListener('keydown', (e) => {
                     if (!this.game.isPlaying) return;
                     if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) this.game.handleAction('jump');
