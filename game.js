@@ -303,11 +303,11 @@ class BackgroundLayer {
 
         // ASSET MAPPING - Using Validated Filenames
         const themeAssets = {
-            'CITY': 'assets/Noir_plan.png',
-            'LAB': 'assets/Radyoaktif_Lab.png',
-            'MATRIX': 'assets/Simülasyon_plan.png', // Ensure UTF-8 saved
-            'SYNTHWAVE': 'assets/Neon Gelecek.png', // Space is part of filename
-            'VOID': 'assets/Kuantum_plan.png'
+            'CITY': 'assets/Noir_plan.webp',
+            'LAB': 'assets/Radyoaktif_Lab.webp',
+            'MATRIX': 'assets/Simülasyon_plan.webp', // Ensure UTF-8 saved
+            'SYNTHWAVE': 'assets/Neon Gelecek.webp', // Space is part of filename
+            'VOID': 'assets/Kuantum_plan.webp'
         };
 
         this.image = new Image();
@@ -315,7 +315,7 @@ class BackgroundLayer {
         // However, we will use a safe approach:
         // If it fails, we fall back.
 
-        let assetPath = themeAssets[this.theme] || 'assets/Noir_plan.png';
+        let assetPath = themeAssets[this.theme] || 'assets/Noir_plan.webp';
         this.image.src = assetPath;
 
         // Debug log
@@ -326,12 +326,12 @@ class BackgroundLayer {
             if (this.theme !== 'CITY') {
                 // Optional: Maybe try encoded version only on failure?
                 // For now just fallback to ensure game doesn't look broken (white/black screen)
-                // this.image.src = 'assets/Noir_plan.png'; 
+                // this.image.src = 'assets/Noir_plan.webp'; 
 
                 // Let's NOT fallback immediately to see if it eventually loads or use a different strategy?
                 // User says "Vienna opens" implies fallback works.
                 // We will keep fallback for safety.
-                this.image.src = 'assets/Noir_plan.png';
+                this.image.src = 'assets/Noir_plan.webp';
             }
         };
     }
@@ -855,22 +855,14 @@ class InputHandler {
         const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
 
         zones.forEach(zone => {
-            // TOUCH EVENTS
             zone.addEventListener('touchstart', (e) => {
                 if (!this.game.isPlaying) return;
-                e.preventDefault();
-                // Enable Fullscreen & Lock Landscape on first touch interaction
-                this.enableMobileMode();
-
+                e.preventDefault(); // Prevent default ONLY in control zones
+                // Check which zone was clicked
                 if (zone.id === 'left-zone') this.game.handleAction('jump');
                 else this.game.handleAction('switch');
             }, { passive: false });
 
-            zone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-            zone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
-
-
-            // MOUSE EVENTS (Fallback)
             zone.addEventListener('mousedown', (e) => {
                 if (!this.game.isPlaying) return;
                 if (zone.id === 'left-zone') this.game.handleAction('jump');
@@ -884,26 +876,6 @@ class InputHandler {
             if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) this.game.handleAction('jump');
             if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD'].includes(e.code)) this.game.handleAction('switch');
         });
-
-        // GLOBAL TOUCH LISTENER FOR ORIENTATION LOCK (If user touches anywhere)
-        document.body.addEventListener('touchstart', () => {
-            this.enableMobileMode();
-        }, { once: true });
-    }
-
-    enableMobileMode() {
-        // Request Fullscreen
-        const docEl = document.documentElement;
-        if (docEl.requestFullscreen) {
-            docEl.requestFullscreen().catch(err => console.log("Fullscreen request failed", err));
-        } else if (docEl.webkitRequestFullscreen) { /* Safari */
-            docEl.webkitRequestFullscreen();
-        }
-
-        // Lock Orientation
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock("landscape").catch(err => console.log("Orientation lock failed/not supported", err));
-        }
     }
 }
 
@@ -987,11 +959,11 @@ try {
 
 // SHOP & ECONOMY SYSTEM
 const THEMES = {
-    CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.png" },
-    LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.png" },
-    MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.png" },
-    SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.png" },
-    VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.png" }
+    CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp" },
+    LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp" },
+    MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp" },
+    SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp" },
+    VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp" }
 };
 
 let economyData = {
@@ -1506,55 +1478,8 @@ const gameInterface = {
 };
 const inputHandler = new InputHandler(gameInterface);
 
-// ASSET PRELOADER
-const ASSETS_TO_LOAD = [
-    // Themes
-    'assets/Noir_plan.webp', 'assets/Radyoaktif_Lab.webp', 'assets/Simülasyon_plan.webp', 'assets/Neon Gelecek.webp', 'assets/Kuantum_plan.webp',
-    // Shop Icons
-    'assets/shop_icon_life.webp', 'assets/shop_icon_shield.webp', 'assets/shop_icon_wormhole.webp', 'assets/shop_icon_booster.webp',
-    'assets/noir.webp', 'assets/laboratuvar.webp', 'assets/simülasyon.webp', 'assets/neon.webp', 'assets/Kuantum.webp',
-    // Story Panels
-    'assets/story_panel_1.webp', 'assets/story_panel_2.webp', 'assets/story_panel_3.webp', 'assets/story_panel_4.webp', 'assets/story_panel_5.webp'
-];
-
-function preloadAssets(callback) {
-    let loadedCount = 0;
-    const total = ASSETS_TO_LOAD.length;
-
-    // Show Preloader UI (Optional or just rely on Loading Text)
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#39FF14";
-    ctx.font = "20px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("YÜKLENİYOR...", canvas.width / 2, canvas.height / 2);
-
-    ASSETS_TO_LOAD.forEach(src => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-            loadedCount++;
-            // Update Loading Bar if needed
-            if (loadedCount >= total) callback();
-        };
-        img.onerror = () => {
-            console.error("Asset Failed:", src);
-            loadedCount++; // Continue anyway
-            if (loadedCount >= total) callback();
-        };
-    });
-}
-
 // Initialize Game
 function initGame() {
-    // PRELOAD FIRST
-    preloadAssets(() => {
-        _initGameInternal();
-    });
-}
-
-function _initGameInternal() {
     initEconomy();
     const settings = DIFFICULTY_SETTINGS[currentDifficulty];
 
@@ -2210,14 +2135,14 @@ window.updateMenuBackground = () => {
     const bgLayer = document.getElementById('menu-background-layer');
     if (!bgLayer) return;
 
-    let bgUrl = 'assets/Noir_plan.png'; // Default
+    let bgUrl = 'assets/Noir_plan.webp'; // Default
     const t = economyData.equippedTheme;
 
-    if (t === 'CITY') bgUrl = 'assets/Noir_plan.png';
-    else if (t === 'LAB') bgUrl = 'assets/Radyoaktif_Lab.png';
-    else if (t === 'MATRIX') bgUrl = 'assets/Simülasyon_plan.png';
-    else if (t === 'SYNTHWAVE') bgUrl = 'assets/Neon Gelecek.png';
-    else if (t === 'VOID') bgUrl = 'assets/Kuantum_plan.png';
+    if (t === 'CITY') bgUrl = 'assets/Noir_plan.webp';
+    else if (t === 'LAB') bgUrl = 'assets/Radyoaktif_Lab.webp';
+    else if (t === 'MATRIX') bgUrl = 'assets/Simülasyon_plan.webp';
+    else if (t === 'SYNTHWAVE') bgUrl = 'assets/Neon Gelecek.webp';
+    else if (t === 'VOID') bgUrl = 'assets/Kuantum_plan.webp';
 
     bgLayer.style.backgroundImage = `url('${bgUrl}')`;
 };
