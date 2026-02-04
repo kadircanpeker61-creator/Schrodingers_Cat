@@ -105,8 +105,12 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
+            /* FIX: Center yerine flex-start yapıldı */
             align-items: center;
+            padding-top: max(30px, env(safe-area-inset-top));
+            /* Çentik için güvenli alan */
+            padding-bottom: max(30px, env(safe-area-inset-bottom));
             /* background: rgba(0, 0, 0, 0.85); REPLACED */
             background: transparent;
             z-index: 30;
