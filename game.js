@@ -466,53 +466,36 @@ class ObstacleManager {
         for (let g of this.groundSegments) {
             const isWhite = g.type === 'white';
 
-            // Base Colors
+            // BASE GROUND (Simplified for Performance)
+            // Instead of drawing 100+ rects per frame, we draw one big block.
+
+            // 1. Main Background
             ctx.fillStyle = isWhite ? '#b0b0b0' : '#080808';
             ctx.fillRect(g.x, groundY, g.width, height - groundY);
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(g.x, groundY, g.width, height - groundY);
-            ctx.clip(); // Keep patterns inside ground segment
-
-            // COBBLESTONE / TILE PATTERN
-            const tileSize = 40;
-            const rows = Math.ceil((height - groundY) / tileSize);
-            // Use Math.floor/ceil based on g.x offset to lock texture to world, not screen
-            // Texture should move with ground: startX should be aligned to world grid
-            // g.x is moving, so we draw relative to g.x
-
-            const cols = Math.ceil(g.width / tileSize);
-
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = isWhite ? 'rgba(255,255,255,0.3)' : 'rgba(50,50,50,0.5)';
+            // 2. Pattern Overlay (Simple Scanlines instead of complex tiles)
             ctx.fillStyle = isWhite ? 'rgba(255,255,255,0.1)' : 'rgba(20,20,20,0.5)';
+            ctx.strokeStyle = isWhite ? 'rgba(255,255,255,0.2)' : 'rgba(50,50,50,0.3)';
+            ctx.lineWidth = 2;
 
-            for (let r = 0; r < rows; r++) {
-                const yPos = groundY + (r * tileSize);
-                // Row offset for brick pattern
-                const offset = (r % 2 === 0) ? 0 : tileSize / 2;
+            // Draw simple vertical lines every 40px for tile effect
+            const startX = Math.floor(g.x / 40) * 40;
+            // Correct alignment so lines move with ground
 
-                // We iterate coverage of the segment width
-                // Start drawing slightly before 0 to cover scrolling edge if needed, 
-                // but here we are drawing inside the segment coordinate space relative to g.x?
-                // Actually, just iterating 0 to width is fine since we translate or just fill rects at x + ...
-
-                for (let c = -1; c < cols + 1; c++) {
-                    const xPos = g.x + (c * tileSize) + offset;
-
-                    // Random slight variation
-                    // const randomColor = Math.random() > 0.8 ? (isWhite ? '#ccc' : '#111') : (isWhite ? '#bbb' : '#0a0a0a');
-                    // ctx.fillStyle = randomColor; 
-
-                    // Draw Tile rect
-                    ctx.beginPath();
-                    // Slightly smaller to show mortar
-                    ctx.roundRect(xPos + 2, yPos + 2, tileSize - 4, tileSize - 4, 4);
-                    ctx.fill();
-                    ctx.stroke();
-                }
+            ctx.beginPath();
+            for (let lx = g.x; lx < g.x + g.width; lx += 40) {
+                ctx.moveTo(lx, groundY);
+                ctx.lineTo(lx, height);
             }
+            ctx.stroke();
+
+            // 3. Horizontal lines
+            ctx.beginPath();
+            for (let ly = groundY; ly < height; ly += 40) {
+                ctx.moveTo(g.x, ly);
+                ctx.lineTo(g.x + g.width, ly);
+            }
+            ctx.stroke();
 
             // Top Highlight Line
             ctx.fillStyle = isWhite ? '#fff' : '#333';
@@ -525,7 +508,7 @@ class ObstacleManager {
             ctx.fillStyle = grad;
             ctx.fillRect(g.x, height - 50, g.width, 50);
 
-            ctx.restore();
+            // Removed expensive clip/save/restore/nested loops for tiles
         }
 
         // --- URANIUM FLASK OBSTACLES (Uranyum Şişeleri) ---
@@ -540,7 +523,7 @@ class ObstacleManager {
             // 1. Şişe İçindeki Sıvı (Uranyum)
             ctx.fillStyle = '#39FF14'; // Neon Yeşil
             ctx.shadowColor = '#39FF14';
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 10; // Performance: Reduced from 20
 
             ctx.beginPath();
             // Sıvı seviyesi (hafif dalgalanma efekti)
@@ -915,28 +898,11 @@ const gameMsgEl = document.getElementById('game-message');
 const leftZone = document.getElementById('left-zone');
 const rightZone = document.getElementById('right-zone');
 
-// CANVAS SETUP - CRITICAL MISSING PART RESTORED
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+// CANVAS SETUP - MOVED TO END OF FILE FOR RESOLUTION CAP
+// Variable declarations removed to prevent duplication errors.
+// Main initialization is now handled by resizeCanvas() at bottom.
 
-let WIDTH = window.innerWidth;
-let HEIGHT = window.innerHeight;
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
-
-let GROUND_Y = HEIGHT - 100;
-
-// Handle Resize
-window.addEventListener('resize', () => {
-    WIDTH = window.innerWidth;
-    HEIGHT = window.innerHeight;
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;
-    GROUND_Y = HEIGHT - 100;
-    if (player) player.y = Math.min(player.y, GROUND_Y - player.height);
-    if (inputHandler) inputHandler.updateWidth(WIDTH);
-    if (backgroundLayers) backgroundLayers.forEach(l => l.width = WIDTH);
-});
+const SPEED_START = 8;
 
 
 
@@ -2277,6 +2243,57 @@ window.addEventListener('resize', () => {
     if (!isPlaying) drawStatic();
 });
 
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false }); // Optimization: Disable alpha channel if possible (though we use transparent backgrounds, check if layers stack. Actually we clearRect. Let's keep alpha false for bg layer, but game canvas needs alpha? Wait, canvas is on top of bg. Game canvas needs alpha.
+// Correction: Main canvas has game elements on top. Background is handled by game code drawing BG image or using separate div? 
+// Code shows: backgroundLayers.forEach... drawing into SAME ctx.
+// So ctx handles EVERYTHING.
+// We can use alpha: false potentially if we draw full screen opaque bg first.
+// `drawStatic` fills black. `draw` fills black. So yes, alpha: false is safe and faster.
+
+let WIDTH = window.innerWidth;
+let HEIGHT = window.innerHeight;
+let scaleRatio = 1;
+
+function resizeCanvas() {
+    const targetWidth = window.innerWidth;
+    const targetHeight = window.innerHeight;
+
+    // Performance limiting for High-DPI screens (Desktop 2K/4K)
+    const MAX_WIDTH = 1920;
+
+    if (targetWidth > MAX_WIDTH) {
+        scaleRatio = MAX_WIDTH / targetWidth;
+        canvas.width = MAX_WIDTH;
+        canvas.height = targetHeight * scaleRatio;
+    } else {
+        scaleRatio = 1;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+    }
+
+    // CSS always fills screen
+    canvas.style.width = targetWidth + 'px';
+    canvas.style.height = targetHeight + 'px';
+
+    // Update Logical Width/Height for game calculations
+    // Game logic uses WIDTH/HEIGHT. If we scale canvas, we must ensure coordinate system matches or we scale context.
+    // Easiest approach: Scale context so game logic thinks it's working in logic coordinates, but draws to smaller canvas.
+
+    ctx.scale(scaleRatio, scaleRatio);
+
+    // Logical Resolution (Game thinks screen is this big)
+    WIDTH = targetWidth;
+    HEIGHT = targetHeight;
+
+    GROUND_Y = HEIGHT - 100;
+
+    if (player) player.y = Math.min(player.y, GROUND_Y - player.height);
+    if (inputHandler) inputHandler.updateWidth(WIDTH);
+    if (backgroundLayers) backgroundLayers.forEach(l => l.width = WIDTH);
+    if (!isPlaying) drawStatic();
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Init
 drawStatic();
