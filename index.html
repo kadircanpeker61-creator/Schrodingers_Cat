@@ -3164,7 +3164,11 @@
         }
 
         function createRain() {
-            for (let i = 0; i < 80; i++) {
+            const isMobile = window.innerWidth < 768;
+            const dropCount = isMobile ? 30 : 80; // Mobilde daha az yağmur
+
+            rainDrops = []; // Reset array
+            for (let i = 0; i < dropCount; i++) {
                 rainDrops.push({
                     x: Math.random() * WIDTH,
                     y: Math.random() * HEIGHT,
@@ -3186,7 +3190,10 @@
         }
 
         function createDust(x, y) {
-            for (let i = 0; i < 5; i++) {
+            const isMobile = window.innerWidth < 768;
+            const count = isMobile ? 2 : 5; // Mobilde daha az toz
+
+            for (let i = 0; i < count; i++) {
                 particles.push({
                     x: x, y: y,
                     vx: (Math.random() - 0.5) * 4,
@@ -3288,23 +3295,39 @@
             ctx.restore();
         }
 
+        // FPS CONTROL
+        let lastFrameTime = 0;
+        const targetFPS = 60;
+        const frameInterval = 1000 / targetFPS;
+
         function loop(timeStamp) {
             if (!isPlaying) return;
 
+            requestAnimationFrame(loop);
+
+            // Throttle FPS to targetFPS (60)
+            const elapsed = timeStamp - lastFrameTime;
+            if (elapsed < frameInterval) return;
+
+            // Adjust for stable rhythm
+            lastFrameTime = timeStamp - (elapsed % frameInterval);
+
             // Pause if in Portrait Mode
             if (window.innerHeight > window.innerWidth) {
-                lastTime = timeStamp; // Prevent dt jump
-                requestAnimationFrame(loop);
+                lastTime = timeStamp;
                 return;
             }
 
             if (!lastTime) lastTime = timeStamp;
             const deltaTimeMs = timeStamp - lastTime;
-            lastTime = timeStamp;
-            const dt = deltaTimeMs / 16.66;
+            // Prevent huge delta jumps (max 100ms)
+            const safeDelta = Math.min(deltaTimeMs, 100);
+
+            lastTime = timeStamp; // Reset for next valid frame
+
+            const dt = safeDelta / 16.66;
             update(dt);
             draw();
-            requestAnimationFrame(loop);
         }
 
         function showMessage(msg) {
