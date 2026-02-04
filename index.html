@@ -593,7 +593,7 @@
 
         .story-img-container {
             width: 100%;
-            aspect-ratio: 1/1;
+            aspect-ratio: 16/9;
             margin-bottom: 20px;
             border: 4px solid #fff;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
@@ -1808,12 +1808,12 @@
                 this.speed = 0;
                 this.theme = theme;
 
-                // ASSET MAPPING - Using Validated Filenames
+                // ASSET MAPPING - Using Converted WebP (Optimized)
                 const themeAssets = {
                     'CITY': 'assets/Noir_plan.webp',
                     'LAB': 'assets/Radyoaktif_Lab.webp',
-                    'MATRIX': 'assets/Simülasyon_plan.webp', // Ensure UTF-8 saved
-                    'SYNTHWAVE': 'assets/Neon Gelecek.webp', // Space is part of filename
+                    'MATRIX': 'assets/Simülasyon_plan.webp',
+                    'SYNTHWAVE': 'assets/Neon_Gelecek.webp', // Renamed to remove space
                     'VOID': 'assets/Kuantum_plan.webp'
                 };
 
