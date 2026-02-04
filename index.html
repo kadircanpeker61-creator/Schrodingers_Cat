@@ -1086,6 +1086,84 @@
             }
         }
 
+        /* -------------------------------------------
+           MOBILE FONT OPTIMIZATION (Step 6)
+           ------------------------------------------- */
+        @media (max-width: 768px) {
+            html {
+                font-size: 18px;
+                /* Base font bump */
+            }
+
+            /* Buttons & Inputs */
+            .btn,
+            .btn-secondary,
+            .buy-btn {
+                font-size: 1rem !important;
+                /* Enforce readable button text */
+                padding: 12px 20px;
+                /* Larger touch targets */
+            }
+
+            input[type="text"] {
+                font-size: 16px !important;
+                /* Prevents iOS auto-zoom */
+                padding: 12px;
+            }
+
+            /* Typography */
+            .main-title {
+                font-size: 3rem !important;
+            }
+
+            .sub-title {
+                font-size: 0.9rem !important;
+                letter-spacing: 0.3em !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            /* Shop & Items */
+            .item-title {
+                font-size: 1.1rem !important;
+            }
+
+            .item-desc {
+                font-size: 0.9rem !important;
+            }
+
+            .shop-balance {
+                font-size: 1.8rem !important;
+            }
+
+            /* Badges */
+            .badge-title {
+                font-size: 1rem !important;
+            }
+
+            .badge-desc {
+                font-size: 0.8rem !important;
+            }
+
+            /* slightly smaller than 0.85 to fit grid */
+            .badge-icon {
+                font-size: 2.2rem !important;
+            }
+
+            /* Scoreboard */
+            .score-row {
+                font-size: 1rem !important;
+                padding: 12px 0 !important;
+            }
+
+            .tab-btn {
+                font-size: 1rem !important;
+                padding: 12px 10px !important;
+            }
+        }
+
         /* YATAY MOD ZORUNLULUĞU */
         #rotate-warning {
             display: none;
