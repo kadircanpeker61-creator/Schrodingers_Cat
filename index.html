@@ -157,12 +157,6 @@
             touch-action: pan-y;
         }
 
-        /* FIX 5: Shop Scroll Layout */
-        #shop-screen {
-            justify-content: flex-start;
-            overflow-y: auto;
-        }
-
         .hidden {
             display: none !important;
         }
@@ -2453,7 +2447,6 @@
                 const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
 
                 zones.forEach(zone => {
-                    if (!zone) return; // Safety check
                     if (isMobile) {
                         // Sadece touch eventleri
                         zone.addEventListener('touchstart', (e) => {
@@ -2521,10 +2514,22 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        let WIDTH, HEIGHT, dpr;
+        const dpr = window.devicePixelRatio || 1;
+        let WIDTH = window.innerWidth;
+        let HEIGHT = window.innerHeight;
 
-        function resizeCanvas() {
-            dpr = window.devicePixelRatio || 1;
+        canvas.width = WIDTH * dpr;
+        canvas.height = HEIGHT * dpr;
+        canvas.style.width = WIDTH + 'px';
+        canvas.style.height = HEIGHT + 'px';
+
+        ctx.scale(dpr, dpr);
+
+        let GROUND_Y = HEIGHT - 100;
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            const dpr = window.devicePixelRatio || 1;
             WIDTH = window.innerWidth;
             HEIGHT = window.innerHeight;
 
@@ -2537,16 +2542,10 @@
             ctx.scale(dpr, dpr);
 
             GROUND_Y = HEIGHT - 100;
-            if (window.inputHandler) window.inputHandler.updateWidth(WIDTH);
-            if (window.backgroundLayers) window.backgroundLayers.forEach(l => { l.width = WIDTH; l.height = HEIGHT; });
-            if (!isPlaying) drawStatic();
-        }
-
-        // Initial Resize
-        resizeCanvas();
-
-        // Handle Resize
-        window.addEventListener('resize', resizeCanvas);
+            if (player) player.y = Math.min(player.y, GROUND_Y - player.height);
+            if (inputHandler) inputHandler.updateWidth(WIDTH);
+            if (backgroundLayers) backgroundLayers.forEach(l => { l.width = WIDTH; l.height = HEIGHT; });
+        });
 
 
 
