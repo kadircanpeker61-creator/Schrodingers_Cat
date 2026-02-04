@@ -1292,6 +1292,7 @@
                 <button class="btn btn-secondary flex-1" onclick="openScoreboard()">SKORLAR</button>
             </div>
             <button class="btn btn-secondary w-full mt-2" onclick="openBadges()">ROZETLER 🎖️</button>
+            <button class="btn btn-secondary w-full mt-2" onclick="openSettings()">AYARLAR ⚙️</button>
 
             <!-- DEV TOOLS -->
             <div class="flex gap-2 justify-center mt-6 opacity-40 hover:opacity-100 transition-opacity">
@@ -1424,6 +1425,40 @@
         </div>
 
         <button class="btn btn-secondary mb-4 mt-0" style="flex-shrink: 0;" onclick="closeBadges()">KAPAT</button>
+    </div>
+
+    <!-- AYARLAR EKRANI -->
+    <div id="settings-screen" class="screen hidden" style="justify-content: center; align-items: center;">
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">AYARLAR
+        </h2>
+
+        <div class="flex flex-col gap-6 w-full max-w-sm px-4">
+            <!-- Music Volume Control -->
+            <div class="flex flex-col gap-2">
+                <label class="text-[#39FF14] font-mono font-bold text-lg">MÜZİK: <span
+                        id="music-vol-display">30%</span></label>
+                <input type="range" id="music-volume-slider" min="0" max="100" value="30"
+                    class="accent-[#39FF14] w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    oninput="updateMusicVolume(this.value)">
+            </div>
+
+            <!-- SFX Volume Control -->
+            <div class="flex flex-col gap-2">
+                <label class="text-[#39FF14] font-mono font-bold text-lg">SES EFEKTLERİ: <span
+                        id="sfx-vol-display">30%</span></label>
+                <input type="range" id="sfx-volume-slider" min="0" max="100" value="30"
+                    class="accent-[#39FF14] w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    oninput="updateSfxVolume(this.value)">
+            </div>
+
+            <!-- Mute Toggle -->
+            <div class="flex items-center justify-between border border-gray-700 p-4 rounded bg-black/50">
+                <span class="text-white font-mono text-lg">SESİ KAPAT (MUTE)</span>
+                <button id="mute-btn" class="btn-secondary py-2 px-4" onclick="toggleMute()">AÇIK</button>
+            </div>
+
+            <button class="btn btn-secondary mt-8" onclick="closeSettings()">KAPAT</button>
+        </div>
     </div>
 
     <div id="story-screen" class="screen hidden"
@@ -1583,8 +1618,18 @@
                 this.isMusicPlaying = false;
                 this.musicSource = null;
                 this.musicGain = null;
+                this.sfxGain = null;
                 this.masterGain = null;
                 this.currentTheme = null;
+
+                // Settings Defaults
+                this.musicVolume = parseFloat(localStorage.getItem('musicVolume'));
+                if (isNaN(this.musicVolume)) this.musicVolume = 0.3;
+
+                this.sfxVolume = parseFloat(localStorage.getItem('sfxVolume'));
+                if (isNaN(this.sfxVolume)) this.sfxVolume = 0.3;
+
+                this.isMuted = localStorage.getItem('gameMuted') === 'true';
 
                 // Müzik Dosyaları Eşleştirmesi
                 this.themeFiles = {
@@ -1602,18 +1647,51 @@
                 if (!this.ctx) {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     this.ctx = new AudioContext();
+
+                    // Master Gain (Used for Mute logic mainly)
                     this.masterGain = this.ctx.createGain();
-                    this.masterGain.gain.value = 0.3; // Master volume
+                    this.masterGain.gain.value = this.isMuted ? 0 : 1;
                     this.masterGain.connect(this.ctx.destination);
 
-                    // Müzik kanalı için ayrı gain
+                    // Music Channel
                     this.musicGain = this.ctx.createGain();
-                    this.musicGain.gain.value = 0.6; // Müzik sesi
+                    this.musicGain.gain.value = this.musicVolume;
                     this.musicGain.connect(this.masterGain);
+
+                    // SFX Channel
+                    this.sfxGain = this.ctx.createGain();
+                    this.sfxGain.gain.value = this.sfxVolume;
+                    this.sfxGain.connect(this.masterGain);
                 }
 
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
+                }
+            }
+
+            setMusicVolume(val) {
+                this.musicVolume = val;
+                localStorage.setItem('musicVolume', val);
+                if (this.musicGain) {
+                    this.musicGain.gain.setValueAtTime(val, this.ctx.currentTime);
+                }
+            }
+
+            setSfxVolume(val) {
+                this.sfxVolume = val;
+                localStorage.setItem('sfxVolume', val);
+                if (this.sfxGain) {
+                    this.sfxGain.gain.setValueAtTime(val, this.ctx.currentTime);
+                }
+            }
+
+            setMute(state) {
+                this.isMuted = state;
+                localStorage.setItem('gameMuted', state);
+                if (this.masterGain) {
+                    // Toggle Master between 0 and 1. Individual volumes are kept in their own gain nodes.
+                    const target = state ? 0 : 1;
+                    this.masterGain.gain.setValueAtTime(target, this.ctx.currentTime);
                 }
             }
 
@@ -1646,7 +1724,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
 
                 osc.connect(gain);
-                gain.connect(this.masterGain);
+                gain.connect(this.sfxGain); // Connect to SFX Gain
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.15);
             }
@@ -1662,7 +1740,7 @@
                 gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
 
-                gain.connect(this.masterGain);
+                gain.connect(this.sfxGain); // Connect to SFX Gain
                 osc.connect(gain);
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.1);
@@ -1686,7 +1764,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
 
                 osc.connect(gain);
-                gain.connect(this.masterGain);
+                gain.connect(this.sfxGain); // Connect to SFX Gain
 
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.1);
@@ -1702,7 +1780,7 @@
                 gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
                 osc.connect(gain);
-                gain.connect(this.masterGain);
+                gain.connect(this.sfxGain); // Connect to SFX Gain
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.1);
             }
@@ -1726,7 +1804,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.0);
 
                 osc.connect(gain);
-                gain.connect(this.masterGain);
+                gain.connect(this.sfxGain); // Connect to SFX Gain
                 osc.start();
                 osc.stop(this.ctx.currentTime + 1.0);
             }
@@ -2951,6 +3029,67 @@
         function closeBadges() {
             document.getElementById('badges-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // --- SETTINGS UI ---
+        function openSettings() {
+            // Sync UI with current Audio Manager state
+            const musicSlider = document.getElementById('music-volume-slider');
+            const musicDisplay = document.getElementById('music-vol-display');
+            const sfxSlider = document.getElementById('sfx-volume-slider');
+            const sfxDisplay = document.getElementById('sfx-vol-display');
+            const muteBtn = document.getElementById('mute-btn');
+
+            // Music
+            const musicVol = (audioManager.musicVolume !== undefined) ? audioManager.musicVolume : 0.3;
+            musicSlider.value = Math.round(musicVol * 100);
+            musicDisplay.innerText = musicSlider.value + "%";
+
+            // SFX
+            const sfxVol = (audioManager.sfxVolume !== undefined) ? audioManager.sfxVolume : 0.3;
+            sfxSlider.value = Math.round(sfxVol * 100);
+            sfxDisplay.innerText = sfxSlider.value + "%";
+
+            // Mute
+            const isMuted = audioManager.isMuted;
+            muteBtn.innerText = isMuted ? "KAPALI" : "AÇIK";
+            muteBtn.style.color = isMuted ? "red" : "#39FF14";
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('settings-screen').classList.remove('hidden');
+            audioManager.playMenuClick();
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            audioManager.playMenuClick();
+        }
+
+        function updateMusicVolume(val) {
+            const vol = parseInt(val);
+            document.getElementById('music-vol-display').innerText = vol + "%";
+            audioManager.setMusicVolume(vol / 100);
+        }
+
+        function updateSfxVolume(val) {
+            const vol = parseInt(val);
+            document.getElementById('sfx-vol-display').innerText = vol + "%";
+            audioManager.setSfxVolume(vol / 100);
+        }
+
+        function toggleMute() {
+            const currentState = audioManager.isMuted;
+            const newState = !currentState;
+
+            audioManager.setMute(newState);
+
+            const muteBtn = document.getElementById('mute-btn');
+            muteBtn.innerText = newState ? "KAPALI" : "AÇIK";
+            muteBtn.style.color = newState ? "red" : "#39FF14";
+
+            // Also update slider visual if needed or leave as is (slider shows 'potential' volume)
+            audioManager.playMenuClick();
         }
 
         function renderBadges() {
