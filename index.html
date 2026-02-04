@@ -1524,6 +1524,41 @@
     </div>
 
     <script>
+        // WEBP SUPPORT CHECK (Step 8)
+        let supportsWebP = true; // Assume TRUE initially to prevent flash of wrong content
+
+        function checkWebPSupport() {
+            const elem = document.createElement('canvas');
+            if (!!(elem.getContext && elem.getContext('2d'))) {
+                // Was able to create canvas, now check toDataURL
+                supportsWebP = elem.toDataURL('image/webp').indexOf('data:image/webp') == 0;
+            } else {
+                supportsWebP = false;
+            }
+            console.log("WebP Support:", supportsWebP);
+            if (!supportsWebP) convertStaticImagesToPng();
+        }
+
+        // Helper to get correct extension
+        function getAssetPath(filename) {
+            if (supportsWebP) return filename; // Filename already has .webp
+            return filename.replace('.webp', '.png');
+        }
+
+        function convertStaticImagesToPng() {
+            // Convert all <img> tags currently in DOM
+            document.querySelectorAll('img').forEach(img => {
+                if (img.src.includes('.webp')) {
+                    img.src = img.src.replace('.webp', '.png');
+                }
+            });
+            // Convert background images if needed (complex, usually handled by JS re-render)
+            updateMenuBackground();
+        }
+
+        // Run Check Immediately
+        checkWebPSupport();
+
         class AudioManager {
             constructor() {
                 this.ctx = null;
@@ -1545,6 +1580,21 @@
 
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
+                }
+            }
+
+            // IOS UNLOCK (Step 11)
+            unlockAudio() {
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().then(() => {
+                        console.log("Audio Context Force Resumed");
+                        // Play silent buffer to effectively unlock
+                        const buffer = this.ctx.createBuffer(1, 1, 22050);
+                        const source = this.ctx.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(this.ctx.destination);
+                        source.start(0);
+                    });
                 }
             }
 
@@ -2672,9 +2722,9 @@
             // ----------------------------------
 
             // Periodic Passive Check
-            if (!window.passiveCheckInterval) {
-                window.passiveCheckInterval = setInterval(checkPassiveBadges, 30000); // Check every 30s
-            }
+            // Periodic Passive Check
+            if (window.passiveCheckInterval) clearInterval(window.passiveCheckInterval);
+            window.passiveCheckInterval = setInterval(checkPassiveBadges, 30000); // Check every 30s
 
             updateShopUI();
             updateLoadoutUI();
@@ -3525,11 +3575,36 @@
             saveData();
         }
 
+        // WAKE LOCK LOGIC (Step 12)
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active!');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released');
+                    });
+                }
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+
+        // Re-request lock on visibility change
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+
         window.startGame = () => {
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
             document.body.style.height = '100%';
+
+            requestWakeLock(); // Prevent Screen Sleep
 
             audioManager.init();
 
@@ -3710,7 +3785,7 @@
                     }
 
                     const iconHtml = theme.img ?
-                        `<img src="${theme.img}" class="shop-icon-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #333;">` :
+                        `<img src="${getAssetPath(theme.img)}" class="shop-icon-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #333;">` :
                         `<div class="item-icon" style="color:${theme.color};"><i class="fa-solid ${theme.icon}"></i></div>`;
 
                     item.innerHTML = `
@@ -3731,14 +3806,14 @@
             const bgLayer = document.getElementById('menu-background-layer');
             if (!bgLayer) return;
 
-            let bgUrl = 'assets/Noir_plan.webp'; // Default
+            let bgUrl = getAssetPath('assets/Noir_plan.webp'); // Default
             const t = economyData.equippedTheme;
 
-            if (t === 'CITY') bgUrl = 'assets/Noir_plan.webp';
-            else if (t === 'LAB') bgUrl = 'assets/Radyoaktif_Lab.webp';
-            else if (t === 'MATRIX') bgUrl = 'assets/Simülasyon_plan.webp';
-            else if (t === 'SYNTHWAVE') bgUrl = 'assets/Neon Gelecek.webp';
-            else if (t === 'VOID') bgUrl = 'assets/Kuantum_plan.webp';
+            if (t === 'CITY') bgUrl = getAssetPath('assets/Noir_plan.webp');
+            else if (t === 'LAB') bgUrl = getAssetPath('assets/Radyoaktif_Lab.webp');
+            else if (t === 'MATRIX') bgUrl = getAssetPath('assets/Simülasyon_plan.webp');
+            else if (t === 'SYNTHWAVE') bgUrl = getAssetPath('assets/Neon Gelecek.webp');
+            else if (t === 'VOID') bgUrl = getAssetPath('assets/Kuantum_plan.webp');
 
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
         };
@@ -3879,6 +3954,15 @@
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
         drawStatic();
+
+        // IOS AUDIO UNLOCK INITIALIZATION (Step 11)
+        function unlockIOSAudio() {
+            audioManager.unlockAudio();
+            document.removeEventListener('touchstart', unlockIOSAudio);
+            document.removeEventListener('click', unlockIOSAudio);
+        }
+        document.addEventListener('touchstart', unlockIOSAudio, { passive: false });
+        document.addEventListener('click', unlockIOSAudio);
     </script>
 
 </body>
