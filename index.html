@@ -14,12 +14,18 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden;
+            overflow: hidden !important;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            /* Prevent bouncing */
             font-family: 'Montserrat', sans-serif;
             background-color: #111;
             touch-action: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            /* iOS Safe Area */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         canvas {
@@ -107,6 +113,26 @@
             /* Enable interactions in screens */
             touch-action: auto;
             pointer-events: auto;
+
+            /* SCROLL AYARLARI */
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        /* Shop scroll wrapper özel */
+        .shop-scroll-wrapper {
+            width: 100%;
+            max-width: 800px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 40px 20px 150px 20px !important;
+            /* Alt padding bol olsun */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         /* Screen content scrollable areas need pan-y */
@@ -3388,6 +3414,11 @@
         }
 
         window.startGame = () => {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
+
             audioManager.init();
 
             playerName = playerNameInput.value || "KEDI";
@@ -3711,6 +3742,9 @@
         };
 
         window.showMenu = () => {
+            document.body.style.overflow = 'hidden'; // Ensure locked even in menu
+            document.body.style.position = 'fixed'; // Keep fixed
+
             gameOverScreen.classList.add('hidden');
             storyScreen.classList.add('hidden');
             scoreboardScreen.classList.add('hidden');
