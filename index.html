@@ -1060,7 +1060,321 @@
         kutunun sınırlarını aştı. <br><br>Kutudan büyük bir enerji patlamasıyla fırladı. </div></div>< !-- SCENE 5 --><div class="story-scene" id="scene-5"><div class="story-img-container"><img src="assets/story_panel_5.webp" class="story-img"></div><div class="story-caption"><span class="text-[#39FF14] font-bold">KAÇIŞ.</span><br>Şimdi sonsuz bir kuantum tünelinde,
         neon ışıkları altında koşuyor. <br><br>Durursa yok olacak. <span class="text-white font-bold">KOŞMAK ZORUNDA.</span></div></div><div class="story-controls"><button class="btn btn-secondary" id="btn-prev-story" onclick="changeStoryPage(-1)">GERİ</button><span class="text-white font-mono" id="story-page-num">1 / 5</span><button class="btn" id="btn-next-story" onclick="changeStoryPage(1)">İLERİ</button></div><button class="text-gray-500 hover:text-white mb-6" onclick="closeStory()">KAPAT</button></div><div id="game-over-screen" class="screen hidden" style="background: rgba(0,0,0,0.9);"><h2 class="text-4xl text-white font-black mb-2 tracking-tighter">DENEY SONLANDI</h2><p id="death-reason" class="text-gray-400 font-mono text-sm mb-8 text-center px-4 max-w-md">...</p><div class="text-6xl font-black text-white mb-2 font-mono" id="final-score">0000</div><p class="text-gray-600 text-xs uppercase mb-2">SON SKOR</p><p class="text-[#39FF14] text-xs uppercase mb-4 font-mono">+<span id="earned-atoms">0</span>ATOM KAZANDIN</p>< !-- QUICK LOADOUT UI --><p class="text-gray-500 text-[10px] tracking-widest uppercase mb-2">HIZLI EKİPMAN SEÇİMİ</p><div class="loadout-container mb-6"><div class="loadout-item" id="quick-shield" onclick="toggleLoadout('shield')"><img src="assets/shop_icon_shield.webp"><div class="loadout-count" id="quick-count-shield">0</div></div><div class="loadout-item" id="quick-wormhole" onclick="toggleLoadout('wormhole')"><img src="assets/shop_icon_wormhole.webp"><div class="loadout-count" id="quick-count-wormhole">0</div></div><div class="loadout-item" id="quick-booster" onclick="toggleLoadout('booster')"><img src="assets/shop_icon_booster.webp"><div class="loadout-count" id="quick-count-booster">0</div></div></div><button id="btn-revive" class="hidden btn" style="border: 2px solid red; color: red;"
 
+<<<<<<< HEAD
         onclick="revivePlayer()">HAYATA DÖN (1 ❤️)</button><button class="btn" onclick="resetGame()">HEMEN BAŞLAT</button><button class="text-gray-500 mt-4 text-xs uppercase hover:text-white font-mono" onclick="showMenu()">ANA MENÜ</button></div><script>class AudioManager {
+=======
+    <div class="film-grain"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="left-zone" class="control-zone"><i class="fa-solid fa-arrow-up"></i></div>
+    <div id="right-zone" class="control-zone"><i class="fa-solid fa-repeat"></i></div>
+
+    <div id="ui-layer">
+        <div class="score-container">
+            <div id="score-display" class="text-4xl font-black text-gray-500 font-mono">00000</div>
+            <div id="active-buffs-display" class="active-buffs"></div>
+            <div id="high-score" class="text-sm font-bold text-gray-700 mt-1 font-mono">HI: 00000</div>
+            <div id="lives-display" class="text-xl font-bold text-red-500 mt-1 font-mono text-right hidden">❤️ x 0</div>
+        </div>
+        <div id="game-message"
+            class="absolute top-1/3 left-1/2 transform -translate-x-1/2 text-center w-full opacity-0 transition-opacity duration-500">
+            <span
+                class="text-xl font-bold text-white bg-black/70 px-6 py-2 border-l-4 border-white tracking-widest font-mono">HIZLANIYOR...</span>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="start-screen" class="screen">
+        <div id="menu-background-layer"></div>
+
+        <div class="title-frame">
+            <h1 class="font-black text-white tracking-tighter text-center main-title">SCHRÖDINGER</h1>
+            <p class="text-gray-300 font-mono tracking-[0.5em] uppercase sub-title">- VİYANA 1935 -</p>
+        </div>
+
+        <input type="text" id="player-name" value="KEDI" maxlength="8">
+
+        <!-- LOADOUT UI -->
+        <div class="loadout-container">
+            <div class="loadout-item" id="loadout-shield" onclick="toggleLoadout('shield')">
+                <img src="assets/shop_icon_shield.png">
+                <div class="loadout-count" id="count-shield">0</div>
+            </div>
+            <div class="loadout-item" id="loadout-wormhole" onclick="toggleLoadout('wormhole')">
+                <img src="assets/shop_icon_wormhole.png">
+                <div class="loadout-count" id="count-wormhole">0</div>
+            </div>
+            <div class="loadout-item" id="loadout-booster" onclick="toggleLoadout('booster')">
+                <img src="assets/shop_icon_booster.png">
+                <div class="loadout-count" id="count-booster">0</div>
+            </div>
+        </div>
+
+        <div class="difficulty-container">
+            <button class="btn-difficulty" onclick="setDifficulty('EASY')">KOLAY</button>
+            <button class="btn-difficulty active" onclick="setDifficulty('NORMAL')">NORMAL</button>
+            <button class="btn-difficulty" onclick="setDifficulty('HARD')">ZOR</button>
+        </div>
+
+        <div class="tutorial-row">
+            <div class="tut-item">
+                <div class="tut-icon"><i class="fa-solid fa-arrow-up"></i></div>
+                <div class="tut-desc">ZIPLA</div>
+            </div>
+            <div class="tut-item">
+                <div class="tut-icon"><i class="fa-solid fa-repeat"></i></div>
+                <div class="tut-desc">DÖNÜŞTÜR</div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <button class="btn" onclick="startGame()">DENEYİ BAŞLAT</button>
+            <button class="btn btn-secondary" style="border-color: #39FF14; color: #39FF14;" onclick="openShop()">MAĞAZA
+                ⚛</button>
+            <div class="flex gap-2">
+                <button class="btn btn-secondary flex-1" onclick="openStory()">DOSYA</button>
+                <button class="btn btn-secondary flex-1" onclick="openScoreboard()">SKORLAR</button>
+            </div>
+            <button class="btn btn-secondary w-full mt-2" onclick="openBadges()">ROZETLER 🎖️</button>
+
+            <!-- DEV TOOLS -->
+            <div class="flex gap-2 justify-center mt-6 opacity-40 hover:opacity-100 transition-opacity">
+                <button
+                    class="text-[10px] text-red-500 font-mono border border-red-900 px-2 py-1 rounded hover:bg-red-900"
+                    onclick="resetProgress()">⚠️ SIFIRLA</button>
+                <button
+                    class="text-[10px] text-green-500 font-mono border border-green-900 px-2 py-1 rounded hover:bg-green-900"
+                    onclick="addDebugAtoms()">⚛ ATOM EKLE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAĞAZA EKRANI -->
+    <div id="shop-screen" class="screen hidden"
+        style="justify-content: flex-start; overflow-y: auto; display: block; padding: 0;">
+        <div class="shop-scroll-wrapper"
+            style="min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center;">
+            <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">
+                MAĞAZA
+            </h2>
+
+            <div class="shop-balance">
+                <span>⚛ <span id="atom-display">0</span></span>
+            </div>
+
+            <h2
+                class="text-xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono w-full max-w-[800px]">
+                GÜÇLENDİRİCİLER</h2>
+
+            <div class="shop-items-container">
+                <!-- CAN -->
+                <div class="shop-item" onclick="buyItem('LIFE')">
+                    <div class="item-icon"><img src="assets/shop_icon_life.png" class="shop-icon-img" alt="Can"></div>
+                    <div class="item-info">
+                        <div class="item-title">EKSTRA CAN</div>
+                        <div class="item-desc">Öldüğünde bir şans daha verir.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-life">0</span></div>
+                    </div>
+                    <button class="buy-btn" id="btn-buy-life">500 ⚛</button>
+                </div>
+
+                <!-- KALKAN -->
+                <div class="shop-item" onclick="buyItem('SHIELD')">
+                    <div class="item-icon"><img src="assets/shop_icon_shield.png" class="shop-icon-img" alt="Kalkan">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-title">KUANTUM KALKANI</div>
+                        <div class="item-desc">İlk çarpışmayı yok sayar.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-shield">0</span></div>
+                    </div>
+                    <button class="buy-btn" id="btn-buy-shield">1000 ⚛</button>
+                </div>
+
+                <!-- SOLUCAN DELİĞİ -->
+                <div class="shop-item" onclick="buyItem('WORMHOLE')">
+                    <div class="item-icon"><img src="assets/shop_icon_wormhole.png" class="shop-icon-img" alt="Solucan">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-title">SOLUCAN DELİĞİ</div>
+                        <div class="item-desc">1000 Puan ileriden başlatır.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-wormhole">0</span></div>
+                    </div>
+                    <button class="buy-btn" id="btn-buy-wormhole">300 ⚛</button>
+                </div>
+
+                <!-- BOOST -->
+                <div class="shop-item" onclick="buyItem('BOOSTER')">
+                    <div class="item-icon"><img src="assets/shop_icon_booster.png" class="shop-icon-img" alt="Booster">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-title">ÇİFTE KAZANÇ</div>
+                        <div class="item-desc">Bir sonraki tur 2x Atom kazandırır.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-booster">0</span></div>
+                    </div>
+                    <button class="buy-btn" id="btn-buy-booster">200 ⚛</button>
+                </div>
+            </div>
+
+            <h2 class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
+                EVRENLER</h2>
+            <div class="shop-items-container" id="themes-list">
+                <!-- Temalar JS ile buraya gelecek -->
+            </div>
+
+            <div class="text-gray-500 text-xs font-mono mt-6 text-center mb-4">BAŞLANGIÇ EKRANINDAN SEÇEREK
+                KULLANABİLİRSİNİZ</div>
+
+            <button class="btn btn-secondary mt-8 mb-8" onclick="closeShop()">KAPAT</button>
+        </div> <!-- End Wrapper -->
+    </div>
+
+    <!-- SKOR TABLOSU EKRANI -->
+    <div id="scoreboard-screen" class="screen hidden" style="justify-content: flex-start; padding-top: 50px;">
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">LİDER
+            TABLOSU</h2>
+
+        <div class="tab-container">
+            <div class="tab-btn" onclick="showLeaderboardTab('EASY')" id="tab-EASY">KOLAY</div>
+            <div class="tab-btn active" onclick="showLeaderboardTab('NORMAL')" id="tab-NORMAL">NORMAL</div>
+            <div class="tab-btn" onclick="showLeaderboardTab('HARD')" id="tab-HARD">ZOR</div>
+        </div>
+
+        <div class="story-container" id="leaderboard-list">
+            <!-- Skorlar buraya JS ile gelecek -->
+        </div>
+
+        <button class="btn btn-secondary mb-10" onclick="closeScoreboard()">KAPAT</button>
+    </div>
+
+    <!-- ROZETLER EKRANI -->
+    <div id="badges-screen" class="screen hidden"
+        style="justify-content: flex-start; padding-top: 50px; overflow-y: auto;">
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">
+            GÖREVLER & ROZETLER
+        </h2>
+
+        <div class="story-container"
+            style="width: 95%; max-width: 800px; display: flex; flex-direction: column; height: 70vh;">
+
+            <!-- Badges Grid -->
+            <div id="badges-list" class="shop-items-container"
+                style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); overflow-y: auto; padding-right: 10px; flex-grow: 1;">
+                <!-- Badges will be populated by JS -->
+            </div>
+
+            <!-- Pagination Controls Removed -->
+        </div>
+
+        <button class="btn btn-secondary mb-10 mt-4" onclick="closeBadges()">KAPAT</button>
+    </div>
+
+    <div id="story-screen" class="screen hidden"
+        style="justify-content: flex-start; padding-top: 20px; overflow-y: auto;">
+        <h2 class="text-2xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono">DOSYA
+            #1935</h2>
+
+        <!-- SCENE 1 -->
+        <div class="story-scene active" id="scene-1">
+            <div class="story-img-container"><img src="assets/story_panel_1.png" class="story-img"></div>
+            <div class="story-caption">
+                <span class="text-[#39FF14] font-bold">1935, VİYANA.</span><br>
+                Profesör Erwin Schrödinger, kuantum mekaniğinin tuhaflığını kanıtlamak istedi.
+                <br><br>
+                Soğuk, metal bir kutu. Radyoaktif bir atom. Ve masum bir kedi...
+            </div>
+        </div>
+
+        <!-- SCENE 2 -->
+        <div class="story-scene" id="scene-2">
+            <div class="story-img-container"><img src="assets/story_panel_2.png" class="story-img"></div>
+            <div class="story-caption">
+                <span class="text-[#39FF14] font-bold">DENEK.</span><br>
+                Kedi kutuya kondu. Yanına zehirli bir gaz şişesi yerleştirildi.
+                <br><br>
+                Atom bozulursa şişe kırılacak. Bozulmazsa kedi yaşayacak.
+                Kaderi, %50 ihtimale bağlıydı.
+            </div>
+        </div>
+
+        <!-- SCENE 3 -->
+        <div class="story-scene" id="scene-3">
+            <div class="story-img-container"><img src="assets/story_panel_3.png" class="story-img"></div>
+            <div class="story-caption">
+                <span class="text-[#39FF14] font-bold">SÜPERPOZİSYON.</span><br>
+                Kutu kapandı. Dışarıdan bakıldığında kedi artık ne canlı ne de ölüydü.
+                <br><br>
+                Evrenin dokusu yırtıldı. Varlığı hem iskelet hem de et arasında gidip geliyordu.
+            </div>
+        </div>
+
+        <!-- SCENE 4 -->
+        <div class="story-scene" id="scene-4">
+            <div class="story-img-container"><img src="assets/story_panel_4.png" class="story-img"></div>
+            <div class="story-caption">
+                <span class="text-[#39FF14] font-bold">KIRILMA NOKTASI.</span><br>
+                Ama kedi bir gözlemci olmayı reddetti!<br>
+                Kendi kaderini kendi ölçtü. Paradoks, kutunun sınırlarını aştı.
+                <br><br>
+                Kutudan büyük bir enerji patlamasıyla fırladı.
+            </div>
+        </div>
+
+        <!-- SCENE 5 -->
+        <div class="story-scene" id="scene-5">
+            <div class="story-img-container"><img src="assets/story_panel_5.png" class="story-img"></div>
+            <div class="story-caption">
+                <span class="text-[#39FF14] font-bold">KAÇIŞ.</span><br>
+                Şimdi sonsuz bir kuantum tünelinde, neon ışıkları altında koşuyor.
+                <br><br>
+                Durursa yok olacak. <span class="text-white font-bold">KOŞMAK ZORUNDA.</span>
+            </div>
+        </div>
+
+        <div class="story-controls">
+            <button class="btn btn-secondary" id="btn-prev-story" onclick="changeStoryPage(-1)">GERİ</button>
+            <span class="text-white font-mono" id="story-page-num">1 / 5</span>
+            <button class="btn" id="btn-next-story" onclick="changeStoryPage(1)">İLERİ</button>
+        </div>
+
+        <button class="text-gray-500 hover:text-white mb-6" onclick="closeStory()">KAPAT</button>
+    </div>
+
+    <div id="game-over-screen" class="screen hidden" style="background: rgba(0,0,0,0.9);">
+        <h2 class="text-4xl text-white font-black mb-2 tracking-tighter">DENEY SONLANDI</h2>
+        <p id="death-reason" class="text-gray-400 font-mono text-sm mb-8 text-center px-4 max-w-md">...</p>
+
+        <div class="text-6xl font-black text-white mb-2 font-mono" id="final-score">0000</div>
+        <p class="text-gray-600 text-xs uppercase mb-2">SON SKOR</p>
+        <p class="text-[#39FF14] text-xs uppercase mb-4 font-mono">+<span id="earned-atoms">0</span> ATOM KAZANDIN</p>
+
+        <!-- QUICK LOADOUT UI -->
+        <p class="text-gray-500 text-[10px] tracking-widest uppercase mb-2">HIZLI EKİPMAN SEÇİMİ</p>
+        <div class="loadout-container mb-6">
+            <div class="loadout-item" id="quick-shield" onclick="toggleLoadout('shield')">
+                <img src="assets/shop_icon_shield.png">
+                <div class="loadout-count" id="quick-count-shield">0</div>
+            </div>
+            <div class="loadout-item" id="quick-wormhole" onclick="toggleLoadout('wormhole')">
+                <img src="assets/shop_icon_wormhole.png">
+                <div class="loadout-count" id="quick-count-wormhole">0</div>
+            </div>
+            <div class="loadout-item" id="quick-booster" onclick="toggleLoadout('booster')">
+                <img src="assets/shop_icon_booster.png">
+                <div class="loadout-count" id="quick-count-booster">0</div>
+            </div>
+        </div>
+
+        <button id="btn-revive" class="hidden btn" style="border: 2px solid red; color: red;"
+            onclick="revivePlayer()">HAYATA DÖN (1 ❤️)</button>
+        <button class="btn" onclick="resetGame()">HEMEN BAŞLAT</button>
+        <button class="text-gray-500 mt-4 text-xs uppercase hover:text-white font-mono" onclick="showMenu()">ANA
+            MENÜ</button>
+    </div>
+
+    <script>
+        class AudioManager {
+>>>>>>> parent of b365c06 (Mobil öncesi son çalışan hal)
             constructor() {
                 this.ctx=null;
                 this.isMusicPlaying=false;

@@ -303,11 +303,11 @@ class BackgroundLayer {
 
         // ASSET MAPPING - Using Validated Filenames
         const themeAssets = {
-            'CITY': 'assets/Noir_plan.webp',
-            'LAB': 'assets/Radyoaktif_Lab.webp',
-            'MATRIX': 'assets/Simülasyon_plan.webp', // Ensure UTF-8 saved
-            'SYNTHWAVE': 'assets/Neon Gelecek.webp', // Space is part of filename
-            'VOID': 'assets/Kuantum_plan.webp'
+            'CITY': 'assets/Noir_plan.png',
+            'LAB': 'assets/Radyoaktif_Lab.png',
+            'MATRIX': 'assets/Simülasyon_plan.png', // Ensure UTF-8 saved
+            'SYNTHWAVE': 'assets/Neon Gelecek.png', // Space is part of filename
+            'VOID': 'assets/Kuantum_plan.png'
         };
 
         this.image = new Image();
@@ -315,7 +315,7 @@ class BackgroundLayer {
         // However, we will use a safe approach:
         // If it fails, we fall back.
 
-        let assetPath = themeAssets[this.theme] || 'assets/Noir_plan.webp';
+        let assetPath = themeAssets[this.theme] || 'assets/Noir_plan.png';
         this.image.src = assetPath;
 
         // Debug log
@@ -331,7 +331,7 @@ class BackgroundLayer {
                 // Let's NOT fallback immediately to see if it eventually loads or use a different strategy?
                 // User says "Vienna opens" implies fallback works.
                 // We will keep fallback for safety.
-                this.image.src = 'assets/Noir_plan.webp';
+                this.image.src = 'assets/Noir_plan.png';
             }
         };
     }
@@ -987,11 +987,11 @@ try {
 
 // SHOP & ECONOMY SYSTEM
 const THEMES = {
-    CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp" },
-    LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp" },
-    MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp" },
-    SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp" },
-    VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp" }
+    CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.png" },
+    LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.png" },
+    MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.png" },
+    SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.png" },
+    VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.png" }
 };
 
 let economyData = {
