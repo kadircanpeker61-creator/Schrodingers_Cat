@@ -2402,62 +2402,234 @@
                     ctx.restore();
                 }
 
-                // --- URANIUM FLASK OBSTACLES (Uranyum Şişeleri) ---
+                // --- THEME SPECIFIC OBSTACLES ---
                 for (let obs of this.obstacles) {
                     ctx.save();
                     ctx.translate(obs.x, obs.y);
 
-                    // Şişe Boyutları
-                    const w = obs.width;
-                    const h = obs.height;
+                    const currentTheme = economyData.equippedTheme || 'CITY';
 
-                    // 1. Şişe İçindeki Sıvı (Uranyum)
-                    ctx.fillStyle = '#39FF14'; // Neon Yeşil
-                    ctx.shadowColor = '#39FF14';
-                    ctx.shadowBlur = 20;
-
-                    ctx.beginPath();
-                    // Sıvı seviyesi (hafif dalgalanma efekti)
-                    const liquidLevel = h * 0.4 + Math.sin(Date.now() / 200) * 2;
-
-                    ctx.moveTo(w * 0.2, h); // Sol alt
-                    ctx.lineTo(w * 0.8, h); // Sağ alt
-                    ctx.lineTo(w * 0.65, h - liquidLevel); // Sağ üst sıvı sınırı
-                    ctx.lineTo(w * 0.35, h - liquidLevel); // Sol üst sıvı sınırı
-                    ctx.fill();
-
-                    // 2. Şişe Camı (Erlenmeyer Şekli)
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                    ctx.lineWidth = 2;
-                    ctx.shadowBlur = 0; // Cam parlamasın
-
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.35, 0); // Ağız sol
-                    ctx.lineTo(w * 0.65, 0); // Ağız sağ
-                    ctx.lineTo(w * 0.65, h * 0.3); // Boyun sağ
-                    ctx.lineTo(w * 0.9, h); // Taban sağ köşe
-                    ctx.quadraticCurveTo(w * 0.5, h + 5, w * 0.1, h); // Hafif kavisli taban
-                    ctx.lineTo(w * 0.35, h * 0.3); // Boyun sol
-                    ctx.closePath();
-                    ctx.stroke();
-
-                    // 3. Kabarcıklar (Radyasyon efekti)
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    if (Math.random() > 0.8) {
-                        ctx.beginPath();
-                        ctx.arc(w / 2 + (Math.random() - 0.5) * 10, h - liquidLevel + Math.random() * 10, 1 + Math.random() * 2, 0, Math.PI * 2);
-                        ctx.fill();
+                    switch (currentTheme) {
+                        case 'CITY':
+                            this.drawUraniumFlask(ctx, obs.width, obs.height);
+                            break;
+                        case 'EGYPT':
+                            this.drawCanopicJar(ctx, obs.width, obs.height);
+                            break;
+                        case 'FOREST':
+                            this.drawPoisonMushroom(ctx, obs.width, obs.height);
+                            break;
+                        case 'ISLAND':
+                            this.drawStormCrystal(ctx, obs.width, obs.height);
+                            break;
+                        case 'ORIENTAL':
+                            this.drawStoneLantern(ctx, obs.width, obs.height);
+                            break;
+                        case 'RUINS':
+                            this.drawToxicBarrel(ctx, obs.width, obs.height);
+                            break;
+                        default:
+                            this.drawUraniumFlask(ctx, obs.width, obs.height);
+                            break;
                     }
-
-                    // 4. Kafatası / Tehlike Sembolü (İsteğe bağlı, çok küçük detay boğabilir ama deneyelim)
-                    ctx.fillStyle = '#000';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('☢', w / 2, h - 5);
 
                     ctx.restore();
                 }
                 ctx.restore();
+            }
+
+            // --- THEME DRAWING HELPERS ---
+
+            drawUraniumFlask(ctx, w, h) {
+                // 1. Şişe İçindeki Sıvı (Uranyum)
+                ctx.fillStyle = '#39FF14'; // Neon Yeşil
+                ctx.shadowColor = '#39FF14';
+                ctx.shadowBlur = 20;
+
+                ctx.beginPath();
+                // Sıvı seviyesi (hafif dalgalanma efekti)
+                const liquidLevel = h * 0.4 + Math.sin(Date.now() / 200) * 2;
+
+                ctx.moveTo(w * 0.2, h); // Sol alt
+                ctx.lineTo(w * 0.8, h); // Sağ alt
+                ctx.lineTo(w * 0.65, h - liquidLevel); // Sağ üst sıvı sınırı
+                ctx.lineTo(w * 0.35, h - liquidLevel); // Sol üst sıvı sınırı
+                ctx.fill();
+
+                // 2. Şişe Camı (Erlenmeyer Şekli)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 0; // Cam parlamasın
+
+                ctx.beginPath();
+                ctx.moveTo(w * 0.35, 0); // Ağız sol
+                ctx.lineTo(w * 0.65, 0); // Ağız sağ
+                ctx.lineTo(w * 0.65, h * 0.3); // Boyun sağ
+                ctx.lineTo(w * 0.9, h); // Taban sağ köşe
+                ctx.quadraticCurveTo(w * 0.5, h + 5, w * 0.1, h); // Hafif kavisli taban
+                ctx.lineTo(w * 0.35, h * 0.3); // Boyun sol
+                ctx.closePath();
+                ctx.stroke();
+
+                // 3. Kabarcıklar (Radyasyon efekti)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                if (Math.random() > 0.8) {
+                    ctx.beginPath();
+                    ctx.arc(w / 2 + (Math.random() - 0.5) * 10, h - liquidLevel + Math.random() * 10, 1 + Math.random() * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // 4. Kafatası / Tehlike Sembolü
+                ctx.fillStyle = '#000';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('☢', w / 2, h - 5);
+            }
+
+            drawCanopicJar(ctx, w, h) {
+                // ANTİK MISIR: Kanopik Kavanoz
+                // Gövde (Altın)
+                const grad = ctx.createLinearGradient(0, 0, w, 0);
+                grad.addColorStop(0, '#DAA520'); // GoldenRod
+                grad.addColorStop(0.5, '#FFD700'); // Gold
+                grad.addColorStop(1, '#B8860B'); // DarkGoldenRod
+                ctx.fillStyle = grad;
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 10;
+
+                ctx.beginPath();
+                ctx.moveTo(w * 0.2, h);
+                ctx.lineTo(w * 0.8, h);
+                ctx.quadraticCurveTo(w * 0.9, h * 0.2, w * 0.2, h * 0.2); // Çanak şekli
+                ctx.quadraticCurveTo(w * 0.1, h * 0.2, w * 0.2, h);
+                ctx.fill();
+
+                // Kapak (Çakal Başı - Anubis)
+                ctx.fillStyle = '#2F4F4F'; // DarkSlateGray
+                ctx.beginPath();
+                ctx.moveTo(w * 0.2, h * 0.25);
+                ctx.lineTo(w * 0.8, h * 0.25);
+                ctx.lineTo(w * 0.5, -h * 0.1); // Sivri kulaklar
+                ctx.fill();
+
+                // Dekoratif Şeritler (Mavi)
+                ctx.strokeStyle = '#0000CD'; // MediumBlue
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(w * 0.15, h * 0.4);
+                ctx.lineTo(w * 0.85, h * 0.4);
+                ctx.moveTo(w * 0.18, h * 0.6);
+                ctx.lineTo(w * 0.82, h * 0.6);
+                ctx.stroke();
+            }
+
+            drawPoisonMushroom(ctx, w, h) {
+                // MİSTİK ORMAN: Zehirli Mantar
+                // Sap
+                ctx.fillStyle = '#F5F5DC'; // Beige
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.rect(w * 0.35, h * 0.4, w * 0.3, h * 0.6);
+                ctx.fill();
+
+                // Şapka (Mor ve Parlak)
+                ctx.fillStyle = '#8A2BE2'; // BlueViolet
+                ctx.shadowColor = '#9400D3';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(w / 2, h * 0.4, w * 0.6, Math.PI, 0); // Yarım daire
+                ctx.fill();
+
+                // Benekler (Yeşil Zehir)
+                ctx.fillStyle = '#7FFF00'; // Chartreuse
+                ctx.beginPath();
+                ctx.arc(w * 0.3, h * 0.25, 3, 0, Math.PI * 2);
+                ctx.arc(w * 0.7, h * 0.3, 4, 0, Math.PI * 2);
+                ctx.arc(w * 0.5, h * 0.15, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawStormCrystal(ctx, w, h) {
+                // UÇAN ADA: Fırtına Kristali
+                ctx.fillStyle = '#00FFFF'; // Aqua
+                ctx.shadowColor = '#E0FFFF'; // LightCyan
+                ctx.shadowBlur = 25;
+
+                // Havada asılı durma efekti
+                const floatY = Math.sin(Date.now() / 300) * 5;
+
+                ctx.beginPath();
+                ctx.moveTo(w / 2, 0 + floatY); // Üst Uç
+                ctx.lineTo(w, h * 0.4 + floatY); // Orta Sağ
+                ctx.lineTo(w / 2, h + floatY); // Alt Uç
+                ctx.lineTo(0, h * 0.4 + floatY); // Orta Sol
+                ctx.closePath();
+                ctx.fill();
+
+                // İç kısımdaki parlama
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(w / 2, 0 + floatY);
+                ctx.lineTo(w / 2, h + floatY);
+                ctx.stroke();
+            }
+
+            drawStoneLantern(ctx, w, h) {
+                // YASAK ŞEHİR: Taş Fener (Toro)
+                ctx.shadowBlur = 0;
+
+                // Kaide
+                ctx.fillStyle = '#696969'; // DimGray
+                ctx.fillRect(w * 0.3, h * 0.8, w * 0.4, h * 0.2);
+
+                // Gövde (Direk)
+                ctx.fillRect(w * 0.4, h * 0.5, w * 0.2, h * 0.3);
+
+                // Işık Haznesi (Kırmızı Ateş)
+                ctx.fillStyle = '#FF4500'; // OrangeRed
+                ctx.shadowColor = '#FF0000';
+                ctx.shadowBlur = 15;
+                ctx.fillRect(w * 0.25, h * 0.25, w * 0.5, h * 0.25);
+
+                // Çatı
+                ctx.fillStyle = '#2F4F4F';
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.moveTo(w * 0.1, h * 0.25);
+                ctx.lineTo(w * 0.9, h * 0.25);
+                ctx.lineTo(w * 0.5, 0); // Tepe
+                ctx.fill();
+            }
+
+            drawToxicBarrel(ctx, w, h) {
+                // YIKILMIŞ DÜNYA: Paslı Varil
+                ctx.shadowBlur = 0;
+
+                // Varil Gövdesi
+                ctx.fillStyle = '#8B4513'; // SaddleBrown (Pas rengi)
+                ctx.fillRect(w * 0.1, h * 0.2, w * 0.8, h * 0.8);
+
+                // Şeritler (Metal)
+                ctx.fillStyle = '#CD853F'; // Peru
+                ctx.fillRect(w * 0.1, h * 0.3, w * 0.8, h * 0.1);
+                ctx.fillRect(w * 0.1, h * 0.7, w * 0.8, h * 0.1);
+
+                // Sızan Yeşil Sıvı
+                ctx.fillStyle = '#32CD32'; // LimeGreen
+                ctx.shadowColor = '#00FF00';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(w * 0.8, h * 0.9, 5, 0, Math.PI * 2); // Sızıntı damlası
+                ctx.fill();
+
+                // Üstteki Radyoaktif Sembolü (Basit üçgen)
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.moveTo(w * 0.3, h * 0.5);
+                ctx.lineTo(w * 0.7, h * 0.5);
+                ctx.lineTo(w * 0.5, h * 0.8);
+                ctx.fill();
             }
 
             checkCollision(cat) {
