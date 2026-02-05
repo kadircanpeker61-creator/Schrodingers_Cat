@@ -1491,6 +1491,8 @@
             <button class="btn-difficulty" onclick="setDifficulty('EASY')">KOLAY</button>
             <button class="btn-difficulty active" onclick="setDifficulty('NORMAL')">NORMAL</button>
             <button class="btn-difficulty" onclick="setDifficulty('HARD')">ZOR</button>
+            <button class="btn-difficulty" onclick="setDifficulty('EXTREME')"
+                style="border-color: #FF0000; color: #FF0000; box-shadow: 0 0 10px #FF0000;">EXTREME</button>
         </div>
 
         <div class="tutorial-row">
@@ -2277,17 +2279,21 @@
                 if (lastG.x + lastG.width < width + 200) {
                     const newX = lastG.x + lastG.width;
 
-                    let nextType = lastG.type;
+                    let nextType = lastG.type === 'white' ? 'black' : 'white';
                     if (Math.random() < 0.85) {
                         nextType = lastG.type === 'white' ? 'black' : 'white';
                     }
 
-                    const minLen = 500 + (speed * 15);
+                    // FIX: Dinamik güvenli alan hesabı
+                    // Hız arttıkça engellerin kenarlara olan mesafesi artmalı
+                    const safeMargin = Math.max(300, 150 + (speed * 20));
+
+                    // Zemin uzunluğu en az 2 katı kadar olmalı ki engel sığsın
+                    const minLen = (safeMargin * 2.5) + (speed * 10);
                     const newW = minLen + Math.random() * 500;
 
                     this.groundSegments.push(new Ground(newX, newW, nextType));
 
-                    const safeMargin = 235;
                     let currentSpawnX = newX + safeMargin;
                     const limitX = newX + newW - safeMargin;
 
@@ -2295,11 +2301,16 @@
                         if (Math.random() < 0.9) {
                             this.obstacles.push(new Obstacle(currentSpawnX, 'spike', groundY));
                         }
+
+                        const settings = DIFFICULTY_SETTINGS[currentDifficulty] || DIFFICULTY_SETTINGS['EASY'];
+                        const gapMultiplier = settings.gapMultiplier || 1.0;
+
                         // FIX: Increase spacing to ensure jump distance < gap
-                        // Player Jump Distance approx = speed * 24.44;
-                        // We set gap to be slightly larger than max jump distance to allow landing.
+                        // Using gapMultiplier allows wider gaps for Easy mode (more forgiving)
                         const jumpDistance = 100 + (speed * 26);
-                        currentSpawnX += jumpDistance + (Math.random() * 200);
+
+                        // Base gap logic adjusted by multiplier
+                        currentSpawnX += (jumpDistance + (Math.random() * 200)) * gapMultiplier;
                     }
                 }
 
@@ -2823,10 +2834,16 @@
                 this.dy = 0;
                 this.gravity = 1.8;
                 this.jumpForce = -22;
+                // Will be overwritten by setDifficulty
                 this.grounded = true;
                 this.color = 'white'; // Başlangıç rengi
                 this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
+            }
+
+            setPhysics(grav, jump) {
+                this.gravity = grav;
+                this.jumpForce = jump;
             }
 
             reset() {
@@ -3031,36 +3048,51 @@
             updateWidth(width) {
                 this.width = width;
             }
+            // updateWidth(width) { // Removed as per new logic
+            //     this.width = width;
+            // }
 
             setupListeners() {
-                const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-                const zones = [document.getElementById('left-zone'), document.getElementById('right-zone')];
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    if (!this.game.isPlaying) return;
+                    const diffSettings = DIFFICULTY_SETTINGS[this.game.currentDifficulty];
+                    const isSwapped = diffSettings && diffSettings.swapControls;
 
-                zones.forEach(zone => {
-                    if (isMobile) {
-                        // Sadece touch eventleri
-                        zone.addEventListener('touchstart', (e) => {
-                            if (!this.game.isPlaying) return;
-                            e.preventDefault(); // Prevent default touch actions (scroll/zoom)
-                            if (zone.id === 'left-zone') this.game.handleAction('jump');
-                            else this.game.handleAction('switch');
-                        }, { passive: false });
-                    } else {
-                        // Desktop için mouse
-                        zone.addEventListener('mousedown', (e) => {
-                            if (!this.game.isPlaying) return;
-                            if (zone.id === 'left-zone') this.game.handleAction('jump');
-                            else this.game.handleAction('switch');
-                        });
+                    if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
+                        // Normal: Jump, Swapped: Switch
+                        this.game.handleAction(isSwapped ? 'switch' : 'jump');
+                    } else if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD', 'ArrowDown', 'KeyS'].includes(e.code)) { // Added ArrowDown, KeyS for switch
+                        // Normal: Switch, Swapped: Jump
+                        this.game.handleAction(isSwapped ? 'jump' : 'switch');
                     }
                 });
 
-                // Keyboard her zaman (desktop için)
-                document.addEventListener('keydown', (e) => {
+                // Touch / Mouse
+                const handleTouch = (e) => {
                     if (!this.game.isPlaying) return;
-                    if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) this.game.handleAction('jump');
-                    if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD'].includes(e.code)) this.game.handleAction('switch');
-                });
+                    e.preventDefault();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const diffSettings = DIFFICULTY_SETTINGS[this.game.currentDifficulty];
+                    const isSwapped = diffSettings && diffSettings.swapControls;
+
+                    // Screen width split
+                    // Normal: Left=Jump, Right=Switch
+                    // Swapped: Left=Switch, Right=Jump
+                    if (clientX < window.innerWidth / 2) {
+                        this.game.handleAction(isSwapped ? 'switch' : 'jump');
+                    } else {
+                        this.game.handleAction(isSwapped ? 'jump' : 'switch');
+                    }
+                };
+
+                // Remove old zone listeners if they exist, then add new global ones
+                // This assumes the old 'zones' logic is being replaced by global window listeners
+                // For simplicity, we'll just add the new global listeners.
+                // If 'left-zone' and 'right-zone' elements are still used for visual feedback,
+                // their event listeners are now redundant for game input.
+                window.addEventListener('touchstart', handleTouch, { passive: false });
+                window.addEventListener('mousedown', handleTouch);
             }
         }
 
@@ -3143,16 +3175,25 @@
         const SPEED_MAX = 20;
 
         const DIFFICULTY_SETTINGS = {
-            'EASY': { speedStart: 6, speedMax: 15, accelInterval: 800, scoreMultiplier: 1.0 },
-            'NORMAL': { speedStart: 8, speedMax: 20, accelInterval: 600, scoreMultiplier: 1.5 },
-            'HARD': { speedStart: 10, speedMax: 25, accelInterval: 400, scoreMultiplier: 2.0 }
+            'EASY': { speedStart: 7, speedMax: 14, accelInterval: 800, scoreMultiplier: 1.0, gravity: 1.5, jumpForce: -20, gapMultiplier: 1.5 },
+            'NORMAL': { speedStart: 9, speedMax: 22, accelInterval: 600, scoreMultiplier: 1.5, gravity: 1.65, jumpForce: -21, gapMultiplier: 1.2 },
+            'HARD': { speedStart: 11, speedMax: 30, accelInterval: 400, scoreMultiplier: 2.0, gravity: 1.8, jumpForce: -22, gapMultiplier: 1.0 },
+            'EXTREME': { speedStart: 13, speedMax: 35, accelInterval: 300, scoreMultiplier: 3.0, gravity: 2.0, jumpForce: -24, gapMultiplier: 0.9, swapControls: true }
         };
 
         // Leaderboard Initial Data
-        let leaderboardData = { 'EASY': [], 'NORMAL': [], 'HARD': [] };
+        // Leaderboard Initial Data
+        let leaderboardData = { 'EASY': [], 'NORMAL': [], 'HARD': [], 'EXTREME': [] };
         try {
             const savedLb = localStorage.getItem('schrodinger_leaderboard');
-            if (savedLb) leaderboardData = JSON.parse(savedLb);
+            if (savedLb) {
+                const parsedLb = JSON.parse(savedLb);
+                leaderboardData = { ...leaderboardData, ...parsedLb };
+                // Ensure all keys exist (migration fix)
+                ['EASY', 'NORMAL', 'HARD', 'EXTREME'].forEach(diff => {
+                    if (!leaderboardData[diff]) leaderboardData[diff] = [];
+                });
+            }
         } catch (e) { console.error("Skor yüklenemedi", e); }
 
 
@@ -3174,7 +3215,7 @@
             atoms: 0,
             extraLives: 0,
             inventory: { shield: 0, wormhole: 0, booster: 0 },
-            highScore: { EASY: 0, NORMAL: 0, HARD: 0 },
+            highScore: { EASY: 0, NORMAL: 0, HARD: 0, EXTREME: 0 },
             ownedThemes: ['CITY'],
             equippedTheme: 'CITY',
             // Achievements
@@ -3304,6 +3345,10 @@
                 // Migration for themes
                 if (!economyData.ownedThemes) economyData.ownedThemes = ['CITY'];
                 if (!economyData.equippedTheme) economyData.equippedTheme = 'CITY';
+
+                // MIGRATION: Ensure highScore has all keys
+                if (!economyData.highScore) economyData.highScore = { EASY: 0, NORMAL: 0, HARD: 0, EXTREME: 0 };
+                if (economyData.highScore.EXTREME === undefined) economyData.highScore.EXTREME = 0;
 
                 // Init Achievement Data if missing
                 if (!economyData.unlockedAchievements) economyData.unlockedAchievements = [];
@@ -4122,6 +4167,7 @@
 
         const gameInterface = {
             get isPlaying() { return isPlaying; },
+            get currentDifficulty() { return currentDifficulty; },
             handleAction: (action) => handleAction(action)
         };
         const inputHandler = new InputHandler(gameInterface);
@@ -4203,6 +4249,7 @@
             }
 
             player.reset();
+            player.setPhysics(settings.gravity, settings.jumpForce);
             obstacleManager.reset(window.innerWidth, GROUND_Y);
 
             backgroundLayers = [];
@@ -4349,6 +4396,9 @@
                 }
             }
         }
+
+        // setDifficulty logic moved to window assignment below
+
 
         function draw() {
             ctx.save();
@@ -4683,11 +4733,13 @@
             currentDifficulty = diff;
             document.querySelectorAll('.btn-difficulty').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.innerText === (diff === 'EASY' ? 'KOLAY' : diff === 'NORMAL' ? 'NORMAL' : 'ZOR')) {
+                // Check correct button by onclick attribute to avoid text issues
+                if (btn.getAttribute('onclick').includes(`'${diff}'`)) {
                     btn.classList.add('active');
                 }
             });
             drawStatic(); // Hangi zorluktaysak onun high score'unu göster
+            if (window.audioManager) window.audioManager.playMenuClick();
         };
 
         window.resetGame = () => { window.startGame(); };
