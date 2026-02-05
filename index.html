@@ -1235,6 +1235,189 @@
         .paw-close-btn:active {
             transform: scale(0.9);
         }
+
+        /* --- INTERACTIVE PET SYSTEM STYLES --- */
+        .pet-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+            z-index: 25;
+            /* Above bg, below UI overlays */
+            pointer-events: auto;
+            /* Allow interactions */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #pet-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: grab;
+        }
+
+        #pet-canvas:active {
+            cursor: grabbing;
+        }
+
+        .pet-tooltip {
+            position: absolute;
+            top: -40px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'Courier Prime', monospace;
+            border: 1px solid #39FF14;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .pet-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            animation: bounce-tooltip 2s infinite;
+        }
+
+        @keyframes bounce-tooltip {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .pet-mood {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            animation: float-mood 3s ease-in-out infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pet-mood.visible {
+            opacity: 1;
+        }
+
+        @keyframes float-mood {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Particle styles handled in JS, but base class here */
+        .pet-heart {
+            position: absolute;
+            color: #ff0055;
+            font-size: 1.2rem;
+            pointer-events: none;
+            animation: float-heart 1s ease-out forwards;
+            text-shadow: 0 0 5px rgba(255, 0, 85, 0.5);
+            z-index: 26;
+        }
+
+        @keyframes float-heart {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+                transform: translateY(-10px) scale(1.2);
+            }
+
+            100% {
+                transform: translateY(-50px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes purr-shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        .shaking {
+            animation: purr-shake 0.5s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .pet-container {
+                width: 150px;
+                height: 150px;
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                left: 10px;
+            }
+
+            .pet-tooltip {
+                font-size: 0.7rem;
+                top: -30px;
+            }
+        }
     </style>
 
 
@@ -1271,6 +1454,15 @@
 
     <div id="start-screen" class="screen">
         <div id="menu-background-layer"></div>
+
+        <!-- INTERACTIVE PET ZONE -->
+        <div id="pet-zone" class="pet-container">
+            <canvas id="pet-canvas" width="200" height="200"></canvas>
+            <div id="pet-tooltip" class="pet-tooltip">
+                <i class="fa-solid fa-hand-pointer"></i> Bana dokun!
+            </div>
+            <div id="pet-mood-indicator" class="pet-mood">😺</div>
+        </div>
 
         <div class="title-frame">
             <h1 class="font-black text-white tracking-tighter text-center main-title">SCHRÖDINGER</h1>
@@ -3146,6 +3338,272 @@
             });
         }
 
+        // --- ETKİLEŞİMLİ EVCİL HAYVAN SİSTEMİ ---
+        class InteractivePet {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                if (!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+
+                // Çözünürlüğü Ayarla
+                this.width = 300;
+                this.height = 300;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+
+                // Durum Değişkenleri
+                this.mood = 80; // 0-100 (Mutluluk)
+                this.energy = 100;
+                this.isSleeping = false;
+                this.lastInteraction = Date.now();
+                this.blinkTimer = 0;
+                this.isBlinking = false;
+
+                // Animasyon Değişkenleri
+                this.frame = 0;
+                this.tailAngle = 0;
+                this.breathScale = 1;
+                this.purrIntensity = 0;
+
+                // Etkileşim Sınırları (Kafa bölgesi için yaklaşık değer)
+                this.headRegion = { x: 150, y: 100, r: 60 };
+
+                // Olay Dinleyicileri
+                this.setupEvents();
+
+                // Döngüyü Başlat
+                this.loop();
+            }
+
+            setupEvents() {
+                // Sevme için Fare/Dokunma Etkileşimi
+                const handleMove = (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const x = (clientX - rect.left) * (this.width / rect.width);
+                    const y = (clientY - rect.top) * (this.height / rect.height);
+
+                    this.checkInteraction(x, y);
+                };
+
+                this.canvas.addEventListener('mousemove', handleMove);
+                this.canvas.addEventListener('touchmove', handleMove, { passive: true });
+                this.canvas.addEventListener('click', () => this.pet(true));
+            }
+
+            checkInteraction(x, y) {
+                // Kafa üzerinde gezinme/dokunma kontrolü
+                const dx = x - this.headRegion.x;
+                const dy = y - this.headRegion.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < this.headRegion.r) {
+                    this.pet();
+                    document.body.style.cursor = 'grab';
+                } else {
+                    document.body.style.cursor = 'default';
+                    this.purrIntensity = Math.max(0, this.purrIntensity - 0.5);
+                }
+            }
+
+            pet(isClick = false) {
+                const now = Date.now();
+                if (now - this.lastInteraction < 50) return; // Debounce
+                this.lastInteraction = now;
+
+                // Mutluluğu Artır
+                this.mood = Math.min(100, this.mood + (isClick ? 5 : 0.5));
+                this.updateMoodUI();
+
+                // Mırıldanma Efekti
+                this.purrIntensity = Math.min(10, this.purrIntensity + 1);
+
+                // Görsel Efektleri Tetikle
+                if (Math.random() < 0.05) this.showHeart();
+
+                // Ses Efekti (Sınırlandırılmış)
+                if (Math.random() < 0.3 && audioManager && audioManager.ctx && !audioManager.isMuted) {
+                    const osc = audioManager.ctx.createOscillator();
+                    const gain = audioManager.ctx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(25 + Math.random() * 10, audioManager.ctx.currentTime);
+
+                    const vol = (audioManager.sfxVolume || 0.3) * 0.2;
+                    gain.gain.setValueAtTime(vol, audioManager.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioManager.ctx.currentTime + 0.8);
+
+                    osc.connect(gain);
+                    if (audioManager.sfxGain) gain.connect(audioManager.sfxGain);
+                    else gain.connect(audioManager.ctx.destination);
+
+                    osc.start();
+                    osc.stop(audioManager.ctx.currentTime + 0.8);
+                }
+            }
+
+            updateMoodUI() {
+                const moodBar = document.getElementById('pet-mood-fill');
+                const tooltip = document.getElementById('pet-tooltip');
+
+                if (moodBar) moodBar.style.width = this.mood + '%';
+
+                if (this.mood > 90) tooltip.innerText = "Çok Mutlu!";
+                else if (this.mood > 50) tooltip.innerText = "Memnun";
+                else if (this.mood > 20) tooltip.innerText = "İlgi Bekliyor";
+                else tooltip.innerText = "Mutsuz...";
+            }
+
+            showHeart() {
+                // Görsel efekt CSS veya canvas ile yapılabilir
+                // Şimdilik ipucu balonunu zıplatalım
+                const tooltip = document.getElementById('pet-tooltip');
+                if (tooltip) {
+                    tooltip.classList.add('visible');
+                    setTimeout(() => tooltip.classList.remove('visible'), 2000);
+                }
+            }
+
+            update() {
+                this.frame++;
+
+                // Nefes Alma
+                this.breathScale = 1 + Math.sin(this.frame * 0.05) * 0.02;
+
+                // Kuyruk Sallama
+                const moodSpeed = this.mood > 80 ? 0.1 : 0.05;
+                this.tailAngle = Math.sin(this.frame * moodSpeed) * (this.mood > 50 ? 0.2 : 0.1);
+
+                // Göz Kırpma
+                this.blinkTimer++;
+                if (this.blinkTimer > 200 + Math.random() * 200) {
+                    this.isBlinking = true;
+                    if (this.blinkTimer > 210 + Math.random() * 200) { // Hızlı kırpma
+                        this.isBlinking = false;
+                        this.blinkTimer = 0;
+                    }
+                }
+
+                // Mutluluk Azalması
+                if (this.frame % 600 === 0) { // Her ~10 saniyede bir
+                    this.mood = Math.max(0, this.mood - 1);
+                    this.updateMoodUI();
+                }
+
+                if (this.purrIntensity > 0) {
+                    this.purrIntensity -= 0.05;
+                    this.canvas.style.transform = `translate(${Math.random()}px, ${Math.random()}px)`;
+                } else {
+                    this.canvas.style.transform = 'none';
+                }
+            }
+
+            draw() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.width, this.height);
+
+                ctx.save();
+                ctx.translate(this.width / 2, this.height / 2 + 20); // Center bottom
+                ctx.scale(2.5 * this.breathScale, 2.5 * this.breathScale); // Scale up
+
+                // Kedi Çizim Mantığı (Silüet Tarzı)
+                ctx.fillStyle = '#000';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 10;
+
+                // KUYRUK
+                ctx.save();
+                ctx.translate(-30, 10);
+                ctx.rotate(this.tailAngle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.globalCompositeOperation = 'destination-over'; // Gövdenin arkasına çiz
+                ctx.bezierCurveTo(-20, -10, -40, -40, -10, -60);
+                ctx.bezierCurveTo(10, -50, 20, -20, 0, 0);
+                ctx.fill();
+                ctx.restore();
+
+                // GÖVDE
+                ctx.beginPath();
+                ctx.ellipse(0, 10, 35, 45, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // KAFA
+                ctx.beginPath();
+                ctx.arc(0, -25, 25, 0, Math.PI * 2);
+                ctx.fill();
+
+                // KULAKLAR
+                ctx.beginPath();
+                ctx.moveTo(-20, -40); // Sol Kulak
+                ctx.lineTo(-25, -65);
+                ctx.lineTo(-5, -45);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(20, -40); // Sağ Kulak
+                ctx.lineTo(25, -65);
+                ctx.lineTo(5, -45);
+                ctx.fill();
+
+                // GÖZLER (Beyaz)
+                if (!this.isBlinking) {
+                    ctx.fillStyle = '#FFF';
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = '#FFF';
+
+                    // Sol Göz
+                    ctx.beginPath();
+                    ctx.ellipse(-10, -25, 4, 3, Math.PI / 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Sağ Göz
+                    ctx.beginPath();
+                    ctx.ellipse(10, -25, 4, 3, -Math.PI / 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pupils
+                    if (this.mood < 30) {
+                        ctx.fillStyle = '#000'; // Narrow pupils if unhappy? Or keep decorative.
+                        // Let's keep it simple white eyes for the silhouette style, maybe specific details
+                    }
+                } else {
+                    // Closed Eyes (Lines)
+                    ctx.strokeStyle = '#FFF';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-15, -25);
+                    ctx.lineTo(-5, -25);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(5, -25);
+                    ctx.lineTo(15, -25);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // Mood Indicator Ring (Subtle)
+                // ctx.beginPath();
+                // ctx.arc(this.width/2, this.height/2, 100, 0, Math.PI*2);
+                // ctx.strokeStyle = `hsla(${this.mood}, 70%, 50%, 0.2)`;
+                // ctx.lineWidth = 2;
+                // ctx.stroke();
+            }
+
+            loop() {
+                if (!document.getElementById('start-screen').classList.contains('hidden')) {
+                    this.update();
+                    this.draw();
+                }
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        let petSystem; // Global Reference
+
         // GAME VARIABLES
         let currentDifficulty = 'NORMAL';
         let isPlaying = false;
@@ -4112,6 +4570,8 @@
                 }
             });
         });
+        // Initialize Pet
+        petSystem = new InteractivePet('pet-canvas');
     </script>
 
 </body>
