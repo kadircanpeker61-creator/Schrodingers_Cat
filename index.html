@@ -1206,6 +1206,35 @@
                 display: none !important;
             }
         }
+
+        /* PAW CLOSE BUTTON */
+        .paw-close-btn {
+            position: fixed;
+            top: max(15px, env(safe-area-inset-top));
+            right: max(20px, env(safe-area-inset-right));
+            font-size: 3rem;
+            /* Daha belirgin olması için büyütüldü */
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+            padding: 10px;
+            /* Dokunma payı */
+            background: transparent;
+            border: none;
+        }
+
+        .paw-close-btn:hover {
+            color: #39FF14;
+            transform: scale(1.2) rotate(10deg);
+            filter: drop-shadow(0 0 15px #39FF14);
+            opacity: 1;
+        }
+
+        .paw-close-btn:active {
+            transform: scale(0.9);
+        }
     </style>
 
 
@@ -1309,6 +1338,7 @@
     <!-- MAĞAZA EKRANI -->
     <div id="shop-screen" class="screen hidden"
         style="justify-content: flex-start; overflow-y: auto; display: block; padding: 0;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeShop()"></i>
         <div class="shop-scroll-wrapper"
             style="min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center;">
             <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">
@@ -1379,15 +1409,15 @@
                 <!-- Temalar JS ile buraya gelecek -->
             </div>
 
-            <div class="text-gray-500 text-xs font-mono mt-6 text-center mb-4">BAŞLANGIÇ EKRANINDAN SEÇEREK
+            <div class="text-gray-500 text-xs font-mono mt-6 text-center mb-8">BAŞLANGIÇ EKRANINDAN SEÇEREK
                 KULLANABİLİRSİNİZ</div>
 
-            <button class="btn btn-secondary mt-8 mb-8" onclick="closeShop()">KAPAT</button>
         </div> <!-- End Wrapper -->
     </div>
 
     <!-- SKOR TABLOSU EKRANI -->
     <div id="scoreboard-screen" class="screen hidden" style="justify-content: flex-start; padding-top: 50px;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeScoreboard()"></i>
         <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">LİDER
             TABLOSU</h2>
 
@@ -1401,13 +1431,13 @@
             <!-- Skorlar buraya JS ile gelecek -->
         </div>
 
-        <button class="btn btn-secondary mb-10" onclick="closeScoreboard()">KAPAT</button>
     </div>
 
     <!-- ROZETLER EKRANI -->
     <!-- ROZETLER EKRANI -->
     <div id="badges-screen" class="screen hidden"
         style="justify-content: flex-start; padding-top: 20px; overflow: hidden;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeBadges()"></i>
         <h2 class="text-xl text-white font-bold mb-2 tracking-widest border-b border-gray-600 pb-2 font-mono"
             style="flex-shrink: 0;">
             GÖREVLER & ROZETLER
@@ -1424,11 +1454,11 @@
             </div>
         </div>
 
-        <button class="btn btn-secondary mb-4 mt-0" style="flex-shrink: 0;" onclick="closeBadges()">KAPAT</button>
     </div>
 
     <!-- AYARLAR EKRANI -->
     <div id="settings-screen" class="screen hidden" style="justify-content: center; align-items: center;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeSettings()"></i>
         <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">AYARLAR
         </h2>
 
@@ -1456,15 +1486,16 @@
                 <span class="text-white font-mono text-lg">SESİ KAPAT (MUTE)</span>
                 <button id="mute-btn" class="btn-secondary py-2 px-4" onclick="toggleMute()">AÇIK</button>
             </div>
-
-            <button class="btn btn-secondary mt-8" onclick="closeSettings()">KAPAT</button>
         </div>
+
     </div>
 
     <div id="story-screen" class="screen hidden"
         style="justify-content: flex-start; padding-top: 20px; overflow-y: auto;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeStory()"></i>
         <h2 class="text-2xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono">DOSYA
             #1935</h2>
+
 
         <!-- SCENE 1 -->
         <div class="story-scene active" id="scene-1">
@@ -1529,7 +1560,6 @@
             <button class="btn" id="btn-next-story" onclick="changeStoryPage(1)">İLERİ</button>
         </div>
 
-        <button class="text-gray-500 hover:text-white mb-6" onclick="closeStory()">KAPAT</button>
     </div>
 
     <div id="game-over-screen" class="screen hidden" style="background: rgba(0,0,0,0.9);">
