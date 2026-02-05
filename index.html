@@ -3364,9 +3364,11 @@
                 this.tailAngle = 0;
                 this.breathScale = 1;
                 this.purrIntensity = 0;
+                this.leftEarTwitch = 0;
+                this.rightEarTwitch = 0;
 
-                // Etkileşim Sınırları (Kafa bölgesi için yaklaşık değer)
-                this.headRegion = { x: 150, y: 100, r: 60 };
+                // Etkileşim Sınırları (Kafa bölgesi için yaklaşık değer: y 100 -> 140 görsel merkez)
+                this.headRegion = { x: 150, y: 150, r: 60 };
 
                 // Olay Dinleyicileri
                 this.setupEvents();
@@ -3471,9 +3473,15 @@
                 // Nefes Alma
                 this.breathScale = 1 + Math.sin(this.frame * 0.05) * 0.02;
 
-                // Kuyruk Sallama
-                const moodSpeed = this.mood > 80 ? 0.1 : 0.05;
-                this.tailAngle = Math.sin(this.frame * moodSpeed) * (this.mood > 50 ? 0.2 : 0.1);
+                // Kuyruk Sallama (Gelişmiş)
+                // Yavaşça yukarı aşağı hareket (Base Offset)
+                const tailLift = Math.sin(this.frame * 0.02) * 0.5 - 0.2;
+                // Hızlı sallanma (Wag)
+                const moodSpeed = this.mood > 80 ? 0.15 : 0.08;
+                const wagRange = this.mood > 50 ? 0.3 : 0.15;
+                const tailWag = Math.sin(this.frame * moodSpeed) * wagRange;
+
+                this.tailAngle = tailLift + tailWag;
 
                 // Göz Kırpma
                 this.blinkTimer++;
@@ -3484,6 +3492,13 @@
                         this.blinkTimer = 0;
                     }
                 }
+
+                // Kulak Oynatma (Rastgele)
+                if (Math.random() > 0.99) this.leftEarTwitch = 10;
+                if (Math.random() > 0.99) this.rightEarTwitch = 10;
+
+                if (this.leftEarTwitch > 0) this.leftEarTwitch *= 0.8;
+                if (this.rightEarTwitch > 0) this.rightEarTwitch *= 0.8;
 
                 // Mutluluk Azalması
                 if (this.frame % 600 === 0) { // Her ~10 saniyede bir
@@ -3504,54 +3519,94 @@
                 ctx.clearRect(0, 0, this.width, this.height);
 
                 ctx.save();
-                ctx.translate(this.width / 2, this.height / 2 + 20); // Center bottom
-                ctx.scale(2.5 * this.breathScale, 2.5 * this.breathScale); // Scale up
+                ctx.translate(this.width / 2, this.height / 2 + 40); // Move down
+                ctx.scale(2.2 * this.breathScale, 2.2 * this.breathScale); // Reduce scale
 
-                // Kedi Çizim Mantığı (Silüet Tarzı)
-                ctx.fillStyle = '#000';
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = 10;
+                // --- PASS 1: LEFT HALF (BLACK) ---
+                this.drawHalf(ctx, 'left');
 
-                // KUYRUK
+                // --- PASS 2: RIGHT HALF (WHITE) ---
+                this.drawHalf(ctx, 'right');
+
+                ctx.restore();
+            }
+
+            drawHalf(ctx, side) {
+                ctx.save();
+
+                // Clipping Region
+                ctx.beginPath();
+                if (side === 'left') {
+                    ctx.rect(-100, -100, 100, 200); // Left side
+                } else {
+                    ctx.rect(0, -100, 100, 200); // Right side
+                }
+                ctx.clip();
+
+                const isLeft = side === 'left';
+                const mainColor = isLeft ? '#111' : '#EEE';
+                const contrastColor = isLeft ? '#EEE' : '#111';
+
+                ctx.fillStyle = mainColor;
+                ctx.strokeStyle = mainColor;
+
+                // 1. KUYRUK
                 ctx.save();
                 ctx.translate(-30, 10);
                 ctx.rotate(this.tailAngle);
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.globalCompositeOperation = 'destination-over'; // Gövdenin arkasına çiz
+                // ctx.globalCompositeOperation = 'destination-over'; // Body arkası
                 ctx.bezierCurveTo(-20, -10, -40, -40, -10, -60);
                 ctx.bezierCurveTo(10, -50, 20, -20, 0, 0);
                 ctx.fill();
                 ctx.restore();
 
-                // GÖVDE
+                // 2. GÖVDE
                 ctx.beginPath();
                 ctx.ellipse(0, 10, 35, 45, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // KAFA
+                // 2.5. PATİLER
+                ctx.beginPath();
+                ctx.ellipse(-20, 45, 12, 8, 0, 0, Math.PI * 2); // Sol Pati
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(20, 45, 12, 8, 0, 0, Math.PI * 2); // Sağ Pati
+                ctx.fill();
+
+                // 3. KAFA
                 ctx.beginPath();
                 ctx.arc(0, -25, 25, 0, Math.PI * 2);
                 ctx.fill();
 
-                // KULAKLAR
+                // 4. KULAKLAR
+                // Sol Kulak
+                ctx.save();
+                ctx.translate(-20, -40);
+                ctx.rotate(this.leftEarTwitch * -0.05);
                 ctx.beginPath();
-                ctx.moveTo(-20, -40); // Sol Kulak
-                ctx.lineTo(-25, -65);
-                ctx.lineTo(-5, -45);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-5, -25);
+                ctx.lineTo(15, -5);
                 ctx.fill();
+                ctx.restore();
 
+                // Sağ Kulak
+                ctx.save();
+                ctx.translate(20, -40);
+                ctx.rotate(this.rightEarTwitch * 0.05);
                 ctx.beginPath();
-                ctx.moveTo(20, -40); // Sağ Kulak
-                ctx.lineTo(25, -65);
-                ctx.lineTo(5, -45);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(5, -25);
+                ctx.lineTo(-15, -5);
                 ctx.fill();
+                ctx.restore();
 
-                // GÖZLER (Beyaz)
+                // 5. GÖZLER
                 if (!this.isBlinking) {
-                    ctx.fillStyle = '#FFF';
-                    ctx.shadowBlur = 5;
-                    ctx.shadowColor = '#FFF';
+                    ctx.fillStyle = contrastColor;
 
                     // Sol Göz
                     ctx.beginPath();
@@ -3562,15 +3617,9 @@
                     ctx.beginPath();
                     ctx.ellipse(10, -25, 4, 3, -Math.PI / 4, 0, Math.PI * 2);
                     ctx.fill();
-
-                    // Pupils
-                    if (this.mood < 30) {
-                        ctx.fillStyle = '#000'; // Narrow pupils if unhappy? Or keep decorative.
-                        // Let's keep it simple white eyes for the silhouette style, maybe specific details
-                    }
                 } else {
-                    // Closed Eyes (Lines)
-                    ctx.strokeStyle = '#FFF';
+                    // Kapalı Gözler (Çizgi)
+                    ctx.strokeStyle = contrastColor;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(-15, -25);
@@ -3583,14 +3632,24 @@
                     ctx.stroke();
                 }
 
-                ctx.restore();
+                // 6. BIYIKLAR
+                ctx.strokeStyle = contrastColor;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
 
-                // Mood Indicator Ring (Subtle)
-                // ctx.beginPath();
-                // ctx.arc(this.width/2, this.height/2, 100, 0, Math.PI*2);
-                // ctx.strokeStyle = `hsla(${this.mood}, 70%, 50%, 0.2)`;
-                // ctx.lineWidth = 2;
-                // ctx.stroke();
+                // Sol Bıyıklar
+                ctx.moveTo(-15, -15); ctx.lineTo(-35, -20);
+                ctx.moveTo(-15, -12); ctx.lineTo(-35, -12);
+                ctx.moveTo(-15, -9); ctx.lineTo(-35, -5);
+
+                // Sağ Bıyıklar
+                ctx.moveTo(15, -15); ctx.lineTo(35, -20);
+                ctx.moveTo(15, -12); ctx.lineTo(35, -12);
+                ctx.moveTo(15, -9); ctx.lineTo(35, -5);
+
+                ctx.stroke();
+
+                ctx.restore();
             }
 
             loop() {
