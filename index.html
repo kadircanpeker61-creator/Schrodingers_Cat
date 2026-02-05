@@ -4235,6 +4235,9 @@
                 player.y = Math.min(player.y, GROUND_Y - player.height - 10);
                 player.dy = 0;
 
+                // Müziği Yeniden Başlat
+                audioManager.startMusic(economyData.equippedTheme);
+
                 requestAnimationFrame(loop);
             }
         }
