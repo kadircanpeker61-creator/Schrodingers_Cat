@@ -2428,6 +2428,18 @@
                         case 'RUINS':
                             this.drawToxicBarrel(ctx, obs.width, obs.height);
                             break;
+                        case 'LAB':
+                            this.drawLabTestTubes(ctx, obs.width, obs.height);
+                            break;
+                        case 'MATRIX':
+                            this.drawGlitchBlock(ctx, obs.width, obs.height);
+                            break;
+                        case 'SYNTHWAVE':
+                            this.drawNeonPyramid(ctx, obs.width, obs.height);
+                            break;
+                        case 'VOID':
+                            this.drawBlackHole(ctx, obs.width, obs.height);
+                            break;
                         default:
                             this.drawUraniumFlask(ctx, obs.width, obs.height);
                             break;
@@ -2630,6 +2642,130 @@
                 ctx.lineTo(w * 0.7, h * 0.5);
                 ctx.lineTo(w * 0.5, h * 0.8);
                 ctx.fill();
+            }
+
+            drawLabTestTubes(ctx, w, h) {
+                // LAB: Test Tüpü Standı
+                ctx.shadowBlur = 0;
+                // Metal Stand Ayakları
+                ctx.strokeStyle = '#C0C0C0';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(w * 0.1, h);
+                ctx.lineTo(w * 0.1, h * 0.4);
+                ctx.moveTo(w * 0.9, h);
+                ctx.lineTo(w * 0.9, h * 0.4);
+                ctx.stroke();
+
+                // 3 Tüp
+                for (let i = 0; i < 3; i++) {
+                    const tx = w * (0.2 + i * 0.25);
+                    const color = i === 0 ? '#FF0000' : i === 1 ? '#00FF00' : '#0000FF';
+
+                    // Cam tüp
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.fillRect(tx, h * 0.3, w * 0.15, h * 0.6);
+
+                    // Renkli Sıvı (Fokurdama efekti)
+                    ctx.fillStyle = color;
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 5;
+                    const boil = Math.random() * 5;
+                    ctx.fillRect(tx, h * 0.5 + boil, w * 0.15, h * 0.4 - boil);
+                }
+            }
+
+            drawGlitchBlock(ctx, w, h) {
+                // MATRIX: Glitch Bloğu
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, w, h);
+
+                // Matrix Kodu
+                ctx.fillStyle = '#00FF00';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#00FF00';
+                ctx.shadowBlur = 5;
+
+                // Titreme efekti
+                if (Math.random() > 0.8) ctx.globalAlpha = 0.5;
+
+                ctx.fillText('0 1', w / 2, h * 0.3);
+                ctx.fillText('1 0', w / 2, h * 0.6);
+                ctx.fillText('ERR', w / 2, h * 0.9);
+
+                ctx.globalAlpha = 1.0;
+
+                // Border Glitch
+                ctx.strokeStyle = '#00FF00';
+                if (Math.random() > 0.9) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random() * w, Math.random() * h);
+                    ctx.lineTo(Math.random() * w, Math.random() * h);
+                    ctx.stroke();
+                }
+            }
+
+            drawNeonPyramid(ctx, w, h) {
+                // SYNTHWAVE: Neon Piramit
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = 2;
+
+                // Gradyan Çizgiler
+                const grad = ctx.createLinearGradient(0, 0, 0, h);
+                grad.addColorStop(0, '#FF00FF'); // Magenta
+                grad.addColorStop(1, '#00FFFF'); // Cyan
+                ctx.strokeStyle = grad;
+                ctx.shadowColor = '#FF00FF';
+                ctx.shadowBlur = 15;
+
+                ctx.beginPath();
+                ctx.moveTo(w / 2, 0); // Tepe
+                ctx.lineTo(w, h); // Sağ Alt
+                ctx.lineTo(0, h); // Sol Alt
+                ctx.closePath();
+                ctx.stroke();
+
+                // Izgara çizgileri
+                ctx.beginPath();
+                ctx.moveTo(w * 0.25, h * 0.5);
+                ctx.lineTo(w * 0.75, h * 0.5);
+                ctx.stroke();
+
+                // Yansıma (Altına ters silik)
+                ctx.save();
+                ctx.scale(1, -0.5);
+                ctx.globalAlpha = 0.3;
+                ctx.translate(0, -h * 3);
+                ctx.stroke(); // Piramidi tekrar çiz (ters)
+                ctx.restore();
+            }
+
+            drawBlackHole(ctx, w, h) {
+                // VOID: Karadelik
+                const cx = w / 2;
+                const cy = h / 2;
+
+                // Olay Ufku (Siyah Merkez)
+                ctx.fillStyle = '#000';
+                ctx.shadowColor = '#9D00FF';
+                ctx.shadowBlur = 20; // Etrafında mor hare
+                ctx.beginPath();
+                ctx.arc(cx, cy, w * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Akresyon Diski (Dönen Halkalar)
+                ctx.strokeStyle = '#4B0082'; // Indigo
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const angle = Date.now() / 500;
+                ctx.ellipse(cx, cy, w * 0.5, h * 0.2, angle, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#8A2BE2'; // BlueViolet
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, w * 0.4, h * 0.15, -angle, 0, Math.PI * 2);
+                ctx.stroke();
             }
 
             checkCollision(cat) {
