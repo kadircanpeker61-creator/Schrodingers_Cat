@@ -3366,6 +3366,8 @@
                 this.purrIntensity = 0;
                 this.leftEarTwitch = 0;
                 this.rightEarTwitch = 0;
+                this.yawnTimer = 0;
+                this.isYawning = false;
 
                 // Etkileşim Sınırları (Kafa bölgesi için yaklaşık değer: y 100 -> 140 görsel merkez)
                 this.headRegion = { x: 150, y: 150, r: 60 };
@@ -3500,6 +3502,20 @@
                 if (this.leftEarTwitch > 0) this.leftEarTwitch *= 0.8;
                 if (this.rightEarTwitch > 0) this.rightEarTwitch *= 0.8;
 
+                // Esneme Animasyonu (Nadir)
+                if (!this.isYawning && Math.random() < 0.001) { // ~3 dakikada bir şans (60fps) - Şans arttırıldı: 0.001
+                    this.isYawning = true;
+                    this.yawnTimer = 0;
+                }
+
+                if (this.isYawning) {
+                    this.yawnTimer++;
+                    if (this.yawnTimer > 120) { // 2 saniye sürsün
+                        this.isYawning = false;
+                        this.yawnTimer = 0;
+                    }
+                }
+
                 // Mutluluk Azalması
                 if (this.frame % 600 === 0) { // Her ~10 saniyede bir
                     this.mood = Math.max(0, this.mood - 1);
@@ -3632,7 +3648,32 @@
                     ctx.stroke();
                 }
 
-                // 6. BIYIKLAR
+                // 6. AĞIZ / ESNEME
+                if (this.isYawning) {
+                    // Esneme (Açık Ağız)
+                    const progress = this.yawnTimer / 60; // 0 -> 2
+                    const openFactor = Math.sin(Math.min(progress, 1) * Math.PI); // 0 -> 1 -> 0
+
+                    ctx.fillStyle = contrastColor;
+                    ctx.beginPath();
+                    // Ağız konumu: y = -15 civarı
+                    // Side check: Esneme ağzını tam ortada çizmek için clip yüzünden yarısını çiziyoruz
+                    ctx.ellipse(0, -10, 8 * openFactor, 10 * openFactor, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Normal Ağız (Küçük 'w' gib)
+                    ctx.strokeStyle = contrastColor;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    if (side === 'left') {
+                        ctx.arc(-3, -12, 3, 0, Math.PI);
+                    } else {
+                        ctx.arc(3, -12, 3, 0, Math.PI);
+                    }
+                    ctx.stroke();
+                }
+
+                // 7. BIYIKLAR
                 ctx.strokeStyle = contrastColor;
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
