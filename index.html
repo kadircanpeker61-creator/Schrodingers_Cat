@@ -2072,35 +2072,92 @@
                 }
             }
 
-            stopMusic() {
-                if (this.musicSource) {
+            async playMusicFile(url) {
+                console.log("[Audio] Attempting to play:", url);
+
+                // --- METHOD 1: Web Audio API (Preferred) ---
+                if (!this.musicBuffers[url]) {
                     try {
-                        this.musicSource.stop();
-                    } catch (e) { }
-                    this.musicSource = null;
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const arrayBuffer = await response.arrayBuffer();
+                        this.musicBuffers[url] = await this.ctx.decodeAudioData(arrayBuffer);
+                        console.log("Müzik decode edildi (Web Audio):", url);
+                    } catch (e) {
+                        console.warn("Web Audio Fetch Failed (Likely file:// protocol), trying fallback...", e);
+                        // Fallback to Method 2 immediately
+                        this.playMusicFallback(url);
+                        return;
+                    }
                 }
-                this.isMusicPlaying = false;
+
+                if (!this.isMusicPlaying) return;
+
+                // Stop previous Web Audio source
+                if (this.musicSource) {
+                    try { this.musicSource.stop(); } catch (e) { }
+                }
+                // Stop previous Fallback Audio
+                if (this.fallbackAudio) {
+                    this.fallbackAudio.pause();
+                    this.fallbackAudio.currentTime = 0;
+                }
+
+                try {
+                    const buffer = this.musicBuffers[url];
+                    const source = this.ctx.createBufferSource();
+                    source.buffer = buffer;
+                    source.loop = true;
+                    source.connect(this.musicGain);
+                    source.start(0);
+                    this.musicSource = source;
+                    console.log("Müzik başladı (Web Audio):", url);
+                } catch (e) {
+                    console.error("Web Audio Playback Error:", e);
+                }
             }
 
-            async playMusicFile(url) {
-                // Eğer buffer cache'de varsa oradan çal, yoksa indir
-                if (!this.musicBuffers[url]) {
-                    console.log("Müzik indiriliyor:", url);
-                    const response = await fetch(url);
-                    const arrayBuffer = await response.arrayBuffer();
-                    this.musicBuffers[url] = await this.ctx.decodeAudioData(arrayBuffer);
+            // --- METHOD 2: HTML5 Audio (Fallback for local files) ---
+            playMusicFallback(url) {
+                if (!this.isMusicPlaying) return;
+
+                // Stop previous sources
+                if (this.musicSource) { try { this.musicSource.stop(); } catch (e) { } }
+                if (this.fallbackAudio) {
+                    this.fallbackAudio.pause();
+                    this.fallbackAudio.currentTime = 0;
                 }
 
-                if (!this.isMusicPlaying) return; // İndirme sürerken durdurulduysa çalma
+                console.log("Müzik başlatılıyor (Fallback Audio):", url);
+                const audio = new Audio(url);
+                audio.loop = true;
+                // Volume syncing is harder without gain node, but workable
+                audio.volume = this.musicVolume;
 
-                const buffer = this.musicBuffers[url];
-                const source = this.ctx.createBufferSource();
-                source.buffer = buffer;
-                source.loop = true; // Döngüsel çal
-                source.connect(this.musicGain);
-                source.start(0);
-                this.musicSource = source;
-                console.log("Müzik başladı:", url);
+                // Add error listener for user feedback
+                audio.onerror = (e) => {
+                    console.error("Fallback Audio Error:", e);
+                    showToast("HATA", "Müzik dosyası bulunamadı: " + url.split('/').pop(), "fa-triangle-exclamation");
+                };
+
+                audio.play().catch(e => {
+                    console.error("Autoplay/Play Error:", e);
+                });
+
+                this.fallbackAudio = audio;
+            }
+
+            stopMusic() {
+                if (this.musicSource) {
+                    try { this.musicSource.stop(); } catch (e) { }
+                    this.musicSource = null;
+                }
+                if (this.fallbackAudio) {
+                    this.fallbackAudio.pause();
+                    this.fallbackAudio.currentTime = 0;
+                    this.fallbackAudio = null;
+                }
+                this.isMusicPlaying = false;
             }
         }
 
@@ -4689,4 +4746,220 @@
 
 </body>
 
-</html>
+</html>< ! - -   T o a s t   N o t i f i c a t i o n   C S S   - - > 
+     
+     < s t y l e > 
+         
+                 . t o a s t - c o n t a i n e r   { 
+         
+                         p o s i t i o n :   f i x e d ; 
+         
+                         t o p :   2 0 p x ; 
+         
+                         l e f t :   5 0 % ; 
+         
+                         t r a n s f o r m :   t r a n s l a t e X ( - 5 0 % ) ; 
+         
+                         z - i n d e x :   1 0 0 0 0 ; 
+         
+                         d i s p l a y :   f l e x ; 
+         
+                         f l e x - d i r e c t i o n :   c o l u m n ; 
+         
+                         g a p :   1 0 p x ; 
+         
+                         p o i n t e r - e v e n t s :   n o n e ; 
+         
+                 } 
+         
+         
+         
+                 . t o a s t - m e s s a g e   { 
+         
+                         b a c k g r o u n d :   r g b a ( 0 ,   0 ,   0 ,   0 . 9 ) ; 
+         
+                         c o l o r :   # f f f ; 
+         
+                         p a d d i n g :   1 2 p x   2 4 p x ; 
+         
+                         b o r d e r - r a d i u s :   8 p x ; 
+         
+                         b o r d e r :   1 p x   s o l i d   r g b a ( 2 5 5 ,   2 5 5 ,   2 5 5 ,   0 . 2 ) ; 
+         
+                         b o x - s h a d o w :   0   4 p x   1 2 p x   r g b a ( 0 ,   0 ,   0 ,   0 . 5 ) ; 
+         
+                         d i s p l a y :   f l e x ; 
+         
+                         a l i g n - i t e m s :   c e n t e r ; 
+         
+                         g a p :   1 2 p x ; 
+         
+                         f o n t - f a m i l y :   ' C o u r i e r   N e w ' ,   m o n o s p a c e ; 
+         
+                         f o n t - s i z e :   1 4 p x ; 
+         
+                         a n i m a t i o n :   s l i d e D o w n   0 . 3 s   e a s e - o u t ; 
+         
+                         p o i n t e r - e v e n t s :   a u t o ; 
+         
+                         m i n - w i d t h :   3 0 0 p x ; 
+         
+                 } 
+         
+         
+         
+                 . t o a s t - m e s s a g e . e r r o r   { 
+         
+                         b o r d e r - c o l o r :   # f f 4 4 4 4 ; 
+         
+                         b a c k g r o u n d :   r g b a ( 5 0 ,   0 ,   0 ,   0 . 9 5 ) ; 
+         
+                 } 
+         
+         
+         
+                 . t o a s t - i c o n   { 
+         
+                         f o n t - s i z e :   1 8 p x ; 
+         
+                 } 
+         
+         
+         
+                 . t o a s t - t e x t   { 
+         
+                         f l e x - g r o w :   1 ; 
+         
+                 } 
+         
+         
+         
+                 @ k e y f r a m e s   s l i d e D o w n   { 
+         
+                         f r o m   { 
+         
+                                 t r a n s f o r m :   t r a n s l a t e Y ( - 2 0 p x ) ; 
+         
+                                 o p a c i t y :   0 ; 
+         
+                         } 
+         
+         
+         
+                         t o   { 
+         
+                                 t r a n s f o r m :   t r a n s l a t e Y ( 0 ) ; 
+         
+                                 o p a c i t y :   1 ; 
+         
+                         } 
+         
+                 } 
+         
+         
+         
+                 @ k e y f r a m e s   f a d e O u t   { 
+         
+                         t o   { 
+         
+                                 o p a c i t y :   0 ; 
+         
+                                 t r a n s f o r m :   t r a n s l a t e Y ( - 1 0 p x ) ; 
+         
+                         } 
+         
+                 } 
+         
+         <  / s t y l e > 
+             
+             
+             
+             < s c r i p t > 
+                 
+                         / /   T o a s t   N o t i f i c a t i o n   S y s t e m 
+                 
+                         f u n c t i o n   s h o w T o a s t ( t i t l e ,   m e s s a g e ,   i c o n C l a s s   = 
+                 ' f a - i n f o - c i r c l e ' )   { 
+                 
+                                 l e t   c o n t a i n e r   = 
+                 d o c u m e n t . q u e r y S e l e c t o r ( ' . t o a s t - c o n t a i n e r ' ) ; 
+                 
+                                 i f   ( ! c o n t a i n e r )   { 
+                 
+                                         c o n t a i n e r   = 
+                 d o c u m e n t . c r e a t e E l e m e n t ( ' d i v ' ) ; 
+                 
+                                         c o n t a i n e r . c l a s s N a m e   = 
+                 ' t o a s t - c o n t a i n e r ' ; 
+                 
+                                         d o c u m e n t . b o d y . a p p e n d C h i l d ( c o n t a i n e r ) ; 
+                 
+                                 } 
+                 
+                 
+                 
+                                 c o n s t   t o a s t   = 
+                 d o c u m e n t . c r e a t e E l e m e n t ( ' d i v ' ) ; 
+                 
+                                 t o a s t . c l a s s N a m e   =   ' t o a s t - m e s s a g e ' ; 
+                 
+                                 i f   ( t i t l e   = = =   ' H A T A ' ) 
+                 t o a s t . c l a s s L i s t . a d d ( ' e r r o r ' ) ; 
+                 
+                 
+                 
+                                 t o a s t . i n n e r H T M L   =   ` 
+                 
+                                                 < i   c l a s s = " f a s   $ { i c o n C l a s s } 
+                     t o a s t - i c o n "   s t y l e = " c o l o r :   $ { t i t l e   = = =   ' H A T A '   ? 
+                     ' # f f 4 4 4 4 '   :   ' # 4 4 a a f f ' } " > <  / i > 
+                         
+                                                         < d i v   c l a s s = " t o a s t - t e x t " > 
+                             
+                                                                     < s t r o n g 
+                                 s t y l e = " d i s p l a y : b l o c k ;   m a r g i n - b o t t o m : 2 p x ; 
+                                 c o l o r :   $ { t i t l e   = = =   ' H A T A '   ?   ' # f f 8 8 8 8 '   : 
+                                 ' # 8 8 c c f f ' } " > $ { t i t l e } <  / s t r o n g > 
+                                     
+                                                                             $ { m e s s a g e } 
+                                     
+                                                                     <  / d i v > 
+                                         
+                                                                 ` ; 
+                                         
+                                         
+                                         
+                                                         c o n t a i n e r . a p p e n d C h i l d ( t o a s t ) ; 
+                                         
+                                         
+                                         
+                                                         / /   A u d i o   f e e d b a c k   f o r   e r r o r 
+                                         
+                                                         i f   ( t i t l e   = = =   ' H A T A '   & & 
+                                         w i n d o w . a u d i o M a n a g e r )   { 
+                                         
+                                                                 / /   T r y   t o   p l a y   a   s i m p l e 
+                                         b e e p   i f   p o s s i b l e ,   o r   j u s t   r e l y   o n 
+                                         v i s u a l 
+                                         
+                                                         } 
+                                         
+                                         
+                                         
+                                                         / /   R e m o v e   a f t e r   5   s e c o n d s 
+                                         
+                                                         s e t T i m e o u t ( ( )   = >   { 
+                                         
+                                                                 t o a s t . s t y l e . a n i m a t i o n   = 
+                                         ' f a d e O u t   0 . 5 s   e a s e - f o r w a r d ' ; 
+                                         
+                                                                 s e t T i m e o u t ( ( )   = > 
+                                         t o a s t . r e m o v e ( ) ,   5 0 0 ) ; 
+                                         
+                                                         } ,   5 0 0 0 ) ; 
+                                         
+                                                 } 
+                                         
+                                         <  / s c r i p t > 
+                                             
+                                             

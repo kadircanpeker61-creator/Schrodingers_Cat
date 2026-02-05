@@ -1,0 +1,100 @@
+<!-- Toast Notification CSS -->
+<style>
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+    }
+
+    .toast-message {
+        background: rgba(0, 0, 0, 0.9);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        animation: slideDown 0.3s ease-out;
+        pointer-events: auto;
+        min-width: 300px;
+    }
+
+    .toast-message.error {
+        border-color: #ff4444;
+        background: rgba(50, 0, 0, 0.95);
+    }
+
+    .toast-icon {
+        font-size: 18px;
+    }
+
+    .toast-text {
+        flex-grow: 1;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+</style>
+
+<script>
+    // Toast Notification System
+    function showToast(title, message, iconClass = 'fa-info-circle') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        if (title === 'HATA') toast.classList.add('error');
+
+        toast.innerHTML = `
+                <i class="fas ${iconClass} toast-icon" style="color: ${title === 'HATA' ? '#ff4444' : '#44aaff'}"></i>
+                <div class="toast-text">
+                    <strong style="display:block; margin-bottom:2px; color: ${title === 'HATA' ? '#ff8888' : '#88ccff'}">${title}</strong>
+                    ${message}
+                </div>
+            `;
+
+        container.appendChild(toast);
+
+        // Audio feedback for error
+        if (title === 'HATA' && window.audioManager) {
+            // Try to play a simple beep if possible, or just rely on visual
+        }
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.5s ease-forward';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+</script>
