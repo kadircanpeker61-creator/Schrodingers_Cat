@@ -1859,7 +1859,12 @@
                     'LAB': 'assets/lab_music.ogg',         // Radioactive
                     'MATRIX': 'assets/matrix_music.ogg',   // Simulation
                     'SYNTHWAVE': 'assets/neon_music.ogg',  // Neon Future
-                    'VOID': 'assets/quantum_music.ogg'     // Quantum
+                    'VOID': 'assets/quantum_music.ogg',    // Quantum
+                    'EGYPT': 'assets/egypt.ogg',
+                    'FOREST': 'assets/forest.ogg',
+                    'ISLAND': 'assets/island.ogg',
+                    'ORIENTAL': 'assets/oriental.ogg',
+                    'RUINS': 'assets/ruins.ogg'
                 };
 
                 this.musicBuffers = {}; // Yüklenen müzikleri cachelemek için
@@ -2114,7 +2119,12 @@
                     'LAB': 'assets/Radyoaktif_Lab.webp',
                     'MATRIX': 'assets/Simülasyon_plan.webp',
                     'SYNTHWAVE': 'assets/Neon_Gelecek.webp', // Renamed to remove space
-                    'VOID': 'assets/Kuantum_plan.webp'
+                    'VOID': 'assets/Kuantum_plan.webp',
+                    'EGYPT': 'assets/mısır_plan.webp',
+                    'FOREST': 'assets/orman_plan.webp',
+                    'ISLAND': 'assets/ada_plan.webp',
+                    'ORIENTAL': 'assets/chınes_plan.webp',
+                    'RUINS': 'assets/yıkım_plan.webp'
                 };
 
                 this.image = new Image();
@@ -2783,11 +2793,16 @@
 
         // SHOP & ECONOMY SYSTEM
         const THEMES = {
-            CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp" },
-            LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp" },
-            MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp" },
-            SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp" },
-            VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp" }
+            CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp", bgImg: "assets/Noir_plan.webp" },
+            LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp", bgImg: "assets/Radyoaktif_Lab.webp" },
+            MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp", bgImg: "assets/Simülasyon_plan.webp" },
+            SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp", bgImg: "assets/Neon_Gelecek.webp" },
+            VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp", bgImg: "assets/Kuantum_plan.webp" },
+            EGYPT: { name: "ANTİK MISIR", cost: 20000, desc: "Piramitlerin Gizemi", color: "#F4D03F", icon: "fa-pyramid", img: "assets/mısırr.webp", bgImg: "assets/mısır_plan.webp" },
+            FOREST: { name: "MİSTİK ORMAN", cost: 25000, desc: "Büyülü Doğa", color: "#2ECC71", icon: "fa-tree", img: "assets/ormann.webp", bgImg: "assets/orman_plan.webp" },
+            ISLAND: { name: "UÇAN ADA", cost: 30000, desc: "Gökyüzü Krallığı", color: "#5DADE2", icon: "fa-cloud", img: "assets/adaa.webp", bgImg: "assets/ada_plan.webp" },
+            ORIENTAL: { name: "YASAK ŞEHİR", cost: 35000, desc: "Doğunun İncisi", color: "#E74C3C", icon: "fa-torii-gate", img: "assets/chınes.webp", bgImg: "assets/chınes_plan.webp" },
+            RUINS: { name: "YIKILMIŞ DÜNYA", cost: 40000, desc: "Kıyamet Sonrası", color: "#7F8C8D", icon: "fa-dungeon", img: "assets/bina.webp", bgImg: "assets/yıkım_plan.webp" }
         };
 
         let economyData = {
@@ -4464,16 +4479,14 @@
             const bgLayer = document.getElementById('menu-background-layer');
             if (!bgLayer) return;
 
-            let bgUrl = getAssetPath('assets/Noir_plan.webp'); // Default
             const t = economyData.equippedTheme;
+            let bgUrl = 'assets/Noir_plan.webp'; // Default
 
-            if (t === 'CITY') bgUrl = getAssetPath('assets/Noir_plan.webp');
-            else if (t === 'LAB') bgUrl = getAssetPath('assets/Radyoaktif_Lab.webp');
-            else if (t === 'MATRIX') bgUrl = getAssetPath('assets/Simülasyon_plan.webp');
-            else if (t === 'SYNTHWAVE') bgUrl = getAssetPath('assets/Neon Gelecek.webp');
-            else if (t === 'VOID') bgUrl = getAssetPath('assets/Kuantum_plan.webp');
+            if (THEMES[t] && THEMES[t].bgImg) {
+                bgUrl = THEMES[t].bgImg;
+            }
 
-            bgLayer.style.backgroundImage = `url('${bgUrl}')`;
+            bgLayer.style.backgroundImage = `url('${getAssetPath(bgUrl)}')`;
         };
 
         window.updateBuffsDisplay = () => {
