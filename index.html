@@ -3949,10 +3949,14 @@
         }
 
         function createRain() {
+            rainDrops = []; // Reset array
+
+            // Sadece Viyana temasında yağmur yağsın
+            if (economyData.equippedTheme !== 'CITY') return;
+
             const isMobile = window.innerWidth < 768;
             const dropCount = isMobile ? 30 : 80; // Mobilde daha az yağmur
 
-            rainDrops = []; // Reset array
             for (let i = 0; i < dropCount; i++) {
                 rainDrops.push({
                     x: Math.random() * WIDTH,
