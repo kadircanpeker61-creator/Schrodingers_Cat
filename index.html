@@ -1619,6 +1619,8 @@
             <div class="tab-btn" onclick="showLeaderboardTab('EASY')" id="tab-EASY">KOLAY</div>
             <div class="tab-btn active" onclick="showLeaderboardTab('NORMAL')" id="tab-NORMAL">NORMAL</div>
             <div class="tab-btn" onclick="showLeaderboardTab('HARD')" id="tab-HARD">ZOR</div>
+            <div class="tab-btn" style="color: #ff0000; border-color: #ff0000;" onclick="showLeaderboardTab('EXTREME')"
+                id="tab-EXTREME">EXTREME</div>
         </div>
 
         <div class="story-container" id="leaderboard-list">
@@ -5003,30 +5005,8 @@
             }
         };
 
-        window.showLeaderboardTab = (diff) => {
-            // Tab Buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('tab-' + diff).classList.add('active');
+        // Duplicate showLeaderboardTab removed. The active definition is around line 4814.
 
-            // List Content
-            const container = document.getElementById('leaderboard-list');
-            container.innerHTML = "";
-
-            const scores = leaderboardData[diff] || [];
-            if (scores.length === 0) {
-                container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
-            } else {
-                scores.forEach((item, index) => {
-                    const row = document.createElement('div');
-                    row.className = 'score-row';
-                    row.innerHTML = `
-                        <span>${index + 1}. ${item.name}</span>
-                        <span>${Math.floor(item.score).toString().padStart(5, '0')}</span>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-        };
 
         window.showMenu = () => {
             document.body.style.overflow = 'hidden'; // Ensure locked even in menu
