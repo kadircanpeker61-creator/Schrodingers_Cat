@@ -2840,7 +2840,17 @@
                 this.grounded = true;
                 this.color = 'white'; // Başlangıç rengi
                 this.isInvulnerable = false;
+                this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
+                this.isOceanMode = false;
+            }
+
+            setOceanMode(active) {
+                this.isOceanMode = active;
+                if (active) {
+                    this.dy = 0; // Reset momentum
+                    this.grounded = false; // Floating
+                }
             }
 
             setPhysics(grav, jump) {
@@ -2867,6 +2877,40 @@
                     }
                 }
 
+                if (this.isOceanMode) {
+                    // OCEAN PHYSICS ("Hold to Dive")
+                    const isDiving = (inputHandler && inputHandler.actions.jump);
+
+                    if (isDiving) {
+                        // DIVE DOWN
+                        this.dy += 1.5 * dt; // Accelerate down
+                        if (this.dy > 8) this.dy = 8; // Terminal velocity down
+                    } else {
+                        // FLOAT UP (Buoyancy)
+                        // Gravity is inverted basically
+                        this.dy -= 0.8 * dt; // Accelerate up
+                        if (this.dy < -6) this.dy = -6; // Terminal velocity up
+                    }
+
+                    // Drag (Water Resistance) - Smooths movements
+                    this.dy *= 0.96;
+
+                    this.y += this.dy * dt;
+
+                    // Ceiling Cap
+                    if (this.y < 0) {
+                        this.y = 0;
+                        if (this.dy < 0) this.dy = 0;
+                    }
+                    // Floor Cap
+                    if (this.y + this.height > groundY) {
+                        this.y = groundY - this.height;
+                        if (this.dy > 0) this.dy = 0;
+                    }
+                    return; // Skip normal physics
+                }
+
+                // NORMAL PHYSICS
                 this.dy += this.gravity * dt;
                 this.y += this.dy * dt;
 
@@ -2880,6 +2924,11 @@
             }
 
             jump() {
+                if (this.isOceanMode) {
+                    // DIVE handled in update() via input state
+                    return false;
+                }
+
                 if (this.grounded) {
                     this.dy = this.jumpForce;
                     this.grounded = false;
@@ -3044,57 +3093,88 @@
             constructor(game) {
                 this.game = game;
                 this.width = window.innerWidth;
+                this.actions = { jump: false, switch: false }; // State tracking
                 this.setupListeners();
             }
 
             updateWidth(width) {
                 this.width = width;
             }
-            // updateWidth(width) { // Removed as per new logic
-            //     this.width = width;
-            // }
 
             setupListeners() {
                 // Keyboard
                 window.addEventListener('keydown', (e) => {
                     if (!this.game.isPlaying) return;
+
+                    // Prevent repeat triggers for hold (optional, but good for one-shot logic if we kept it)
+                    // But for state tracking 'repeat' is fine, or we just set true.
+
                     const diffSettings = DIFFICULTY_SETTINGS[this.game.currentDifficulty];
                     const isSwapped = diffSettings && diffSettings.swapControls;
+                    const isJumpKey = ['Space', 'ArrowUp', 'KeyW'].includes(e.code);
+                    const isSwitchKey = ['Enter', 'ArrowRight', 'KeyZ', 'KeyD', 'ArrowDown', 'KeyS'].includes(e.code);
 
-                    if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
-                        // Normal: Jump, Swapped: Switch
-                        this.game.handleAction(isSwapped ? 'switch' : 'jump');
-                    } else if (['Enter', 'ArrowRight', 'KeyZ', 'KeyD', 'ArrowDown', 'KeyS'].includes(e.code)) { // Added ArrowDown, KeyS for switch
-                        // Normal: Switch, Swapped: Jump
-                        this.game.handleAction(isSwapped ? 'jump' : 'switch');
+                    if (isJumpKey) {
+                        const action = isSwapped ? 'switch' : 'jump';
+                        this.actions[action] = true;
+                        this.game.handleAction(action);
+                    } else if (isSwitchKey) {
+                        const action = isSwapped ? 'jump' : 'switch';
+                        this.actions[action] = true;
+                        this.game.handleAction(action);
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    const diffSettings = DIFFICULTY_SETTINGS[this.game.currentDifficulty];
+                    const isSwapped = diffSettings && diffSettings.swapControls;
+                    const isJumpKey = ['Space', 'ArrowUp', 'KeyW'].includes(e.code);
+                    const isSwitchKey = ['Enter', 'ArrowRight', 'KeyZ', 'KeyD', 'ArrowDown', 'KeyS'].includes(e.code);
+
+                    if (isJumpKey) {
+                        const action = isSwapped ? 'switch' : 'jump';
+                        this.actions[action] = false;
+                    } else if (isSwitchKey) {
+                        const action = isSwapped ? 'jump' : 'switch';
+                        this.actions[action] = false;
                     }
                 });
 
                 // Touch / Mouse
-                const handleTouch = (e) => {
+                const handleStart = (e) => {
                     if (!this.game.isPlaying) return;
-                    e.preventDefault();
+                    if (e.type === 'touchstart') e.preventDefault(); // Prevent scroll/mouse emulation
+
                     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                     const diffSettings = DIFFICULTY_SETTINGS[this.game.currentDifficulty];
                     const isSwapped = diffSettings && diffSettings.swapControls;
 
-                    // Screen width split
-                    // Normal: Left=Jump, Right=Switch
-                    // Swapped: Left=Switch, Right=Jump
-                    if (clientX < window.innerWidth / 2) {
-                        this.game.handleAction(isSwapped ? 'switch' : 'jump');
+                    // Left=Jump, Right=Switch (Normal)
+                    const isLeft = clientX < window.innerWidth / 2;
+                    let action = 'jump';
+
+                    if (isLeft) {
+                        action = isSwapped ? 'switch' : 'jump';
                     } else {
-                        this.game.handleAction(isSwapped ? 'jump' : 'switch');
+                        action = isSwapped ? 'jump' : 'switch';
                     }
+
+                    this.actions[action] = true;
+                    this.game.handleAction(action);
                 };
 
-                // Remove old zone listeners if they exist, then add new global ones
-                // This assumes the old 'zones' logic is being replaced by global window listeners
-                // For simplicity, we'll just add the new global listeners.
-                // If 'left-zone' and 'right-zone' elements are still used for visual feedback,
-                // their event listeners are now redundant for game input.
-                window.addEventListener('touchstart', handleTouch, { passive: false });
-                window.addEventListener('mousedown', handleTouch);
+                const handleEnd = (e) => {
+                    // For simplicity, release both on any up, or try to track touches.
+                    // A simple "release all" is usually safe for this simple game.
+                    this.actions.jump = false;
+                    this.actions.switch = false;
+                };
+
+                window.addEventListener('touchstart', handleStart, { passive: false });
+                window.addEventListener('mousedown', handleStart);
+
+                window.addEventListener('touchend', handleEnd);
+                window.addEventListener('mouseup', handleEnd);
             }
         }
 
@@ -4174,6 +4254,264 @@
         };
         const inputHandler = new InputHandler(gameInterface);
 
+        // --- PHASE 1 & 2: PORTAL & OCEAN SYSTEM ---
+        const GAME_MODES = {
+            NORMAL: 'NORMAL',
+            OCEAN: 'OCEAN'
+        };
+
+        class PortalManager {
+            constructor() {
+                this.portals = [];
+                // Phase 1: More frequent spawns (30-50s) as requested
+                this.spawnTimer = 0;
+                this.nextSpawnTime = Math.random() * 20 + 30; // 30-50s
+            }
+
+            reset() {
+                this.portals = [];
+                this.spawnTimer = 0;
+                this.nextSpawnTime = Math.random() * 20 + 30;
+            }
+
+            update(dt, speed) {
+                if (gameMode !== GAME_MODES.NORMAL) return;
+
+                // Spawning
+                this.spawnTimer += dt;
+                if (this.spawnTimer >= this.nextSpawnTime) {
+                    this.spawnPortal();
+                    this.spawnTimer = 0;
+                    this.nextSpawnTime = Math.random() * 20 + 30;
+                }
+
+                // Update Portals
+                for (let i = this.portals.length - 1; i >= 0; i--) {
+                    let p = this.portals[i];
+                    p.x -= (speed * 1.2) * dt; // Portals move slightly faster than background
+                    p.rotation += 2 * dt;
+
+                    // Remove if off screen
+                    if (p.x < -100) {
+                        this.portals.splice(i, 1);
+                    }
+                }
+            }
+
+            spawnPortal() {
+                // Spawn lower for better reachability (Middle to Lower-Middle)
+                // GROUND_Y is approx floor. Canvas 0 is top.
+                // We want spawning between GROUND_Y - 250 (High Jump) and GROUND_Y - 100 (Low Jump)
+                const yPos = GROUND_Y - (Math.random() * 150 + 100);
+                this.portals.push({
+                    x: WIDTH + 100,
+                    y: yPos,
+                    radius: 40,
+                    rotation: 0,
+                    color: '#8A2BE2' // BlueViolet/Purple
+                });
+                // Optional: Play spawn sound
+                // if(window.audioManager) window.audioManager.playPortalSpawn();
+                console.log("Portal Spawned!");
+            }
+
+            draw(ctx) {
+                if (gameMode !== GAME_MODES.NORMAL && this.portals.length === 0) return;
+
+                for (let p of this.portals) {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+
+                    // Portal Ring
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 5;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = p.color;
+                    ctx.stroke();
+
+                    // Inner swirling vortex effect (simplified)
+                    ctx.fillStyle = 'rgba(138, 43, 226, 0.3)';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, -p.radius + 5);
+                    ctx.lineTo(0, p.radius - 5);
+                    ctx.moveTo(-p.radius + 5, 0);
+                    ctx.lineTo(p.radius - 5, 0);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+            }
+
+            checkCollision(player) {
+                // Simple Circle-Rectangle (approx) or Point collision
+                // Player center approx:
+                const px = player.x + player.width / 2;
+                const py = player.y + player.height / 2;
+
+                for (let i = 0; i < this.portals.length; i++) {
+                    let p = this.portals[i];
+                    const dx = px - p.x;
+                    const dy = py - p.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < p.radius + 20) { // Player radius approx 20
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        class OceanMode {
+            constructor() {
+                this.isActive = false;
+                this.timer = 0;
+                this.duration = 20; // 20 seconds
+                this.bubbles = [];
+            }
+
+            enter() {
+                this.isActive = true;
+                this.timer = this.duration;
+                console.log("Entering Ocean Mode");
+
+                // Activate Player Ocean Physics
+                if (player) player.setOceanMode(true);
+
+                // Visual feedback
+                document.body.style.transition = "background-color 1s";
+                document.body.style.backgroundColor = "#001e33"; // Deep blue
+
+                // Spawn initial bubbles
+                for (let i = 0; i < 20; i++) {
+                    this.bubbles.push({
+                        x: Math.random() * WIDTH,
+                        y: HEIGHT + Math.random() * 100,
+                        radius: Math.random() * 5 + 2,
+                        speed: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            exit() {
+                this.isActive = false;
+                if (player) player.setOceanMode(false);
+
+                // Switch back explicitly if managed by global
+                gameMode = GAME_MODES.NORMAL;
+                console.log("Exiting Ocean Mode");
+
+                document.body.style.backgroundColor = "#111"; // Back to dark
+            }
+
+            update(dt) {
+                if (!this.isActive) return;
+
+                this.timer -= dt / 60; // Approx seconds
+
+                if (this.timer <= 0) {
+                    this.exit();
+                    return;
+                }
+
+                // Update Bubbles
+                if (Math.random() < 0.1) { // Spawn new bubbles occassionally
+                    this.bubbles.push({
+                        x: Math.random() * WIDTH,
+                        y: HEIGHT + 10,
+                        radius: Math.random() * 5 + 2,
+                        speed: Math.random() * 2 + 1
+                    });
+                }
+
+                for (let i = this.bubbles.length - 1; i >= 0; i--) {
+                    let b = this.bubbles[i];
+                    b.y -= b.speed * (dt * 0.8); // Rise up
+                    b.x += Math.sin(gameTime * 0.05 + b.y * 0.01) * 0.5; // Wobble
+
+                    if (b.y < -10) this.bubbles.splice(i, 1);
+                }
+            }
+
+            draw(ctx) {
+                if (!this.isActive) return;
+
+                // Draw Bubbles
+                ctx.save();
+                ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+                for (let b of this.bubbles) {
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw Water Overlay (Gradient)
+                const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+                grad.addColorStop(0, "rgba(0, 100, 255, 0.1)");
+                grad.addColorStop(1, "rgba(0, 30, 100, 0.4)");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+                // Draw Timer
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 24px 'Courier Prime'";
+                ctx.textAlign = "center";
+                ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+
+                ctx.restore();
+            }
+
+            draw(ctx, width, height) {
+                // Ocean Overlay / Background
+                ctx.save();
+                const grad = ctx.createLinearGradient(0, 0, 0, height);
+                grad.addColorStop(0, '#006994');
+                grad.addColorStop(1, '#001e33');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, width, height);
+
+                // Bubbles (Placeholder)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                for (let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Timer UI
+                ctx.fillStyle = '#39FF14';
+                ctx.font = '20px Courier Prime';
+                ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, 20, 100);
+
+                ctx.restore();
+            }
+        }
+
+        // GLOBALS FOR NEW MODES
+        let gameMode = GAME_MODES.NORMAL;
+        let portalManager = new PortalManager();
+        let oceanMode = new OceanMode();
+
+        function switchGameMode(newMode) {
+            gameMode = newMode;
+            if (newMode === GAME_MODES.OCEAN) {
+                oceanMode.enter();
+                // Modify physics for ocean?
+                // We'll handle physics changes in the main update loop or Player class
+            } else {
+                // Reset to normal physics
+                player.setPhysics(DIFFICULTY_SETTINGS[currentDifficulty].gravity, DIFFICULTY_SETTINGS[currentDifficulty].jumpForce);
+            }
+        }
+
+
         // Initialize Game
         // Initialize Game
         function initGame() {
@@ -4184,6 +4522,11 @@
             // RESET
             score = 0;
             atomsClaimedThisRun = 0;
+
+            // Phase 1 Reset
+            if (portalManager) portalManager.reset();
+            gameMode = GAME_MODES.NORMAL;
+
             speed = settings.speedStart;
             frames = 0;
             gameTime = 0;
@@ -4366,6 +4709,24 @@
             frames++;
             gameTime += dt;
 
+            // --- OCEAN MODE UPDATE ---
+            // --- OCEAN MODE UPDATE ---
+            if (gameMode === GAME_MODES.OCEAN) {
+                if (oceanMode) oceanMode.update(dt);
+                player.update(GROUND_Y, dt); // Ensure physics run
+                // In Ocean Mode, we pause normal obstacle/speed updates
+                return;
+            }
+
+            // --- PORTAL UPDATE ---
+            if (portalManager) {
+                portalManager.update(dt, speed);
+                if (portalManager.checkCollision(player)) {
+                    switchGameMode(GAME_MODES.OCEAN);
+                    return;
+                }
+            }
+
             if (shake > 0) {
                 shake -= 15 * dt;
                 if (shake < 0) shake = 0;
@@ -4410,10 +4771,21 @@
                 ctx.translate(dx, dy);
             }
 
+            // --- OCEAN MODE DRAW ---
+            if (gameMode === GAME_MODES.OCEAN) {
+                if (oceanMode) oceanMode.draw(ctx, WIDTH, HEIGHT);
+                player.draw(ctx, frames, playerName, gameTime);
+                ctx.restore();
+                return;
+            }
+
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
             backgroundLayers.forEach(layer => layer.draw(ctx, WIDTH, HEIGHT, GROUND_Y));
+
+            // Draw Portals
+            if (portalManager) portalManager.draw(ctx);
 
             ctx.beginPath();
             ctx.strokeStyle = '#333';
