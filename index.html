@@ -4522,7 +4522,7 @@
             update(dt) {
                 if (!this.isActive) return;
 
-                this.timer -= dt / 60; // Fix: Convert dt(frames) to seconds
+                this.timer -= dt; // Fix: dt is already in seconds
 
                 if (this.timer <= 0) {
                     this.exit();
