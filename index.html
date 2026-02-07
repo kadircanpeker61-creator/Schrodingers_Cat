@@ -4523,6 +4523,10 @@
                 // Load Background Image
                 this.bgImage = new Image();
                 this.bgImage.src = 'assets/okyanus.webp';
+
+                // Background Scrolling (Infinite)
+                this.bgX = 0;
+                this.bgSpeed = 80; // Slow, relaxing drift (pixels per second)
             }
 
             enter() {
@@ -4587,6 +4591,12 @@
                 if (this.timer <= 0) {
                     this.exit();
                     return;
+                }
+
+                // --- BACKGROUND SCROLLING ---
+                this.bgX -= this.bgSpeed * dt;
+                if (this.bgX <= -WIDTH) {
+                    this.bgX = 0;
                 }
 
                 // --- BUBBLES ---
@@ -4658,8 +4668,9 @@
                 // Draw Background Image if loaded
                 if (this.bgImage && this.bgImage.complete && this.bgImage.naturalWidth !== 0) {
                     try {
-                        // Draw full screen
-                        ctx.drawImage(this.bgImage, 0, 0, WIDTH, HEIGHT);
+                        // Draw looping background (Seamless Scrolling)
+                        ctx.drawImage(this.bgImage, this.bgX, 0, WIDTH, HEIGHT);
+                        ctx.drawImage(this.bgImage, this.bgX + WIDTH, 0, WIDTH, HEIGHT);
 
                         // Overlay a semi-transparent blue tint to ensure text/elements pop
                         ctx.fillStyle = "rgba(0, 30, 51, 0.3)";
