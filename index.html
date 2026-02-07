@@ -2216,7 +2216,7 @@
 
             update(speed, dt) {
                 this.speed = speed * this.speedModifier;
-                this.x -= this.speed * dt;
+                this.x -= this.speed * 60 * dt;
                 if (this.x <= -this.width) {
                     this.x = 0;
                 }
@@ -2319,7 +2319,7 @@
                 // Update Obstacles
                 for (let i = this.obstacles.length - 1; i >= 0; i--) {
                     let obs = this.obstacles[i];
-                    obs.x -= speed * deltaTime;
+                    obs.x -= speed * 60 * deltaTime;
 
                     // Check if passed
                     // Check if passed
@@ -2344,7 +2344,7 @@
 
                 // Move ground
                 for (let g of this.groundSegments) {
-                    g.x -= speed * deltaTime;
+                    g.x -= speed * 60 * deltaTime;
                 }
             }
 
@@ -2871,7 +2871,7 @@
             update(groundY, dt) {
                 // Invulnerability Timer
                 if (this.isInvulnerable) {
-                    this.invulnerableTimer -= dt * 16.66; // Approx ms
+                    this.invulnerableTimer -= dt * 1000; // dt is in seconds, convert to ms
                     if (this.invulnerableTimer <= 0) {
                         this.isInvulnerable = false;
                     }
@@ -2883,19 +2883,19 @@
 
                     if (isDiving) {
                         // DIVE DOWN
-                        this.dy += 1.5 * dt; // Accelerate down
+                        this.dy += 1.5 * 60 * dt; // Accelerate down
                         if (this.dy > 8) this.dy = 8; // Terminal velocity down
                     } else {
                         // FLOAT UP (Buoyancy)
                         // Gravity is inverted basically
-                        this.dy -= 0.8 * dt; // Accelerate up
+                        this.dy -= 0.8 * 60 * dt; // Accelerate up
                         if (this.dy < -6) this.dy = -6; // Terminal velocity up
                     }
 
                     // Drag (Water Resistance) - Smooths movements
                     this.dy *= 0.96;
 
-                    this.y += this.dy * dt;
+                    this.y += this.dy * 60 * dt;
 
                     // Ceiling Cap
                     if (this.y < 0) {
@@ -2911,8 +2911,8 @@
                 }
 
                 // NORMAL PHYSICS
-                this.dy += this.gravity * dt;
-                this.y += this.dy * dt;
+                this.dy += this.gravity * 60 * dt;
+                this.y += this.dy * 60 * dt;
 
                 if (this.y + this.height > groundY) {
                     this.y = groundY - this.height;
@@ -4263,15 +4263,15 @@
         class PortalManager {
             constructor() {
                 this.portals = [];
-                // Phase 1: More frequent spawns (30-50s) as requested
+                // Phase 1: Frequent spawns for testing (10-25s)
                 this.spawnTimer = 0;
-                this.nextSpawnTime = Math.random() * 20 + 30; // 30-50s
+                this.nextSpawnTime = Math.random() * 15 + 10; // 10-25s
             }
 
             reset() {
                 this.portals = [];
                 this.spawnTimer = 0;
-                this.nextSpawnTime = Math.random() * 20 + 30;
+                this.nextSpawnTime = 5; // First portal spawns in 5 seconds
             }
 
             update(dt, speed) {
@@ -4282,14 +4282,14 @@
                 if (this.spawnTimer >= this.nextSpawnTime) {
                     this.spawnPortal();
                     this.spawnTimer = 0;
-                    this.nextSpawnTime = Math.random() * 20 + 30;
+                    this.nextSpawnTime = Math.random() * 15 + 10;
                 }
 
                 // Update Portals
                 for (let i = this.portals.length - 1; i >= 0; i--) {
                     let p = this.portals[i];
-                    p.x -= (speed * 1.2) * dt; // Portals move slightly faster than background
-                    p.rotation += 2 * dt;
+                    p.x -= (speed * 1.2 * 60) * dt; // Portals move slightly faster than background
+                    p.rotation += 2 * 60 * dt;
 
                     // Remove if off screen
                     if (p.x < -100) {
@@ -4376,9 +4376,11 @@
         }
 
         const FISH_TYPES = {
-            GREEN: { color: '#00ff00', score: 0, time: 1, weight: 0.6, name: 'Time Fish' },
+            GREEN: { color: '#00ff00', score: 0, time: 1, weight: 0.4, name: 'Time Fish' },
             BLUE: { color: '#00ffff', score: 10, time: 0, weight: 0.3, name: 'Score Fish' },
-            GOLD: { color: '#ffd700', score: 50, time: 0, weight: 0.1, name: 'Gold Fish' }
+            GOLD: { color: '#ffd700', score: 50, time: 0, weight: 0.1, name: 'Gold Fish' },
+            PURPLE: { color: '#800080', score: 25, time: 0, weight: 0.15, name: 'Rare Score' },
+            ORANGE: { color: '#ffa500', score: 0, time: 2, weight: 0.05, name: 'Rare Time' }
         };
 
         class Fish {
@@ -4390,7 +4392,9 @@
                 this.baseY = this.y;
 
                 // Speed Calculation (Pixels per Second)
-                this.speed = Math.random() * 80 + 40; // 40 - 120 px/s
+                // Speed Calculation (Pixels per Second)
+                // INCREASED SPEED: 120 - 250 px/s (was 40-120) for 10s mode
+                this.speed = Math.random() * 130 + 120;
 
                 this.timeOffset = Math.random() * 100;
 
@@ -4398,10 +4402,13 @@
                 this.scale = 0.8 + Math.random() * 0.4; // 0.8x to 1.2x size
 
                 // Pick Type
+                // Pick Type based on weight
                 const rand = Math.random();
                 if (rand < FISH_TYPES.GREEN.weight) this.type = FISH_TYPES.GREEN;
                 else if (rand < FISH_TYPES.GREEN.weight + FISH_TYPES.BLUE.weight) this.type = FISH_TYPES.BLUE;
-                else this.type = FISH_TYPES.GOLD;
+                else if (rand < FISH_TYPES.GREEN.weight + FISH_TYPES.BLUE.weight + FISH_TYPES.GOLD.weight) this.type = FISH_TYPES.GOLD;
+                else if (rand < FISH_TYPES.GREEN.weight + FISH_TYPES.BLUE.weight + FISH_TYPES.GOLD.weight + FISH_TYPES.PURPLE.weight) this.type = FISH_TYPES.PURPLE;
+                else this.type = FISH_TYPES.ORANGE;
 
                 this.width *= this.scale;
                 this.height *= this.scale;
@@ -4409,10 +4416,12 @@
             }
 
             update(dt) {
-                this.x -= this.speed * (dt / 60); // Fix: Convert dt(frames) to seconds
+                // Now dt is in seconds.
+                // Speed is pixels/second (120-250)
+                this.x -= this.speed * dt;
 
                 // Bobbing using internally tracked time for smoothness
-                this.bobTimer += dt / 60;
+                this.bobTimer += dt;
                 this.y = this.baseY + Math.sin(this.bobTimer * 2 + this.timeOffset) * 20;
             }
 
@@ -4521,15 +4530,14 @@
                 }
 
                 // --- BUBBLES ---
-                // Probability adjusted for frame-based dt
-                if (Math.random() < (5 / 60) * dt) {
+                if (Math.random() < 5 * dt) {
                     this.bubbles.push(this.createBubble());
                 }
 
                 for (let i = this.bubbles.length - 1; i >= 0; i--) {
                     let b = this.bubbles[i];
-                    b.y -= b.speed * (dt / 60); // Fix: Speed is px/sec
-                    b.x += Math.sin(gameTime * 2 + b.wobble) * 20 * (dt / 60); // Wobble
+                    b.y -= b.speed * dt; // Speed is px/sec
+                    b.x += Math.sin(gameTime * 2 + b.wobble) * 20 * dt; // Wobble
 
                     if (b.y < -10) {
                         this.bubbles.splice(i, 1);
@@ -4537,11 +4545,11 @@
                 }
 
                 // --- FISHES ---
-                this.fishSpawnTimer += dt / 60; // Fix: Seconds
+                this.fishSpawnTimer += dt;
 
-                // Spawn every 1-2 seconds
-                if (this.fishSpawnTimer > Math.random() * 1.5 + 1.0) {
-                    if (Math.random() < 0.7) {
+                // Spawn every 1.5 - 3.5 seconds (REDUCED FREQUENCY from 1.0-2.5)
+                if (this.fishSpawnTimer > Math.random() * 2.0 + 1.5) {
+                    if (Math.random() < 0.8) { // Slightly higher chance to spawn when timer hits
                         this.fishes.push(new Fish(WIDTH + 50));
                     }
                     this.fishSpawnTimer = 0;
@@ -4768,7 +4776,7 @@
                 if (inputHandler.clickHistory.length > (inputHandler.maxCps || 0)) inputHandler.maxCps = inputHandler.clickHistory.length;
 
                 audioManager.playSwitch();
-                shake = 5;
+                // shake = 5; // REMOVED: User didn't like the shake
                 let flashColor = player.color === 'white' ? '#222' : '#333';
                 document.body.style.backgroundColor = flashColor;
                 setTimeout(() => document.body.style.backgroundColor = '#000', 50);
@@ -4802,8 +4810,8 @@
 
         function updateRain(dt) {
             for (let p of rainDrops) {
-                p.y += p.v * dt;
-                p.x -= (speed * 0.5) * dt;
+                p.y += p.v * 60 * dt;
+                p.x -= (speed * 0.5) * 60 * dt;
                 if (p.y > HEIGHT) {
                     p.y = -20;
                     p.x = Math.random() * WIDTH + (speed * 20);
@@ -4830,9 +4838,9 @@
         function updateParticles(dt) {
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.life -= 0.05 * dt;
+                p.x += p.vx * 60 * dt;
+                p.y += p.vy * 60 * dt;
+                p.life -= 0.05 * 60 * dt;
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
@@ -4997,7 +5005,7 @@
 
             lastTime = timeStamp; // Reset for next valid frame
 
-            const dt = safeDelta / 16.66;
+            const dt = safeDelta / 1000; // Convert to seconds
             update(dt);
             draw();
         }
