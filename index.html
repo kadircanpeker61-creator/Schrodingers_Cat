@@ -2950,6 +2950,15 @@
                 ctx.save();
                 ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 
+                // --- OCEAN MODE ROTATION & SWIMMING ---
+                let swimRotation = 0;
+                if (this.isOceanMode) {
+                    // Rotate based on DY (Smoothly)
+                    // limit rotation to ~45 degrees (PI/4)
+                    swimRotation = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, this.dy * 0.1));
+                    ctx.rotate(swimRotation);
+                }
+
                 if (this.isInvulnerable) {
                     ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 50) * 0.3; // Flashing effect
                 } else {
@@ -2979,7 +2988,9 @@
                 ctx.lineCap = 'round';
 
                 // Animasyon Değişkenleri
-                const runCycle = Math.sin(frames * 0.4); // Koşu döngüsü
+                // Ocean Mode: Slower, smoother cycle
+                const animSpeed = this.isOceanMode ? 0.2 : 0.4;
+                const runCycle = Math.sin(frames * animSpeed);
                 const t = gameTime;
 
                 // 1. GÖVDE (Akıcı silüet)
@@ -3010,7 +3021,7 @@
                 // 3. GÖZLER (Keskin bakış)
                 ctx.fillStyle = isWhite ? '#000' : '#fff';
                 ctx.beginPath();
-                if (this.dy > 5) { // Düşerken gözler biraz büyür
+                if (this.dy > 5 && !this.isOceanMode) { // Düşerken gözler biraz büyür (Normal mode only)
                     ctx.ellipse(26, -8, 3, 3, 0, 0, Math.PI * 2);
                 } else if (Math.floor(gameTime) % 150 > 140) { // Göz kırpma
                     ctx.rect(24, -8, 6, 1);
@@ -3028,22 +3039,43 @@
                 ctx.beginPath();
                 ctx.moveTo(-15, 0);
                 // Kuyruk ucu hareketi
-                const tailWag = Math.sin(frames * 0.2) * 10;
+                const tailWag = Math.sin(frames * (this.isOceanMode ? 0.1 : 0.2)) * 10;
                 ctx.bezierCurveTo(-25, -10, -30 + tailWag, -20, -25 + tailWag, -30);
                 ctx.stroke();
 
-                // 5. BACAKLAR (Prosedürel Koşu Animasyonu)
+                // 5. BACAKLAR (Prosedürel Koşu / Yüzme Animasyonu)
                 ctx.fillStyle = isWhite ? '#fff' : '#000';
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = isWhite ? '#fff' : '#000';
 
                 // Bacak çizim fonksiyonu
                 const drawLeg = (x, y, phase) => {
-                    const angle = Math.sin(frames * 0.5 + phase) * 0.8;
-                    const len = 14;
+                    let angle = 0;
+                    let len = 14;
+                    let extension = 0;
+
+                    if (this.isOceanMode) {
+                        // SWIMMING (Paddling)
+                        // Legs move back and forth more horizontally
+                        angle = Math.sin(frames * 0.2 + phase) * 0.5 + 0.5; // Bias towards back
+                        // Rotate legs to be more horizontal naturally
+                        // We want them trailing behind mostly
+                        // Simple paddle:
+                        const swimCycle = Math.sin(frames * 0.2 + phase);
+                        const x2 = x + swimCycle * 10 - 5;
+                        const y2 = y + Math.abs(swimCycle) * 5 + 5;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                        return;
+                    }
+
+                    // RUNNING / JUMPING
+                    angle = Math.sin(frames * 0.5 + phase) * 0.8;
 
                     // Havadaysa bacakları uzat
-                    let extension = 0;
                     if (!this.grounded) {
                         extension = 5;
                         // Zıplama pozu
@@ -3072,6 +3104,8 @@
                 ctx.fillStyle = "#666";
                 ctx.font = "bold 10px monospace";
                 ctx.textAlign = "center";
+                // Rotate text back so it stays upright? Or let it rotate with cat?
+                // Let it rotate with cat for now, looks more natural as "attached" tag.
                 ctx.fillText(name, 5, -50);
 
                 ctx.restore();
