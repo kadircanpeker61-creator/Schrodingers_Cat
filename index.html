@@ -2840,7 +2840,6 @@
                 this.grounded = true;
                 this.color = 'white'; // Başlangıç rengi
                 this.isInvulnerable = false;
-                this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
                 this.isOceanMode = false;
             }
@@ -3480,10 +3479,9 @@
             // DAILY LOGIN LOGIC (Consolidated)
             checkDailyLogin();
 
-            if (economyData.atoms < 50000) {
-                economyData.atoms = 50000;
+            if (economyData.atoms < 0) {
+                economyData.atoms = 0;
                 saveEconomy();
-                setTimeout(() => alert("🐈 TESTER HEDİYESİ: 50.000 Atom hesabına yüklendi! Bol harcamalar!"), 500);
             }
             // ----------------------------------
 
@@ -3619,7 +3617,6 @@
 
             leaderboardData[currentDifficulty] = list;
             localStorage.setItem('schrodinger_leaderboard', JSON.stringify(leaderboardData));
-            localStorage.setItem('schrodinger_leaderboard', JSON.stringify(leaderboardData));
         }
 
         // --- BADGES LOGIC (NO PAGINATION) ---
@@ -3657,7 +3654,6 @@
                 revives: runRevives || 0,
                 usedShield: safePowerups.shield,
                 usedWormhole: safePowerups.wormhole,
-                usedBooster: safePowerups.booster,
                 usedBooster: safePowerups.booster,
                 usedLoadout: (safePowerups.shield || safePowerups.wormhole || safePowerups.booster),
                 obstaclesPassed: obstaclesPassedCount, // Live count
@@ -4565,7 +4561,7 @@
                     // Post-Portal Invulnerability (3 Seconds)
                     player.isInvulnerable = true;
                     player.invulnerableTimer = 3000;
-                    if (window.showToast) showToast("SAFE! (3s)", "#39FF14");
+                    if (window.showToast) showToast("GÜVENDE", "3 sn dokunulmazlık", "fa-shield");
                 }
 
                 // Switch back explicitly if managed by global
@@ -4640,12 +4636,12 @@
                         if (f.type.time > 0) {
                             this.timer += f.type.time;
                             // Visual Feedback
-                            if (window.showToast) showToast(`+${f.type.time}s`, '#0f0');
+                            if (window.showToast) showToast(`OXYGEN +${f.type.time}s`, "Balık toplandı", "fa-water");
                         }
                         if (f.type.score > 0) {
                             score += f.type.score;
                             // Visual Feedback
-                            if (window.showToast) showToast(`+${f.type.score}`, f.type.color);
+                            if (window.showToast) showToast(`+${f.type.score} PUAN`, "Balık toplandı", "fa-fish");
                         }
 
                         // Audio
@@ -4730,19 +4726,6 @@
         let portalManager = new PortalManager();
         let oceanMode = new OceanMode();
 
-        function switchGameMode(newMode) {
-            gameMode = newMode;
-            if (newMode === GAME_MODES.OCEAN) {
-                oceanMode.enter();
-                // Modify physics for ocean?
-                // We'll handle physics changes in the main update loop or Player class
-            } else {
-                // Reset to normal physics
-                player.setPhysics(DIFFICULTY_SETTINGS[currentDifficulty].gravity, DIFFICULTY_SETTINGS[currentDifficulty].jumpForce);
-            }
-        }
-
-
         // Initialize Game
         // Initialize Game
         function initGame() {
@@ -4762,13 +4745,10 @@
             frames = 0;
             gameTime = 0;
             lastTime = 0;
-            gameTime = 0;
-            lastTime = 0;
             shake = 0;
 
             // Reset Tracking
             obstaclesPassedTimestamps = [];
-            maxObstaclesPerSecond = 0;
             maxObstaclesPerSecond = 0;
             obstaclesPassedCount = 0;
             runRevives = 0;
@@ -5598,6 +5578,7 @@
                 saveEconomy();
                 // Recalculate UI
                 updateShopUI();
+                updateLoadoutUI();
                 checkPassiveBadges(); // Check shopaholic etc
 
                 // Show floating text instead of alert for better UX
@@ -5681,15 +5662,6 @@
         resizeCanvas(); // Trigger immediately
         drawStatic();
 
-        // IOS AUDIO UNLOCK INITIALIZATION (Step 11)
-        function unlockIOSAudio() {
-            audioManager.unlockAudio();
-            document.removeEventListener('touchstart', unlockIOSAudio);
-            document.removeEventListener('click', unlockIOSAudio);
-        }
-        document.addEventListener('touchstart', unlockIOSAudio, { passive: false });
-        document.addEventListener('click', unlockIOSAudio);
-
         // UI SOUND INTEGRATION
         // Attach 'tok' sound to all buttons and interactive elements
         document.addEventListener('DOMContentLoaded', () => {
@@ -5720,99 +5692,3 @@
 </body>
 
 </html>
-<!-- Toast Notification CSS -->
-<style>
-    .toast-container {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        pointer-events: none;
-    }
-
-    .toast-message {
-        background: rgba(0, 0, 0, 0.9);
-        color: #fff;
-        padding: 12px 24px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        animation: slideDown 0.3s ease-out;
-        pointer-events: auto;
-        min-width: 300px;
-    }
-
-    .toast-message.error {
-        border-color: #ff4444;
-        background: rgba(50, 0, 0, 0.95);
-    }
-
-    .toast-icon {
-        font-size: 18px;
-    }
-
-    .toast-text {
-        flex-grow: 1;
-    }
-
-    @keyframes slideDown {
-        from {
-            transform: translateY(-20px);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes fadeOut {
-        to {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-    }
-</style>
-
-<script>
-    // Toast Notification System
-    // Toast Notification System
-    function showToast(title, message, iconClass = 'fa-info-circle') {
-        let container = document.querySelector('.toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = 'toast-message';
-        if (title === 'HATA') toast.classList.add('error');
-
-        toast.innerHTML = `
-            <i class="fas ${iconClass} toast-icon" style="color: ${title === 'HATA' ? '#ff4444' : '#44aaff'}"></i>
-            <div class="toast-text">
-                <strong style="display:block; margin-bottom:2px; color: ${title === 'HATA' ? '#ff8888' : '#88ccff'}">${title}</strong>
-                ${message}
-            </div>
-        `;
-
-        container.appendChild(toast);
-
-        // Remove after 5 seconds
-        setTimeout(() => {
-            toast.style.animation = 'fadeOut 0.5s ease-forward';
-            setTimeout(() => toast.remove(), 500);
-        }, 5000);
-    }
-</script>
