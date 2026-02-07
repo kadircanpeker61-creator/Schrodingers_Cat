@@ -4519,6 +4519,10 @@
                 this.bubbles = [];
                 this.fishes = [];
                 this.fishSpawnTimer = 0;
+
+                // Load Background Image
+                this.bgImage = new Image();
+                this.bgImage.src = 'assets/okyanus.webp';
             }
 
             enter() {
@@ -4529,7 +4533,7 @@
                 // Activate Player Ocean Physics
                 if (player) player.setOceanMode(true);
 
-                // Visual feedback
+                // Visual feedback (Fallback color if image fails)
                 document.body.style.transition = "background-color 1s";
                 document.body.style.backgroundColor = "#001e33"; // Deep blue
 
@@ -4650,15 +4654,34 @@
             draw(ctx) {
                 // CLEAR SCREEN FOR OCEAN MODE
                 ctx.save();
-                ctx.fillStyle = "#001e33"; // Deep Ocean Blue
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-                // Add Deep Sea Gradient (optional but nice)
-                const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-                grad.addColorStop(0, "#001e33"); // Surface
-                grad.addColorStop(1, "#000510"); // Deep
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                // Draw Background Image if loaded
+                if (this.bgImage && this.bgImage.complete && this.bgImage.naturalWidth !== 0) {
+                    try {
+                        // Draw full screen
+                        ctx.drawImage(this.bgImage, 0, 0, WIDTH, HEIGHT);
+
+                        // Overlay a semi-transparent blue tint to ensure text/elements pop
+                        ctx.fillStyle = "rgba(0, 30, 51, 0.3)";
+                        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                    } catch (e) {
+                        // Fallback if draw fails
+                        console.error("BG Draw Error", e);
+                        ctx.fillStyle = "#001e33";
+                        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                    }
+                } else {
+                    // Fallback Gradient
+                    ctx.fillStyle = "#001e33"; // Deep Ocean Blue
+                    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+                    // Add Deep Sea Gradient (optional but nice)
+                    const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+                    grad.addColorStop(0, "#001e33"); // Surface
+                    grad.addColorStop(1, "#000510"); // Deep
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                }
                 ctx.restore();
 
                 if (!this.isActive && this.bubbles.length === 0) return;
