@@ -5450,6 +5450,7 @@
         window.closeShop = () => {
             shopScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
+            updateLoadoutUI();
         };
 
         window.updateShopUI = () => {
@@ -5621,6 +5622,7 @@
             startScreen.classList.remove('hidden');
             isPlaying = false;
             drawStatic();
+            updateLoadoutUI();
         };
 
         // RESTORED OPTIMIZATION: Ensure Landscape & High-DPI Scaling (Step 1 & 2)
