@@ -4305,14 +4305,16 @@
                 if (this.spawnTimer >= this.nextSpawnTime) {
                     this.spawnPortal();
                     this.spawnTimer = 0;
-                    this.nextSpawnTime = Math.random() * 15 + 10;
+                    // Balanced Frequency: 20-30s
+                    this.nextSpawnTime = Math.random() * 10 + 20;
                 }
 
                 // Update Portals
                 for (let i = this.portals.length - 1; i >= 0; i--) {
                     let p = this.portals[i];
                     p.x -= (speed * 1.2 * 60) * dt; // Portals move slightly faster than background
-                    p.rotation += 2 * 60 * dt;
+                    p.rotation += 2 * 60 * dt; // Rotate visuals
+                    p.pulse += dt * 5; // Pulse animation speed
 
                     // Remove if off screen
                     if (p.x < -100) {
@@ -4322,20 +4324,20 @@
             }
 
             spawnPortal() {
-                // Spawn lower for better reachability (Middle to Lower-Middle)
-                // GROUND_Y is approx floor. Canvas 0 is top.
-                // We want spawning between GROUND_Y - 250 (High Jump) and GROUND_Y - 100 (Low Jump)
-                const yPos = GROUND_Y - (Math.random() * 150 + 100);
+                // FIXED REACHABILITY: 
+                // Spawn between 70px (Low Jump) and 150px (High Jump) above ground.
+                // Ensures player can always reach it.
+                const yPos = GROUND_Y - (Math.random() * 80 + 70);
+
                 this.portals.push({
                     x: WIDTH + 100,
                     y: yPos,
-                    radius: 40,
+                    radius: 45, // Slightly larger visual radius
                     rotation: 0,
-                    color: '#8A2BE2' // BlueViolet/Purple
+                    pulse: 0,
+                    color: '#8A2BE2' // Base Purple
                 });
-                // Optional: Play spawn sound
-                // if(window.audioManager) window.audioManager.playPortalSpawn();
-                console.log("Portal Spawned!");
+                console.log("Portal Spawned at Y:", yPos);
             }
 
             draw(ctx) {
@@ -4344,29 +4346,54 @@
                 for (let p of this.portals) {
                     ctx.save();
                     ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rotation);
 
-                    // Portal Ring
+                    // PULSING GLOW EFFECT
+                    const glowSize = Math.sin(p.pulse) * 5 + 10;
+                    ctx.shadowBlur = glowSize + 10;
+                    ctx.shadowColor = '#d8b4fe'; // Light Purple Glow
+
+                    // 1. OUTER ROTATING RING (Segmented)
+                    ctx.save();
+                    ctx.rotate(p.rotation * 0.05); // Slow Rotation
+                    ctx.strokeStyle = '#c084fc'; // Bright Purple
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([15, 10]); // Dashed effect
                     ctx.beginPath();
                     ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = p.color;
-                    ctx.lineWidth = 5;
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = p.color;
                     ctx.stroke();
+                    ctx.restore();
 
-                    // Inner swirling vortex effect (simplified)
-                    ctx.fillStyle = 'rgba(138, 43, 226, 0.3)';
+                    // 2. INNER VORTEX (Faster Reverse Rotation)
+                    ctx.save();
+                    ctx.rotate(-p.rotation * 0.1);
+                    ctx.fillStyle = 'rgba(124, 58, 237, 0.4)'; // Transparent Purple
+                    ctx.beginPath();
+                    // Star/Flower shape
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos(i * 1.25) * (p.radius - 10), Math.sin(i * 1.25) * (p.radius - 10));
+                        ctx.lineTo(Math.cos(i * 1.25 + 0.6) * (p.radius - 25), Math.sin(i * 1.25 + 0.6) * (p.radius - 25));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+
+                    // 3. CENTER CORE (Pulsing)
+                    const coreSize = 15 + Math.sin(p.pulse * 2) * 2;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, coreSize, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.beginPath();
-                    ctx.moveTo(0, -p.radius + 5);
-                    ctx.lineTo(0, p.radius - 5);
-                    ctx.moveTo(-p.radius + 5, 0);
-                    ctx.lineTo(p.radius - 5, 0);
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    // 4. PARTICLES (Simple orbiting dots)
+                    for (let i = 0; i < 3; i++) {
+                        const orbitAngle = p.rotation * 0.2 + (i * 2.09); // 120 deg apart
+                        const ox = Math.cos(orbitAngle) * (p.radius + 10);
+                        const oy = Math.sin(orbitAngle) * (p.radius + 10);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(p.pulse + i) * 0.5})`;
+                        ctx.beginPath();
+                        ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
 
                     ctx.restore();
                 }
