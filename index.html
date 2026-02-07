@@ -4502,7 +4502,13 @@
 
             exit() {
                 this.isActive = false;
-                if (player) player.setOceanMode(false);
+                if (player) {
+                    player.setOceanMode(false);
+                    // Post-Portal Invulnerability (3 Seconds)
+                    player.isInvulnerable = true;
+                    player.invulnerableTimer = 3000;
+                    if (window.showToast) showToast("SAFE! (3s)", "#39FF14");
+                }
 
                 // Switch back explicitly if managed by global
                 gameMode = GAME_MODES.NORMAL;
