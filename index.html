@@ -4352,8 +4352,10 @@
             checkCollision(player) {
                 // Simple Circle-Rectangle (approx) or Point collision
                 // Player center approx:
-                const px = player.x + player.width / 2;
-                const py = player.y + player.height / 2;
+                const pw = player.width || 40;
+                const ph = player.height || 40;
+                const px = player.x + pw / 2;
+                const py = player.y + ph / 2;
 
                 for (let i = 0; i < this.portals.length; i++) {
                     let p = this.portals[i];
@@ -4361,7 +4363,11 @@
                     const dy = py - p.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist < p.radius + 20) { // Player radius approx 20
+                    // Debug for user console if needed (hidden usually but good for dev)
+                    // console.log(`Dist: ${dist}, Radius: ${p.radius}`);
+
+                    if (dist < p.radius + 40) { // Generous hit box
+                        console.log("PORTAL HIT!");
                         return true;
                     }
                 }
@@ -4369,12 +4375,91 @@
             }
         }
 
+        const FISH_TYPES = {
+            GREEN: { color: '#00ff00', score: 0, time: 1, weight: 0.6, name: 'Time Fish' },
+            BLUE: { color: '#00ffff', score: 10, time: 0, weight: 0.3, name: 'Score Fish' },
+            GOLD: { color: '#ffd700', score: 50, time: 0, weight: 0.1, name: 'Gold Fish' }
+        };
+
+        class Fish {
+            constructor(startX) {
+                this.x = startX;
+                this.y = Math.random() * (GROUND_Y - 100) + 50; // Random height
+                this.width = 30;
+                this.height = 20;
+                this.baseY = this.y;
+
+                // Speed Calculation (Pixels per Second)
+                this.speed = Math.random() * 80 + 40; // 40 - 120 px/s
+
+                this.timeOffset = Math.random() * 100;
+
+                // Visual Variety
+                this.scale = 0.8 + Math.random() * 0.4; // 0.8x to 1.2x size
+
+                // Pick Type
+                const rand = Math.random();
+                if (rand < FISH_TYPES.GREEN.weight) this.type = FISH_TYPES.GREEN;
+                else if (rand < FISH_TYPES.GREEN.weight + FISH_TYPES.BLUE.weight) this.type = FISH_TYPES.BLUE;
+                else this.type = FISH_TYPES.GOLD;
+
+                this.width *= this.scale;
+                this.height *= this.scale;
+                this.bobTimer = 0;
+            }
+
+            update(dt) {
+                this.x -= this.speed * (dt / 60); // Fix: Convert dt(frames) to seconds
+
+                // Bobbing using internally tracked time for smoothness
+                this.bobTimer += dt / 60;
+                this.y = this.baseY + Math.sin(this.bobTimer * 2 + this.timeOffset) * 20;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Scale and Flip (Face left)
+                // Scale (No flip needed if drawing is already left-facing, or add flip if needed)
+                // Drawing: Tail is at +10..+20 (Right), Head is at -15 (Left).
+                // So the default drawing faces LEFT.
+                // If speed > 0 (Moving Left), we want it to face Left -> Scale(1, 1).
+                if (this.speed > 0) ctx.scale(this.scale, this.scale);
+                else ctx.scale(-this.scale, this.scale);
+
+                ctx.fillStyle = this.type.color;
+
+                // Simple Fish Shape
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(20, -10);
+                ctx.lineTo(20, 10);
+                ctx.fill();
+
+                // Eye
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-8, -2, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
         class OceanMode {
             constructor() {
                 this.isActive = false;
                 this.timer = 0;
-                this.duration = 20; // 20 seconds
+                this.duration = 10; // 10 seconds
                 this.bubbles = [];
+                this.fishes = [];
+                this.fishSpawnTimer = 0;
             }
 
             enter() {
@@ -4390,14 +4475,20 @@
                 document.body.style.backgroundColor = "#001e33"; // Deep blue
 
                 // Spawn initial bubbles
-                for (let i = 0; i < 20; i++) {
-                    this.bubbles.push({
-                        x: Math.random() * WIDTH,
-                        y: HEIGHT + Math.random() * 100,
-                        radius: Math.random() * 5 + 2,
-                        speed: Math.random() * 2 + 1
-                    });
+                this.bubbles = [];
+                for (let i = 0; i < 30; i++) {
+                    this.bubbles.push(this.createBubble(true));
                 }
+            }
+
+            createBubble(randomY = false) {
+                return {
+                    x: Math.random() * WIDTH,
+                    y: randomY ? Math.random() * HEIGHT : HEIGHT + 10,
+                    radius: Math.random() * 5 + 2,
+                    speed: Math.random() * 50 + 20, // Faster bubbles (20-70 px/s)
+                    wobble: Math.random() * Math.PI * 2
+                };
             }
 
             exit() {
@@ -4411,84 +4502,126 @@
                 document.body.style.backgroundColor = "#111"; // Back to dark
             }
 
+            reset() {
+                this.isActive = false;
+                this.timer = this.duration;
+                this.bubbles = [];
+                this.fishes = [];
+                this.fishSpawnTimer = 0;
+            }
+
             update(dt) {
                 if (!this.isActive) return;
 
-                this.timer -= dt / 60; // Approx seconds
+                this.timer -= dt / 60; // Fix: Convert dt(frames) to seconds
 
                 if (this.timer <= 0) {
                     this.exit();
                     return;
                 }
 
-                // Update Bubbles
-                if (Math.random() < 0.1) { // Spawn new bubbles occassionally
-                    this.bubbles.push({
-                        x: Math.random() * WIDTH,
-                        y: HEIGHT + 10,
-                        radius: Math.random() * 5 + 2,
-                        speed: Math.random() * 2 + 1
-                    });
+                // --- BUBBLES ---
+                // Probability adjusted for frame-based dt
+                if (Math.random() < (5 / 60) * dt) {
+                    this.bubbles.push(this.createBubble());
                 }
 
                 for (let i = this.bubbles.length - 1; i >= 0; i--) {
                     let b = this.bubbles[i];
-                    b.y -= b.speed * (dt * 0.8); // Rise up
-                    b.x += Math.sin(gameTime * 0.05 + b.y * 0.01) * 0.5; // Wobble
+                    b.y -= b.speed * (dt / 60); // Fix: Speed is px/sec
+                    b.x += Math.sin(gameTime * 2 + b.wobble) * 20 * (dt / 60); // Wobble
 
-                    if (b.y < -10) this.bubbles.splice(i, 1);
+                    if (b.y < -10) {
+                        this.bubbles.splice(i, 1);
+                    }
+                }
+
+                // --- FISHES ---
+                this.fishSpawnTimer += dt / 60; // Fix: Seconds
+
+                // Spawn every 1-2 seconds
+                if (this.fishSpawnTimer > Math.random() * 1.5 + 1.0) {
+                    if (Math.random() < 0.7) {
+                        this.fishes.push(new Fish(WIDTH + 50));
+                    }
+                    this.fishSpawnTimer = 0;
+                }
+
+                for (let i = this.fishes.length - 1; i >= 0; i--) {
+                    let f = this.fishes[i];
+                    f.update(dt);
+
+                    // Collision with Player
+                    if (
+                        player.x < f.x + f.width &&
+                        player.x + player.width > f.x &&
+                        player.y < f.y + f.height &&
+                        player.y + player.height > f.y
+                    ) {
+                        // COLLECTED
+                        if (f.type.time > 0) {
+                            this.timer += f.type.time;
+                            // Visual Feedback
+                            if (window.showToast) showToast(`+${f.type.time}s`, '#0f0');
+                        }
+                        if (f.type.score > 0) {
+                            score += f.type.score;
+                            // Visual Feedback
+                            if (window.showToast) showToast(`+${f.type.score}`, f.type.color);
+                        }
+
+                        // Audio
+                        if (window.audioManager && audioManager.playCollect) audioManager.playCollect();
+
+                        this.fishes.splice(i, 1);
+                        continue;
+                    }
+
+                    if (f.x < -100) {
+                        this.fishes.splice(i, 1);
+                    }
                 }
             }
 
             draw(ctx) {
-                if (!this.isActive) return;
+                // CLEAR SCREEN FOR OCEAN MODE
+                ctx.save();
+                ctx.fillStyle = "#001e33"; // Deep Ocean Blue
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+                // Add Deep Sea Gradient (optional but nice)
+                const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+                grad.addColorStop(0, "#001e33"); // Surface
+                grad.addColorStop(1, "#000510"); // Deep
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                ctx.restore();
+
+                if (!this.isActive && this.bubbles.length === 0) return;
 
                 // Draw Bubbles
                 ctx.save();
-                ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+                ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Increased opacity
                 for (let b of this.bubbles) {
                     ctx.beginPath();
                     ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
-                // Draw Water Overlay (Gradient)
-                const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-                grad.addColorStop(0, "rgba(0, 100, 255, 0.1)");
-                grad.addColorStop(1, "rgba(0, 30, 100, 0.4)");
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-                // Draw Timer
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 24px 'Courier Prime'";
-                ctx.textAlign = "center";
-                ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
-
-                ctx.restore();
-            }
-
-            draw(ctx, width, height) {
-                // Ocean Overlay / Background
-                ctx.save();
-                const grad = ctx.createLinearGradient(0, 0, 0, height);
-                grad.addColorStop(0, '#006994');
-                grad.addColorStop(1, '#001e33');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, width, height);
-
-                // Bubbles (Placeholder)
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                for (let i = 0; i < 10; i++) {
-                    ctx.beginPath();
-                    ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 5, 0, Math.PI * 2);
-                    ctx.fill();
+                // Draw Fishes
+                if (this.isActive) {
+                    for (let f of this.fishes) {
+                        f.draw(ctx);
+                    }
                 }
 
-                // Timer UI
-                ctx.fillStyle = '#39FF14';
-                ctx.font = '20px Courier Prime';
-                ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, 20, 100);
+                // Draw Timer
+                if (this.isActive) {
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 24px 'Courier Prime'";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+                }
 
                 ctx.restore();
             }
@@ -4701,6 +4834,24 @@
                 p.y += p.vy * dt;
                 p.life -= 0.05 * dt;
                 if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function switchGameMode(newMode) {
+            if (gameMode === newMode) return;
+
+            console.log(`Switching Mode: ${gameMode} -> ${newMode}`);
+
+            // Exit current logic
+            if (gameMode === GAME_MODES.OCEAN && oceanMode) {
+                oceanMode.exit();
+            }
+
+            gameMode = newMode;
+
+            // Enter new logic
+            if (gameMode === GAME_MODES.OCEAN && oceanMode) {
+                oceanMode.enter();
             }
         }
 
