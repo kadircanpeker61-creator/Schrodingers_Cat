@@ -2865,6 +2865,7 @@
                 this.color = 'white';
                 this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
+                this.isOceanMode = false;
             }
 
             update(groundY, dt) {
@@ -4781,6 +4782,7 @@
                     s.update(dt);
 
                     // Collision with Player - DEADLY!
+                    if (player.isInvulnerable) continue;
                     if (
                         player.x < s.x + s.width &&
                         player.x + player.width > s.x &&
