@@ -4510,6 +4510,7 @@
         class OceanMode {
             constructor() {
                 this.isActive = false;
+                this.isExiting = false;
                 this.timer = 0;
                 this.duration = 10; // 10 seconds
                 this.bubbles = [];
@@ -4527,6 +4528,7 @@
 
             enter() {
                 this.isActive = true;
+                this.isExiting = false;
                 this.timer = this.duration;
                 console.log("Entering Ocean Mode");
 
@@ -4542,6 +4544,14 @@
                 for (let i = 0; i < 30; i++) {
                     this.bubbles.push(this.createBubble(true));
                 }
+
+                // Spawn 1-2 fish immediately to avoid initial delay
+                this.fishes = [];
+                const initialFishCount = Math.floor(Math.random() * 2) + 1; // 1 or 2 fish
+                for (let i = 0; i < initialFishCount; i++) {
+                    this.fishes.push(new Fish(WIDTH + 50 + (i * 200))); // Stagger positions
+                }
+                this.fishSpawnTimer = 0;
             }
 
             createBubble(randomY = false) {
@@ -4555,6 +4565,9 @@
             }
 
             exit() {
+                if (this.isExiting) return; // Prevent multiple exits
+                this.isExiting = true;
+
                 this.isActive = false;
                 if (player) {
                     player.setOceanMode(false);
@@ -4573,6 +4586,7 @@
 
             reset() {
                 this.isActive = false;
+                this.isExiting = false;
                 this.timer = this.duration;
                 this.bubbles = [];
                 this.fishes = [];
@@ -4584,10 +4598,12 @@
 
                 this.timer -= dt; // Fix: dt is already in seconds
 
-                if (this.timer <= 0) {
+                // Check if time is up and start exit sequence
+                if (this.timer <= 0 && !this.isExiting) {
                     this.exit();
                     return;
                 }
+
 
                 // --- BACKGROUND SCROLLING ---
                 this.bgX -= this.bgSpeed * dt;
@@ -4633,7 +4649,7 @@
                         player.y + player.height > f.y
                     ) {
                         // COLLECTED
-                        if (f.type.time > 0) {
+                        if (f.type.time > 0 && !this.isExiting) {
                             this.timer += f.type.time;
                             // Visual Feedback
                             if (window.showToast) showToast(`OXYGEN +${f.type.time}s`, "Balık toplandı", "fa-water");
@@ -4950,9 +4966,13 @@
             // --- PORTAL UPDATE ---
             if (portalManager) {
                 portalManager.update(dt, speed);
-                if (portalManager.checkCollision(player)) {
+                // Only enter ocean mode if not currently exiting
+                if (portalManager.checkCollision(player) && (!oceanMode || !oceanMode.isExiting)) {
                     switchGameMode(GAME_MODES.OCEAN);
                     return;
+                } else if (oceanMode && oceanMode.isExiting && !portalManager.checkCollision(player)) {
+                    // Reset isExiting flag when player leaves portal area
+                    oceanMode.isExiting = false;
                 }
             }
 
