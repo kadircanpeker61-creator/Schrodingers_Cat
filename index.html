@@ -4695,7 +4695,8 @@
                 // Add continuous score increase in Ocean Mode
                 const settings = DIFFICULTY_SETTINGS[currentDifficulty];
                 score += (1 * settings.scoreMultiplier);
-                if (window.scoreEl) scoreEl.innerText = Math.floor(score).toString().padStart(5, '0');
+                const sEl = document.getElementById('score-display');
+                if (sEl) sEl.innerText = Math.floor(score).toString().padStart(5, '0');
 
                 // --- BACKGROUND SCROLLING ---
                 this.bgX -= this.bgSpeed * dt;
@@ -4767,9 +4768,9 @@
                 // --- SHARKS ---
                 this.sharkSpawnTimer += dt;
 
-                // Spawn every 4 - 7 seconds (Less frequent than fish)
-                if (this.sharkSpawnTimer > Math.random() * 3.0 + 4.0) {
-                    if (Math.random() < 0.25) { // 25% chance to spawn when timer hits
+                // Increased Shark Spawn Frequency (Every 2 - 4 seconds)
+                if (this.sharkSpawnTimer > Math.random() * 2.0 + 2.0) {
+                    if (Math.random() < 0.40) { // Increased to 40% probability
                         this.sharks.push(new Shark(WIDTH + 80));
                     }
                     this.sharkSpawnTimer = 0;
