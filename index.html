@@ -4880,6 +4880,7 @@
 
             // Phase 1 Reset
             if (portalManager) portalManager.reset();
+            if (oceanMode) oceanMode.reset();
             gameMode = GAME_MODES.NORMAL;
 
             speed = settings.speedStart;
@@ -5092,13 +5093,13 @@
             // --- PORTAL UPDATE ---
             if (portalManager) {
                 portalManager.update(dt, speed);
-                // Only enter ocean mode if not currently exiting
-                if (portalManager.checkCollision(player) && (!oceanMode || !oceanMode.isExiting)) {
+                // Only enter ocean mode if not currently active
+                const portalHit = portalManager.checkCollision(player);
+                if (portalHit && (!oceanMode || !oceanMode.isActive)) {
+                    // Remove all portals to prevent re-entry
+                    portalManager.portals = [];
                     switchGameMode(GAME_MODES.OCEAN);
                     return;
-                } else if (oceanMode && oceanMode.isExiting && !portalManager.checkCollision(player)) {
-                    // Reset isExiting flag when player leaves portal area
-                    oceanMode.isExiting = false;
                 }
             }
 
