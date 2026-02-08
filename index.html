@@ -4627,11 +4627,12 @@
                     this.bubbles.push(this.createBubble(true));
                 }
 
-                // Spawn 1-2 fish immediately to avoid initial delay
+                // Spawn 1-2 fish immediately at closer positions for instant action
                 this.fishes = [];
                 const initialFishCount = Math.floor(Math.random() * 2) + 1; // 1 or 2 fish
                 for (let i = 0; i < initialFishCount; i++) {
-                    this.fishes.push(new Fish(WIDTH + 50 + (i * 200))); // Stagger positions
+                    // Spawn much closer: ~500px from left edge instead of ~850px
+                    this.fishes.push(new Fish(WIDTH / 2 + 100 + (i * 150))); // Closer spawn
                 }
 
                 // Clear sharks array
@@ -4690,6 +4691,11 @@
                     return;
                 }
 
+
+                // Add continuous score increase in Ocean Mode
+                const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+                score += (1 * settings.scoreMultiplier);
+                if (window.scoreEl) scoreEl.innerText = Math.floor(score).toString().padStart(5, '0');
 
                 // --- BACKGROUND SCROLLING ---
                 this.bgX -= this.bgSpeed * dt;
