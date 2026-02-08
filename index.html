@@ -444,6 +444,21 @@
         }
 
         /* SHOP GRID LAYOUT */
+        .shop-section h3 {
+            color: #fff;
+            margin: 20px 0 10px 0;
+            font-family: 'Outfit', sans-serif;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
         .shop-items-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1601,6 +1616,12 @@
                 EVRENLER</h2>
             <div class="shop-items-container" id="themes-list">
                 <!-- Temalar JS ile buraya gelecek -->
+            </div>
+
+            <h2 class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
+                AKSESUARLAR</h2>
+            <div class="shop-items-container" id="cosmetics-list">
+                <!-- Aksesuarlar JS ile buraya gelecek -->
             </div>
 
             <div class="text-gray-500 text-xs font-mono mt-6 text-center mb-8">BAŞLANGIÇ EKRANINDAN SEÇEREK
@@ -3129,6 +3150,86 @@
                 drawLeg(18, 12, Math.PI * 1.5); // Sol Ön
                 drawLeg(18, 12, Math.PI * 0.5); // Sağ Ön (Ters faz)
 
+                // --- AKSESUARLAR (Hats & Glasses) ---
+                const drawAccessories = () => {
+                    const equipped = economyData.equippedCosmetics || { hat: 'none', glasses: 'none' };
+
+                    // 1. ŞAPKALAR (Kafa Üstü)
+                    if (equipped.hat !== 'none') {
+                        ctx.save();
+                        ctx.translate(22, -14); // Kafa üstü hizası
+                        ctx.rotate(Math.PI / 12); // Kafa eğimi
+
+                        if (equipped.hat === 'tophat') {
+                            ctx.fillStyle = '#000';
+                            ctx.fillRect(-8, -10, 16, 12); // Top
+                            ctx.fillRect(-12, 2, 24, 3); // Brim
+                        } else if (equipped.hat === 'party') {
+                            ctx.beginPath();
+                            ctx.moveTo(0, -18); ctx.lineTo(-8, 0); ctx.lineTo(8, 0); ctx.closePath();
+                            ctx.fillStyle = '#ff00ff'; ctx.fill();
+                            ctx.fillStyle = '#fff';
+                            ctx.beginPath(); ctx.arc(0, -20, 2, 0, Math.PI * 2); ctx.fill();
+                        } else if (equipped.hat === 'cowboy') {
+                            ctx.fillStyle = '#8B4513';
+                            ctx.beginPath();
+                            ctx.ellipse(0, 4, 15, 4, 0, 0, Math.PI * 2); ctx.fill(); // Brim
+                            ctx.fillRect(-8, -8, 16, 12); // Crown
+                        } else if (equipped.hat === 'beanie') {
+                            ctx.fillStyle = '#ff0000';
+                            ctx.beginPath();
+                            ctx.arc(0, 0, 10, Math.PI, 0); ctx.fill();
+                            ctx.fillRect(-10, 0, 20, 4);
+                        } else if (equipped.hat === 'king_crown') {
+                            ctx.fillStyle = '#FFD700';
+                            ctx.beginPath();
+                            ctx.moveTo(-10, 0); ctx.lineTo(-10, -12); ctx.lineTo(-5, -6);
+                            ctx.lineTo(0, -15); ctx.lineTo(5, -6); ctx.lineTo(10, -12);
+                            ctx.lineTo(10, 0); ctx.closePath(); ctx.fill();
+                        } else if (equipped.hat === 'queen_crown') {
+                            ctx.fillStyle = '#E6E6FA';
+                            ctx.beginPath(); ctx.bezierCurveTo(-8, -12, 8, -12, 8, 0);
+                            ctx.lineTo(-8, 0); ctx.closePath(); ctx.fill();
+                            ctx.fillStyle = '#DA70D6';
+                            ctx.beginPath(); ctx.arc(0, -10, 3, 0, Math.PI * 2); ctx.fill();
+                        }
+                        ctx.restore();
+                    }
+
+                    // 2. GÖZLÜKLER (Göz Hizası)
+                    if (equipped.glasses !== 'none') {
+                        ctx.save();
+                        ctx.translate(26, -8); // Göz hizası
+                        ctx.rotate(Math.PI / 12);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#000';
+
+                        if (equipped.glasses === 'cool') {
+                            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                            ctx.fillRect(-6, -3, 5, 5); ctx.fillRect(1, -3, 5, 5);
+                            ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(1, 0); ctx.stroke();
+                        } else if (equipped.glasses === 'monocle') {
+                            ctx.beginPath(); ctx.arc(3, 0, 4, 0, Math.PI * 2); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(10, 8); ctx.stroke();
+                        } else if (equipped.glasses === 'nerd') {
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(-5, -3, 4, 5); ctx.strokeRect(1, -3, 4, 5);
+                            ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(1, 0); ctx.stroke();
+                        } else if (equipped.glasses === 'heart') {
+                            const drawSmallHeart = (hx, hy) => {
+                                ctx.beginPath(); ctx.moveTo(hx, hy);
+                                ctx.bezierCurveTo(hx - 2, hy - 2, hx - 4, hy, hx, hy + 4);
+                                ctx.bezierCurveTo(hx + 4, hy, hx + 2, hy - 2, hx, hy); ctx.fill();
+                            };
+                            ctx.fillStyle = 'rgba(255,0,0,0.7)';
+                            drawSmallHeart(-3, -1); drawSmallHeart(3, -1);
+                        }
+                        ctx.restore();
+                    }
+                };
+
+                drawAccessories();
+
                 // İsim Etiketi (Hafif yukarı alındı)
                 ctx.fillStyle = "#666";
                 ctx.font = "bold 10px monospace";
@@ -3332,6 +3433,33 @@
 
 
         // SHOP & ECONOMY SYSTEM
+        const COSMETICS = {
+            hat: {
+                tophat: { name: "Sihirbaz Şapkası", cost: 1000, icon: "🎩" },
+                party: { name: "Parti Şapkası", cost: 500, icon: "🥳" },
+                cowboy: { name: "Kovboy Şapkası", cost: 1500, icon: "🤠" },
+                beanie: { name: "Kırmızı Bere", cost: 800, icon: "🔴" },
+                king_crown: { name: "Kral Tacı", cost: 5000, icon: "👑" },
+                queen_crown: { name: "Kraliçe Tacı", cost: 5000, icon: "👸" }
+            },
+            glasses: {
+                cool: { name: "Havalı Gözlük", cost: 1200, icon: "😎" },
+                monocle: { name: "Monokl", cost: 2000, icon: "🧐" },
+                nerd: { name: "Nerd Gözlük", cost: 900, icon: "🤓" },
+                heart: { name: "Kalp Gözlük", cost: 1100, icon: "😍" }
+            },
+            toy: {
+                yarn: { name: "Yün Yumağı", cost: 600, icon: "🧶" },
+                mouse: { name: "Oyuncak Fare", cost: 750, icon: "🐭" },
+                ball: { name: "Renkli Top", cost: 400, icon: "🎾" }
+            },
+            bowl: {
+                red_bowl: { name: "Kırmızı Kap", cost: 300, icon: "🥣" },
+                blue_bowl: { name: "Mavi Kap", cost: 300, icon: "🥣" },
+                golden_bowl: { name: "Altın Kap", cost: 2500, icon: "🏆" }
+            }
+        };
+
         const THEMES = {
             CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp", bgImg: "assets/Noir_plan.webp" },
             LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp", bgImg: "assets/Radyoaktif_Lab.webp" },
@@ -3352,6 +3480,8 @@
             highScore: { EASY: 0, NORMAL: 0, HARD: 0, EXTREME: 0 },
             ownedThemes: ['CITY'],
             equippedTheme: 'CITY',
+            ownedCosmetics: ['none'],
+            equippedCosmetics: { hat: 'none', glasses: 'none' },
             // Achievements
             unlockedAchievements: [],
             unlockedBadges: [], // Rozetler için yeni dizi
@@ -3487,6 +3617,10 @@
                 // Init Achievement Data if missing
                 if (!economyData.unlockedAchievements) economyData.unlockedAchievements = [];
                 if (!economyData.unlockedBadges) economyData.unlockedBadges = [];
+                if (!economyData.ownedCosmetics) economyData.ownedCosmetics = ['none'];
+                if (!economyData.equippedCosmetics) economyData.equippedCosmetics = { hat: 'none', glasses: 'none', toy: 'none', bowl: 'none' };
+                if (!economyData.equippedCosmetics.toy) economyData.equippedCosmetics.toy = 'none';
+                if (!economyData.equippedCosmetics.bowl) economyData.equippedCosmetics.bowl = 'none';
 
                 // DATA MIGRATION: Ensure all new stats fields exist
                 const defaultStats = {
@@ -4091,6 +4225,138 @@
                 }
             }
 
+            drawAccessories(ctx) {
+                const equipped = economyData.equippedCosmetics || { hat: 'none', glasses: 'none', toy: 'none', bowl: 'none' };
+
+                // 1. ŞAPKALAR
+                if (equipped.hat !== 'none') {
+                    ctx.save();
+                    ctx.translate(0, -45); // Kafa üstü
+                    // Nefes almaya bağlı hafif sallanma
+                    ctx.rotate(Math.sin(this.frame * 0.05) * 0.02);
+
+                    if (equipped.hat === 'tophat') {
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(-15, -20, 30, 25); // Top
+                        ctx.fillRect(-22, 5, 44, 4); // Brim
+                    } else if (equipped.hat === 'party') {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -35); ctx.lineTo(-15, 0); ctx.lineTo(15, 0); ctx.closePath();
+                        ctx.fillStyle = '#ff00ff'; ctx.fill();
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath(); ctx.arc(0, -38, 5, 0, Math.PI * 2); ctx.fill();
+                    } else if (equipped.hat === 'cowboy') {
+                        ctx.fillStyle = '#8B4513';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 5, 30, 8, 0, 0, Math.PI * 2); ctx.fill(); // Brim
+                        ctx.fillRect(-15, -15, 30, 20); // Crown
+                    } else if (equipped.hat === 'beanie') {
+                        ctx.fillStyle = '#ff0000';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 18, Math.PI, 0); ctx.fill(); // Dome
+                        ctx.fillRect(-18, 0, 36, 6); // Brim
+                    } else if (equipped.hat === 'king_crown') {
+                        ctx.fillStyle = '#FFD700'; // Gold
+                        ctx.beginPath();
+                        ctx.moveTo(-20, 0);
+                        ctx.lineTo(-20, -20);
+                        ctx.lineTo(-10, -10);
+                        ctx.lineTo(0, -25);
+                        ctx.lineTo(10, -10);
+                        ctx.lineTo(20, -20);
+                        ctx.lineTo(20, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = '#FF0000'; // Gem
+                        ctx.beginPath(); ctx.arc(0, -15, 3, 0, Math.PI * 2); ctx.fill();
+                    } else if (equipped.hat === 'queen_crown') {
+                        ctx.fillStyle = '#E6E6FA'; // Silver/Lavender
+                        ctx.beginPath();
+                        ctx.moveTo(-15, 0);
+                        ctx.bezierCurveTo(-15, -20, 15, -20, 15, 0);
+                        ctx.fill();
+                        ctx.fillStyle = '#DA70D6'; // Pearl/Gem
+                        ctx.beginPath(); ctx.arc(0, -18, 4, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(-10, -10, 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(10, -10, 2, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // 2. GÖZLÜKLER
+                if (equipped.glasses !== 'none') {
+                    ctx.save();
+                    ctx.translate(0, -25); // Göz hizası
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#000';
+
+                    if (equipped.glasses === 'cool') {
+                        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                        ctx.fillRect(-12, -4, 10, 10); // Sol cam
+                        ctx.fillRect(2, -4, 10, 10);  // Sağ cam
+                        ctx.beginPath(); ctx.moveTo(-2, 1); ctx.lineTo(2, 1); ctx.stroke(); // Köprü
+                    } else if (equipped.glasses === 'monocle') {
+                        ctx.beginPath(); ctx.arc(8, 0, 8, 0, Math.PI * 2); ctx.stroke(); // Sağ cam
+                        ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(25, 15); ctx.stroke(); // Zincir
+                    } else if (equipped.glasses === 'nerd') {
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(-11, -5, 9, 11); ctx.strokeRect(2, -5, 9, 11);
+                        ctx.beginPath(); ctx.moveTo(-2, 1); ctx.lineTo(2, 1); ctx.stroke();
+                    } else if (equipped.glasses === 'heart') {
+                        const drawHeart = (hx, hy) => {
+                            ctx.beginPath();
+                            ctx.moveTo(hx, hy);
+                            ctx.bezierCurveTo(hx - 5, hy - 5, hx - 10, hy, hx, hy + 8);
+                            ctx.bezierCurveTo(hx + 10, hy, hx + 5, hy - 5, hx, hy);
+                            ctx.fill();
+                        };
+                        ctx.fillStyle = 'rgba(255,0,0,0.6)';
+                        drawHeart(-8, -2); drawHeart(8, -2);
+                    }
+                    ctx.restore();
+                }
+
+                // 3. OYUNCAKLAR (Yerde, kedinin sağında)
+                if (equipped.toy && equipped.toy !== 'none') {
+                    ctx.save();
+                    ctx.translate(45, 45); // Sağ alt yer
+                    if (equipped.toy === 'yarn') {
+                        ctx.fillStyle = '#ff69b4';
+                        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.beginPath(); ctx.arc(0, 0, 8 - i * 2, 0, Math.PI * 2); ctx.stroke();
+                        }
+                    } else if (equipped.toy === 'mouse') {
+                        ctx.fillStyle = '#808080';
+                        ctx.beginPath(); ctx.ellipse(0, 0, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-20, -5); ctx.stroke(); // Tail
+                    } else if (equipped.toy === 'ball') {
+                        ctx.fillStyle = '#32CD32';
+                        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 8, 0.2, 1.2); ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // 4. MAMA KABI (Yerde, kedinin solunda)
+                if (equipped.bowl && equipped.bowl !== 'none') {
+                    ctx.save();
+                    ctx.translate(-45, 45); // Sol alt yer
+                    let color = '#ff0000';
+                    if (equipped.bowl === 'blue_bowl') color = '#0000ff';
+                    if (equipped.bowl === 'golden_bowl') color = '#FFD700';
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 5, 20, 5, 0, 0, Math.PI * 2); ctx.fill(); // Base
+                    ctx.fillRect(-15, -2, 30, 7); // Sides
+                    ctx.fillStyle = (equipped.bowl === 'golden_bowl') ? '#FFA500' : '#8B4513'; // Food
+                    ctx.beginPath(); ctx.ellipse(0, -2, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                }
+            }
+
             draw() {
                 const ctx = this.ctx;
                 ctx.clearRect(0, 0, this.width, this.height);
@@ -4104,6 +4370,9 @@
 
                 // --- PASS 2: RIGHT HALF (WHITE) ---
                 this.drawHalf(ctx, 'right');
+
+                // --- PASS 3: ACCESSORIES ---
+                this.drawAccessories(ctx);
 
                 ctx.restore();
             }
@@ -6055,6 +6324,51 @@
                 });
             }
             updateMenuBackground();
+
+            // Render Cosmetics
+            const cosList = document.getElementById('cosmetics-list');
+            if (cosList) {
+                cosList.innerHTML = "";
+                ['hat', 'glasses', 'toy', 'bowl'].forEach(category => {
+                    const sectionTitle = { hat: 'Şapkalar', glasses: 'Gözlükler', toy: 'Oyuncaklar', bowl: 'Kaplar' }[category];
+                    const sectionHeader = document.createElement('h3');
+                    sectionHeader.style.gridColumn = "1 / -1";
+                    sectionHeader.style.color = "#fff";
+                    sectionHeader.style.marginTop = "20px";
+                    sectionHeader.innerText = sectionTitle;
+                    cosList.appendChild(sectionHeader);
+
+                    Object.keys(COSMETICS[category]).forEach(key => {
+                        const itemData = COSMETICS[category][key];
+                        const isOwned = economyData.ownedCosmetics.includes(key);
+                        const isEquipped = economyData.equippedCosmetics[category] === key;
+
+                        const item = document.createElement('div');
+                        item.className = "shop-item";
+                        if (isEquipped) item.style.borderColor = "#39FF14";
+
+                        let btnHtml = "";
+                        if (isEquipped) {
+                            btnHtml = `<button class="btn-secondary" style="color:#39FF14; border-color:#39FF14" onclick="window.toggleCosmetic('${category}', 'none')">ÇIKAR</button>`;
+                        } else if (isOwned) {
+                            btnHtml = `<button class="btn-secondary" onclick="window.toggleCosmetic('${category}', '${key}')">KUŞAN</button>`;
+                        } else {
+                            btnHtml = `<button class="buy-btn" onclick="window.buyCosmetic('${category}', '${key}')">${itemData.cost} ⚛</button>`;
+                        }
+
+                        item.innerHTML = `
+                            <div class="mb-4">
+                                <div class="item-icon">${itemData.icon}</div>
+                            </div>
+                            <div class="item-info">
+                                <div class="item-title">${itemData.name}</div>
+                            </div>
+                            ${btnHtml}
+                        `;
+                        cosList.appendChild(item);
+                    });
+                });
+            }
         };
 
         window.updateMenuBackground = () => {
@@ -6153,6 +6467,37 @@
                 // Shake effect on the item? Or just alert.
                 // Alert is reliable for "Not Enough"
                 alert("Yetersiz Atom! Daha fazla oyna.");
+            }
+        };
+
+        window.buyCosmetic = (category, key) => {
+            const item = COSMETICS[category][key];
+            if (!item) return;
+
+            if (economyData.atoms >= item.cost) {
+                if (!economyData.ownedCosmetics.includes(key)) {
+                    economyData.atoms -= item.cost;
+                    economyData.ownedCosmetics.push(key);
+                    economyData.stats.totalItemsBought++;
+                    economyData.stats.totalAtomsSpent += item.cost;
+                    saveEconomy();
+                    updateShopUI();
+                    showToast("YENİ EŞYA!", `${item.name} artık senin!`, "fa-gift");
+                    checkPassiveBadges();
+                }
+            } else {
+                alert("Yetersiz Atom!");
+            }
+        };
+
+        window.toggleCosmetic = (type, key) => {
+            // type: 'hat', 'glasses', 'toy', 'bowl'
+            // key: item key or 'none'
+            if (key === 'none' || economyData.ownedCosmetics.includes(key)) {
+                economyData.equippedCosmetics[type] = key;
+                saveEconomy();
+                updateShopUI();
+                if (petSystem) petSystem.lastInteraction = Date.now(); // Trigger update for pet display
             }
         };
 
