@@ -2842,13 +2842,24 @@
                 this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
                 this.isOceanMode = false;
+                this.isAtmosferMode = false;
             }
 
             setOceanMode(active) {
                 this.isOceanMode = active;
                 if (active) {
-                    this.dy = 0; // Reset momentum
-                    this.grounded = false; // Floating
+                    this.dy = 0;
+                    this.grounded = false;
+                    this.isAtmosferMode = false;
+                }
+            }
+
+            setAtmosferMode(active) {
+                this.isAtmosferMode = active;
+                if (active) {
+                    this.dy = 0;
+                    this.grounded = false;
+                    this.isOceanMode = false;
                 }
             }
 
@@ -2866,6 +2877,7 @@
                 this.isInvulnerable = false;
                 this.invulnerableTimer = 0;
                 this.isOceanMode = false;
+                this.isAtmosferMode = false;
             }
 
             update(groundY, dt) {
@@ -2878,36 +2890,41 @@
                 }
 
                 if (this.isOceanMode) {
-                    // OCEAN PHYSICS ("Hold to Dive")
                     const isDiving = (inputHandler && inputHandler.actions.jump);
-
                     if (isDiving) {
-                        // DIVE DOWN
-                        this.dy += 1.5 * 60 * dt; // Accelerate down
-                        if (this.dy > 8) this.dy = 8; // Terminal velocity down
+                        this.dy += 1.5 * 60 * dt;
+                        if (this.dy > 8) this.dy = 8;
                     } else {
-                        // FLOAT UP (Buoyancy)
-                        // Gravity is inverted basically
-                        this.dy -= 0.8 * 60 * dt; // Accelerate up
-                        if (this.dy < -6) this.dy = -6; // Terminal velocity up
+                        this.dy -= 0.8 * 60 * dt;
+                        if (this.dy < -6) this.dy = -6;
+                    }
+                    this.dy *= 0.96;
+                    this.y += this.dy * 60 * dt;
+                    if (this.y < 0) this.y = 0;
+                    if (this.y + this.height > groundY) this.y = groundY - this.height;
+                    return;
+                }
+
+                if (this.isAtmosferMode) {
+                    // ATMOSPHERE PHYSICS ("Hold to Fly Up")
+                    const isFlying = (inputHandler && inputHandler.actions.jump);
+
+                    if (isFlying) {
+                        // FLY UP
+                        this.dy -= 1.4 * 60 * dt;
+                        if (this.dy < -10) this.dy = -10;
+                    } else {
+                        // FALL DOWN (Gravity)
+                        this.dy += 0.7 * 60 * dt;
+                        if (this.dy > 7) this.dy = 7;
                     }
 
-                    // Drag (Water Resistance) - Smooths movements
-                    this.dy *= 0.96;
-
+                    this.dy *= 0.97; // Less resistance than water
                     this.y += this.dy * 60 * dt;
 
-                    // Ceiling Cap
-                    if (this.y < 0) {
-                        this.y = 0;
-                        if (this.dy < 0) this.dy = 0;
-                    }
-                    // Floor Cap
-                    if (this.y + this.height > groundY) {
-                        this.y = groundY - this.height;
-                        if (this.dy > 0) this.dy = 0;
-                    }
-                    return; // Skip normal physics
+                    if (this.y < 0) { this.y = 0; this.dy = 0; }
+                    if (this.y + this.height > groundY) { this.y = groundY - this.height; this.dy = 0; }
+                    return;
                 }
 
                 // NORMAL PHYSICS
@@ -2950,13 +2967,13 @@
                 ctx.save();
                 ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 
-                // --- OCEAN MODE ROTATION & SWIMMING ---
-                let swimRotation = 0;
-                if (this.isOceanMode) {
+                // --- OCEAN/ATMOSPHERE MODE ROTATION & ANIMATION ---
+                let modeRotation = 0;
+                if (this.isOceanMode || this.isAtmosferMode) {
                     // Rotate based on DY (Smoothly)
                     // limit rotation to ~45 degrees (PI/4)
-                    swimRotation = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, this.dy * 0.1));
-                    ctx.rotate(swimRotation);
+                    modeRotation = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, this.dy * 0.1));
+                    ctx.rotate(modeRotation);
                 }
 
                 if (this.isInvulnerable) {
@@ -2988,8 +3005,8 @@
                 ctx.lineCap = 'round';
 
                 // Animasyon Değişkenleri
-                // Ocean Mode: Slower, smoother cycle
-                const animSpeed = this.isOceanMode ? 0.2 : 0.4;
+                // Ocean/Atmosfer Mode: Slower, smoother cycle
+                const animSpeed = (this.isOceanMode || this.isAtmosferMode) ? 0.2 : 0.4;
                 const runCycle = Math.sin(frames * animSpeed);
                 const t = gameTime;
 
@@ -3057,13 +3074,25 @@
                     if (this.isOceanMode) {
                         // SWIMMING (Paddling)
                         // Legs move back and forth more horizontally
-                        angle = Math.sin(frames * 0.2 + phase) * 0.5 + 0.5; // Bias towards back
-                        // Rotate legs to be more horizontal naturally
                         // We want them trailing behind mostly
                         // Simple paddle:
                         const swimCycle = Math.sin(frames * 0.2 + phase);
                         const x2 = x + swimCycle * 10 - 5;
                         const y2 = y + Math.abs(swimCycle) * 5 + 5;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                        return;
+                    }
+
+                    if (this.isAtmosferMode) {
+                        // FLYING (Fluttering/Paddling)
+                        // Similar to swimming but a bit more vertical/dynamic
+                        const flyCycle = Math.sin(frames * 0.3 + phase);
+                        const x2 = x + flyCycle * 8 - 3;
+                        const y2 = y + 15 + Math.cos(frames * 0.3 + phase) * 4;
 
                         ctx.beginPath();
                         ctx.moveTo(x, y);
@@ -4278,7 +4307,8 @@
         // --- PHASE 1 & 2: PORTAL & OCEAN SYSTEM ---
         const GAME_MODES = {
             NORMAL: 'NORMAL',
-            OCEAN: 'OCEAN'
+            OCEAN: 'OCEAN',
+            ATMOSPHERE: 'ATMOSPHERE'
         };
 
         class PortalManager {
@@ -4322,20 +4352,21 @@
             }
 
             spawnPortal() {
-                // FIXED REACHABILITY: 
-                // Spawn between 70px (Low Jump) and 150px (High Jump) above ground.
-                // Ensures player can always reach it.
                 const yPos = GROUND_Y - (Math.random() * 80 + 70);
+                const isAtmosphere = Math.random() < 0.5;
+                const mode = isAtmosphere ? GAME_MODES.ATMOSPHERE : GAME_MODES.OCEAN;
+                const color = isAtmosphere ? '#00BFFF' : '#8A2BE2'; // DeepSkyBlue vs Purple
 
                 this.portals.push({
                     x: WIDTH + 100,
                     y: yPos,
-                    radius: 45, // Slightly larger visual radius
+                    radius: 45,
                     rotation: 0,
                     pulse: 0,
-                    color: '#8A2BE2' // Base Purple
+                    color: color,
+                    mode: mode
                 });
-                console.log("Portal Spawned at Y:", yPos);
+                console.log("Portal Spawned - Mode:", mode, "at Y:", yPos);
             }
 
             draw(ctx) {
@@ -4348,12 +4379,12 @@
                     // PULSING GLOW EFFECT
                     const glowSize = Math.sin(p.pulse) * 5 + 10;
                     ctx.shadowBlur = glowSize + 10;
-                    ctx.shadowColor = '#d8b4fe'; // Light Purple Glow
+                    ctx.shadowColor = p.color; // Match portal color
 
                     // 1. OUTER ROTATING RING (Segmented)
                     ctx.save();
                     ctx.rotate(p.rotation * 0.05); // Slow Rotation
-                    ctx.strokeStyle = '#c084fc'; // Bright Purple
+                    ctx.strokeStyle = p.color; // Match portal color
                     ctx.lineWidth = 4;
                     ctx.setLineDash([15, 10]); // Dashed effect
                     ctx.beginPath();
@@ -4398,8 +4429,6 @@
             }
 
             checkCollision(player) {
-                // Simple Circle-Rectangle (approx) or Point collision
-                // Player center approx:
                 const pw = player.width || 40;
                 const ph = player.height || 40;
                 const px = player.x + pw / 2;
@@ -4411,15 +4440,14 @@
                     const dy = py - p.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    // Debug for user console if needed (hidden usually but good for dev)
-                    // console.log(`Dist: ${dist}, Radius: ${p.radius}`);
-
-                    if (dist < p.radius + 40) { // Generous hit box
-                        console.log("PORTAL HIT!");
-                        return true;
+                    if (dist < p.radius + 40) {
+                        console.log("PORTAL HIT! Mode:", p.mode);
+                        const mode = p.mode;
+                        this.portals.splice(i, 1); // Remove hit portal
+                        return mode;
                     }
                 }
-                return false;
+                return null;
             }
         }
 
@@ -4587,6 +4615,319 @@
             }
         }
 
+        const BIRD_TYPES = {
+            GREEN: { color: '#4ade80', score: 0, time: 1, atoms: 0, weight: 0.4, name: 'Zaman Kuşu' },
+            BLUE: { color: '#60a5fa', score: 10, time: 0, atoms: 0, weight: 0.3, name: 'Puan Kuşu' },
+            GOLD: { color: '#fbbf24', score: 50, time: 0, atoms: 5, weight: 0.1, name: 'Altın Kuş' },
+            PURPLE: { color: '#a855f7', score: 25, time: 0, atoms: 2, weight: 0.15, name: 'Nadir Puan' },
+            ORANGE: { color: '#fb923c', score: 0, time: 2, atoms: 1, weight: 0.05, name: 'Nadir Zaman' }
+        };
+
+        class Bird {
+            constructor(startX) {
+                this.x = startX;
+                this.y = Math.random() * (GROUND_Y - 150) + 50;
+                this.width = 35;
+                this.height = 25;
+                this.baseY = this.y;
+                this.speed = Math.random() * 100 + 150;
+                this.timeOffset = Math.random() * 100;
+                this.scale = 0.8 + Math.random() * 0.4;
+
+                const rand = Math.random();
+                let cumulativeWeight = 0;
+                for (const key in BIRD_TYPES) {
+                    cumulativeWeight += BIRD_TYPES[key].weight;
+                    if (rand < cumulativeWeight) {
+                        this.type = BIRD_TYPES[key];
+                        break;
+                    }
+                }
+
+                this.width *= this.scale;
+                this.height *= this.scale;
+                this.wingTimer = 0;
+            }
+
+            update(dt) {
+                this.x -= this.speed * dt;
+                this.wingTimer += dt * 10;
+                this.y = this.baseY + Math.sin(this.wingTimer * 0.5 + this.timeOffset) * 25;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.scale, this.scale);
+
+                // Wings animation
+                const wingPos = Math.sin(this.wingTimer) * 10;
+
+                ctx.fillStyle = this.type.color;
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 15, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head
+                ctx.beginPath();
+                ctx.arc(-12, -2, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Beak
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-17, -2);
+                ctx.lineTo(-24, 0);
+                ctx.lineTo(-17, 2);
+                ctx.fill();
+
+                // Wings
+                ctx.fillStyle = this.type.color;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(5, -15 - wingPos, 15, - wingPos);
+                ctx.lineTo(10, 0);
+                ctx.fill();
+
+                // Eye
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-14, -4, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class Eagle {
+            constructor(startX) {
+                this.x = startX;
+                this.y = Math.random() * (GROUND_Y - 200) + 100;
+                this.width = 80;
+                this.height = 40;
+                this.baseY = this.y;
+                this.speed = Math.random() * 150 + 300;
+                this.timeOffset = Math.random() * 100;
+                this.wingTimer = 0;
+                this.scale = 1.1 + Math.random() * 0.3;
+                this.width *= this.scale;
+                this.height *= this.scale;
+            }
+
+            update(dt) {
+                this.x -= this.speed * dt;
+                this.wingTimer += dt * 8;
+                this.y = this.baseY + Math.sin(this.wingTimer * 0.3 + this.timeOffset) * 20;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.scale, this.scale);
+
+                const wingPos = Math.sin(this.wingTimer) * 12;
+
+                // Body (Brown)
+                ctx.fillStyle = '#452610';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 30, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head (White)
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(-25, -5, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Beak (Yellow/Hooked)
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.moveTo(-32, -5);
+                ctx.lineTo(-42, 2);
+                ctx.lineTo(-32, 5);
+                ctx.fill();
+
+                // Wings
+                ctx.fillStyle = '#452610';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(20, -25 - wingPos);
+                ctx.lineTo(40, -10 - wingPos);
+                ctx.lineTo(10, 5);
+                ctx.fill();
+
+                // Eye (Sharp)
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-28, -7, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class AtmosferMode {
+            constructor() {
+                this.isActive = false;
+                this.isExiting = false;
+                this.timer = 0;
+                this.duration = 10;
+                this.birds = [];
+                this.birdSpawnTimer = 0;
+                this.eagles = [];
+                this.eagleSpawnTimer = 0;
+
+                this.bgImage = new Image();
+                this.bgImage.src = 'assets/atmosfer.webp';
+                this.bgX = 0;
+                this.bgSpeed = 100;
+            }
+
+            enter() {
+                this.isActive = true;
+                this.isExiting = false;
+                this.timer = this.duration;
+                console.log("Atmosfer Moduna Giriliyor");
+
+                if (player) player.setAtmosferMode(true);
+                document.body.style.backgroundColor = "#87CEEB"; // Sky Blue
+
+                this.birds = [];
+                this.eagles = [];
+                this.birdSpawnTimer = 0;
+                this.eagleSpawnTimer = 0;
+
+                // Initial birds
+                for (let i = 0; i < 2; i++) {
+                    this.birds.push(new Bird(WIDTH + 100 + i * 200));
+                }
+            }
+
+            exit() {
+                if (this.isExiting) return;
+                this.isExiting = true;
+                this.isActive = false;
+
+                if (player) {
+                    player.setAtmosferMode(false);
+                    player.isInvulnerable = true;
+                    player.invulnerableTimer = 3000;
+                    if (window.showToast) showToast("GÜVENDE", "3 sn dokunulmazlık", "fa-shield");
+                }
+
+                gameMode = GAME_MODES.NORMAL;
+                document.body.style.backgroundColor = "#111";
+            }
+
+            reset() {
+                this.isActive = false;
+                this.isExiting = false;
+                this.timer = this.duration;
+                this.birds = [];
+                this.eagles = [];
+            }
+
+            update(dt) {
+                if (!this.isActive) return;
+
+                this.timer -= dt;
+                if (this.timer <= 0 && !this.isExiting) {
+                    this.exit();
+                    return;
+                }
+
+                const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+                score += (1.2 * settings.scoreMultiplier);
+                const sEl = document.getElementById('score-display');
+                if (sEl) sEl.innerText = Math.floor(score).toString().padStart(5, '0');
+
+                // Background Scrolling
+                this.bgX -= this.bgSpeed * dt;
+                if (this.bgX <= -WIDTH) this.bgX = 0;
+
+                // Birds
+                this.birdSpawnTimer += dt;
+                if (this.birdSpawnTimer > Math.random() * 2.0 + 1.0) {
+                    this.birds.push(new Bird(WIDTH + 50));
+                    this.birdSpawnTimer = 0;
+                }
+                for (let i = this.birds.length - 1; i >= 0; i--) {
+                    let b = this.birds[i];
+                    b.update(dt);
+                    if (
+                        player.x < b.x + b.width &&
+                        player.x + player.width > b.x &&
+                        player.y < b.y + b.height &&
+                        player.y + player.height > b.y
+                    ) {
+                        if (b.type.time > 0) this.timer += b.type.time;
+                        if (b.type.score > 0) score += b.type.score;
+
+                        // NEW: Atom Rewards
+                        if (b.type.atoms > 0) {
+                            economyData.atoms += b.type.atoms;
+                            atomsClaimedThisRun += b.type.atoms;
+                            if (window.showToast) showToast(`+${b.type.atoms} ATOM`, "Kuş toplandı", "fa-atom");
+                            saveEconomy();
+                        }
+
+                        if (window.audioManager && audioManager.playCollect) audioManager.playCollect();
+                        this.birds.splice(i, 1);
+                        continue;
+                    }
+                    if (b.x < -100) this.birds.splice(i, 1);
+                }
+
+                // Eagles
+                this.eagleSpawnTimer += dt;
+                if (this.eagleSpawnTimer > Math.random() * 3.0 + 2.0) {
+                    if (Math.random() < 0.45) {
+                        this.eagles.push(new Eagle(WIDTH + 100));
+                    }
+                    this.eagleSpawnTimer = 0;
+                }
+                for (let i = this.eagles.length - 1; i >= 0; i--) {
+                    let e = this.eagles[i];
+                    e.update(dt);
+                    if (!player.isInvulnerable &&
+                        player.x < e.x + e.width &&
+                        player.x + player.width > e.x &&
+                        player.y < e.y + e.height &&
+                        player.y + player.height > e.y
+                    ) {
+                        gameOver("Bir kartal tarafından yakalandın!");
+                        return;
+                    }
+                    if (e.x < -200) this.eagles.splice(i, 1);
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                if (this.bgImage && this.bgImage.complete && this.bgImage.naturalWidth !== 0) {
+                    ctx.drawImage(this.bgImage, this.bgX, 0, WIDTH, HEIGHT);
+                    ctx.drawImage(this.bgImage, this.bgX + WIDTH, 0, WIDTH, HEIGHT);
+                } else {
+                    const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+                    grad.addColorStop(0, "#87CEEB");
+                    grad.addColorStop(1, "#E0F6FF");
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                }
+                ctx.restore();
+
+                if (this.isActive) {
+                    for (let b of this.birds) b.draw(ctx);
+                    for (let e of this.eagles) e.draw(ctx);
+
+                    ctx.fillStyle = "#333";
+                    ctx.font = "bold 24px 'Courier Prime'";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`AIR: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+                }
+            }
+        }
 
         class OceanMode {
             constructor() {
@@ -4875,6 +5216,7 @@
         let gameMode = GAME_MODES.NORMAL;
         let portalManager = new PortalManager();
         let oceanMode = new OceanMode();
+        let atmosferMode = new AtmosferMode();
 
         // Initialize Game
         // Initialize Game
@@ -4890,6 +5232,7 @@
             // Phase 1 Reset
             if (portalManager) portalManager.reset();
             if (oceanMode) oceanMode.reset();
+            if (atmosferMode) atmosferMode.reset();
             gameMode = GAME_MODES.NORMAL;
 
             speed = settings.speedStart;
@@ -5076,12 +5419,18 @@
             if (gameMode === GAME_MODES.OCEAN && oceanMode) {
                 oceanMode.exit();
             }
+            if (gameMode === GAME_MODES.ATMOSPHERE && atmosferMode) {
+                atmosferMode.exit();
+            }
 
             gameMode = newMode;
 
             // Enter new logic
             if (gameMode === GAME_MODES.OCEAN && oceanMode) {
                 oceanMode.enter();
+            }
+            if (gameMode === GAME_MODES.ATMOSPHERE && atmosferMode) {
+                atmosferMode.enter();
             }
         }
 
@@ -5090,24 +5439,25 @@
             frames++;
             gameTime += dt;
 
-            // --- OCEAN MODE UPDATE ---
-            // --- OCEAN MODE UPDATE ---
+            // --- OCEAN/ATMOSPHERE MODE UPDATE ---
             if (gameMode === GAME_MODES.OCEAN) {
                 if (oceanMode) oceanMode.update(dt);
-                player.update(GROUND_Y, dt); // Ensure physics run
-                // In Ocean Mode, we pause normal obstacle/speed updates
+                player.update(GROUND_Y, dt);
+                return;
+            }
+            if (gameMode === GAME_MODES.ATMOSPHERE) {
+                if (atmosferMode) atmosferMode.update(dt);
+                player.update(GROUND_Y, dt);
                 return;
             }
 
             // --- PORTAL UPDATE ---
             if (portalManager) {
                 portalManager.update(dt, speed);
-                // Only enter ocean mode if not currently active
-                const portalHit = portalManager.checkCollision(player);
-                if (portalHit && (!oceanMode || !oceanMode.isActive)) {
-                    // Remove all portals to prevent re-entry
+                const portalMode = portalManager.checkCollision(player);
+                if (portalMode) {
                     portalManager.portals = [];
-                    switchGameMode(GAME_MODES.OCEAN);
+                    switchGameMode(portalMode);
                     return;
                 }
             }
@@ -5159,6 +5509,14 @@
             // --- OCEAN MODE DRAW ---
             if (gameMode === GAME_MODES.OCEAN) {
                 if (oceanMode) oceanMode.draw(ctx, WIDTH, HEIGHT);
+                player.draw(ctx, frames, playerName, gameTime);
+                ctx.restore();
+                return;
+            }
+
+            // --- ATMOSPHERE MODE DRAW ---
+            if (gameMode === GAME_MODES.ATMOSPHERE) {
+                if (atmosferMode) atmosferMode.draw(ctx);
                 player.draw(ctx, frames, playerName, gameTime);
                 ctx.restore();
                 return;
