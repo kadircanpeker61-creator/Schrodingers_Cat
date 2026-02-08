@@ -2906,20 +2906,20 @@
                 }
 
                 if (this.isAtmosferMode) {
-                    // ATMOSPHERE PHYSICS ("Hold to Fly Up")
+                    // ATMOSPHERE PHYSICS ("Smoother Flight")
                     const isFlying = (inputHandler && inputHandler.actions.jump);
 
                     if (isFlying) {
-                        // FLY UP
-                        this.dy -= 1.4 * 60 * dt;
-                        if (this.dy < -10) this.dy = -10;
+                        // LIFT: More gradual, stronger lift feeling but controlled
+                        this.dy -= 1.2 * 60 * dt;
+                        if (this.dy < -9) this.dy = -9;
                     } else {
-                        // FALL DOWN (Gravity)
-                        this.dy += 0.7 * 60 * dt;
-                        if (this.dy > 7) this.dy = 7;
+                        // GRAVITY: Floaty, slow descent
+                        this.dy += 0.5 * 60 * dt;
+                        if (this.dy > 6) this.dy = 6;
                     }
 
-                    this.dy *= 0.97; // Less resistance than water
+                    this.dy *= 0.94; // Significantly higher air friction for "floaty" feel
                     this.y += this.dy * 60 * dt;
 
                     if (this.y < 0) { this.y = 0; this.dy = 0; }
@@ -3088,11 +3088,11 @@
                     }
 
                     if (this.isAtmosferMode) {
-                        // FLYING (Fluttering/Paddling)
-                        // Similar to swimming but a bit more vertical/dynamic
-                        const flyCycle = Math.sin(frames * 0.3 + phase);
-                        const x2 = x + flyCycle * 8 - 3;
-                        const y2 = y + 15 + Math.cos(frames * 0.3 + phase) * 4;
+                        // FLYING (Soft Flutter/Gliding)
+                        // Slow down the cycle and reduce amplitude
+                        const flyCycle = Math.sin(frames * 0.15 + phase);
+                        const x2 = x + flyCycle * 5 - 2;
+                        const y2 = y + 12 + Math.cos(frames * 0.15 + phase) * 2;
 
                         ctx.beginPath();
                         ctx.moveTo(x, y);
@@ -4353,7 +4353,7 @@
 
             spawnPortal() {
                 const yPos = GROUND_Y - (Math.random() * 80 + 70);
-                const isAtmosphere = Math.random() < 0.5;
+                const isAtmosphere = Math.random() < 0.7; // 70% chance for Atmosphere, 30% for Ocean
                 const mode = isAtmosphere ? GAME_MODES.ATMOSPHERE : GAME_MODES.OCEAN;
                 const color = isAtmosphere ? '#00BFFF' : '#8A2BE2'; // DeepSkyBlue vs Purple
 
@@ -4616,11 +4616,11 @@
         }
 
         const BIRD_TYPES = {
-            GREEN: { color: '#4ade80', score: 0, time: 1, atoms: 0, weight: 0.4, name: 'Zaman Kuşu' },
-            BLUE: { color: '#60a5fa', score: 10, time: 0, atoms: 0, weight: 0.3, name: 'Puan Kuşu' },
-            GOLD: { color: '#fbbf24', score: 50, time: 0, atoms: 5, weight: 0.1, name: 'Altın Kuş' },
-            PURPLE: { color: '#a855f7', score: 25, time: 0, atoms: 2, weight: 0.15, name: 'Nadir Puan' },
-            ORANGE: { color: '#fb923c', score: 0, time: 2, atoms: 1, weight: 0.05, name: 'Nadir Zaman' }
+            GREEN: { color: '#4ade80', score: 20, time: 1, atoms: 0, weight: 0.4, name: 'Zaman Kuşu' },
+            BLUE: { color: '#60a5fa', score: 30, time: 0, atoms: 0, weight: 0.3, name: 'Puan Kuşu' },
+            GOLD: { color: '#fbbf24', score: 100, time: 0, atoms: 5, weight: 0.1, name: 'Altın Kuş' },
+            PURPLE: { color: '#a855f7', score: 50, time: 0, atoms: 2, weight: 0.15, name: 'Nadir Puan' },
+            ORANGE: { color: '#fb923c', score: 40, time: 2, atoms: 1, weight: 0.05, name: 'Nadir Zaman' }
         };
 
         class Bird {
@@ -4777,6 +4777,7 @@
                 this.birdSpawnTimer = 0;
                 this.eagles = [];
                 this.eagleSpawnTimer = 0;
+                this.floatingTexts = []; // NEW: For score popups
 
                 this.bgImage = new Image();
                 this.bgImage.src = 'assets/atmosfer.webp';
@@ -4826,6 +4827,15 @@
                 this.timer = this.duration;
                 this.birds = [];
                 this.eagles = [];
+                this.floatingTexts = [];
+            }
+
+            addFloatingText(x, y, text, color) {
+                this.floatingTexts.push({
+                    x, y, text, color,
+                    life: 1.0,
+                    uy: -20 // Upward velocity
+                });
             }
 
             update(dt) {
@@ -4862,7 +4872,13 @@
                         player.y + player.height > b.y
                     ) {
                         if (b.type.time > 0) this.timer += b.type.time;
-                        if (b.type.score > 0) score += b.type.score;
+                        if (b.type.score > 0) {
+                            score += b.type.score;
+                            // Update score display immediately
+                            if (sEl) sEl.innerText = Math.floor(score).toString().padStart(5, '0');
+                            // Add floating text
+                            this.addFloatingText(b.x, b.y, `+${b.type.score}`, b.type.color);
+                        }
 
                         // NEW: Atom Rewards
                         if (b.type.atoms > 0) {
@@ -4870,6 +4886,8 @@
                             atomsClaimedThisRun += b.type.atoms;
                             if (window.showToast) showToast(`+${b.type.atoms} ATOM`, "Kuş toplandı", "fa-atom");
                             saveEconomy();
+                            // Optional: add floating atom text too
+                            this.addFloatingText(b.x, b.y - 20, `+${b.type.atoms} ATOM`, '#ffea00');
                         }
 
                         if (window.audioManager && audioManager.playCollect) audioManager.playCollect();
@@ -4901,6 +4919,14 @@
                     }
                     if (e.x < -200) this.eagles.splice(i, 1);
                 }
+
+                // Floating Texts Update
+                for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                    let ft = this.floatingTexts[i];
+                    ft.y += ft.uy * dt;
+                    ft.life -= dt * 1.5;
+                    if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+                }
             }
 
             draw(ctx) {
@@ -4925,6 +4951,15 @@
                     ctx.font = "bold 24px 'Courier Prime'";
                     ctx.textAlign = "center";
                     ctx.fillText(`AIR: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+
+                    // Floating Texts
+                    ctx.font = "bold 20px 'Courier Prime'";
+                    for (let ft of this.floatingTexts) {
+                        ctx.globalAlpha = ft.life;
+                        ctx.fillStyle = ft.color;
+                        ctx.fillText(ft.text, ft.x, ft.y);
+                    }
+                    ctx.globalAlpha = 1.0;
                 }
             }
         }
