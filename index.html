@@ -4516,8 +4516,8 @@
                 this.height = 35;
                 this.baseY = this.y;
 
-                // Slower than fish (80-120 px/s)
-                this.speed = Math.random() * 40 + 80;
+                // Faster than fish for high stakes (250-400 px/s)
+                this.speed = Math.random() * 150 + 250;
 
                 this.timeOffset = Math.random() * 100;
                 this.bobTimer = 0;
