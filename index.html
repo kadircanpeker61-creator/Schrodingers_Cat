@@ -4254,6 +4254,7 @@
         let maxObstaclesPerSecond = 0;
         let obstaclesPassedCount = 0;
         let runRevives = 0;
+        let hasRevivedThisGame = false; // Track if player has already revived this game
 
         // SESSION TRACKING
         let sessionStartTime = Date.now();
@@ -4507,6 +4508,85 @@
             }
         }
 
+        class Shark {
+            constructor(startX) {
+                this.x = startX;
+                this.y = Math.random() * (GROUND_Y - 150) + 80; // Random height, avoid edges
+                this.width = 70;
+                this.height = 35;
+                this.baseY = this.y;
+
+                // Slower than fish (80-120 px/s)
+                this.speed = Math.random() * 40 + 80;
+
+                this.timeOffset = Math.random() * 100;
+                this.bobTimer = 0;
+
+                // Sharks are larger and more menacing
+                this.scale = 1.0 + Math.random() * 0.3; // 1.0x to 1.3x size
+                this.width *= this.scale;
+                this.height *= this.scale;
+            }
+
+            update(dt) {
+                this.x -= this.speed * dt;
+
+                // Subtle bobbing (less than fish)
+                this.bobTimer += dt;
+                this.y = this.baseY + Math.sin(this.bobTimer * 1.5 + this.timeOffset) * 15;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Scale
+                ctx.scale(this.scale, this.scale);
+
+                // Shark Body (Gray)
+                ctx.fillStyle = '#555';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 25, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(15, 0);
+                ctx.lineTo(28, -8);
+                ctx.lineTo(28, 8);
+                ctx.fill();
+
+                // Dorsal Fin (Triangular - Menacing!)
+                ctx.fillStyle = '#444';
+                ctx.beginPath();
+                ctx.moveTo(-5, -12);
+                ctx.lineTo(5, -12);
+                ctx.lineTo(0, -22);
+                ctx.closePath();
+                ctx.fill();
+
+                // Eye (Red - Dangerous!)
+                ctx.fillStyle = '#f00';
+                ctx.beginPath();
+                ctx.arc(-12, -3, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Teeth (White sharp triangles)
+                ctx.fillStyle = '#fff';
+                for (let i = 0; i < 4; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-18 + i * 4, 5);
+                    ctx.lineTo(-16 + i * 4, 9);
+                    ctx.lineTo(-14 + i * 4, 5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+
         class OceanMode {
             constructor() {
                 this.isActive = false;
@@ -4516,6 +4596,8 @@
                 this.bubbles = [];
                 this.fishes = [];
                 this.fishSpawnTimer = 0;
+                this.sharks = [];
+                this.sharkSpawnTimer = 0;
 
                 // Load Background Image
                 this.bgImage = new Image();
@@ -4551,6 +4633,10 @@
                 for (let i = 0; i < initialFishCount; i++) {
                     this.fishes.push(new Fish(WIDTH + 50 + (i * 200))); // Stagger positions
                 }
+
+                // Clear sharks array
+                this.sharks = [];
+                this.sharkSpawnTimer = 0;
                 this.fishSpawnTimer = 0;
             }
 
@@ -4671,6 +4757,38 @@
                         this.fishes.splice(i, 1);
                     }
                 }
+
+                // --- SHARKS ---
+                this.sharkSpawnTimer += dt;
+
+                // Spawn every 4 - 7 seconds (Less frequent than fish)
+                if (this.sharkSpawnTimer > Math.random() * 3.0 + 4.0) {
+                    if (Math.random() < 0.25) { // 25% chance to spawn when timer hits
+                        this.sharks.push(new Shark(WIDTH + 80));
+                    }
+                    this.sharkSpawnTimer = 0;
+                }
+
+                for (let i = this.sharks.length - 1; i >= 0; i--) {
+                    let s = this.sharks[i];
+                    s.update(dt);
+
+                    // Collision with Player - DEADLY!
+                    if (
+                        player.x < s.x + s.width &&
+                        player.x + player.width > s.x &&
+                        player.y < s.y + s.height &&
+                        player.y + player.height > s.y
+                    ) {
+                        // GAME OVER!
+                        gameOver("Köpek balığı tarafından yenildin!");
+                        return;
+                    }
+
+                    if (s.x < -150) {
+                        this.sharks.splice(i, 1);
+                    }
+                }
             }
 
             draw(ctx) {
@@ -4725,6 +4843,13 @@
                     }
                 }
 
+                // Draw Sharks
+                if (this.isActive) {
+                    for (let s of this.sharks) {
+                        s.draw(ctx);
+                    }
+                }
+
                 // Draw Timer
                 if (this.isActive) {
                     ctx.fillStyle = "#fff";
@@ -4768,6 +4893,7 @@
             maxObstaclesPerSecond = 0;
             obstaclesPassedCount = 0;
             runRevives = 0;
+            hasRevivedThisGame = false; // Reset revive flag for new game
 
             // ACTIVATING POWERUPS logic
             activePowerups = { shield: false, wormhole: false, booster: false };
@@ -5173,8 +5299,8 @@
                     highScoreEl.innerText = "HI: " + String(highScore).padStart(5, '0');
                 }
 
-                // Revive Logic
-                if (economyData.extraLives > 0) {
+                // Revive Logic - Only allow ONE revive per game
+                if (economyData.extraLives > 0 && !hasRevivedThisGame) {
                     btnRevive.innerText = `HAYATA DÖN (${economyData.extraLives} ❤️)`;
                     btnRevive.classList.remove('hidden');
                 } else {
@@ -5198,6 +5324,7 @@
                 if (!economyData.stats.totalRevives) economyData.stats.totalRevives = 0;
                 economyData.stats.totalRevives++;
                 runRevives++;
+                hasRevivedThisGame = true; // Mark that player has used their one revive for this game
 
                 livesDisplayEl.innerText = "❤️ x " + economyData.extraLives;
                 if (economyData.extraLives === 0) livesDisplayEl.classList.add('hidden');
