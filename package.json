@@ -1,0 +1,29 @@
+{
+  "name": "schrodingers_cat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "game.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://%3C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%3E@github.com/kadircanpeker61-creator/Schrodingers_Cat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kadircanpeker61-creator/Schrodingers_Cat/issues"
+  },
+  "homepage": "https://github.com/kadircanpeker61-creator/Schrodingers_Cat#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2"
+  },
+  "devDependencies": {
+    "terser": "^5.46.0"
+  }
+}
