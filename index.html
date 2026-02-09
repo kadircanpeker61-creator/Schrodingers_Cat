@@ -1502,22 +1502,11 @@
             </div>
         </div>
 
-        <div class="flex gap-2 w-full max-w-sm mt-4">
-            <button id="btn-revive-main" class="btn flex-1 hidden" onclick="revivePlayer()"><span
-                    id="btn-revive-main-text">HAYATA DÖN</span></button>
-            <button id="btn-restart" class="btn flex-1" onclick="resetGame()"><span id="btn-restart-text">TEKRAR
-                    DENE</span></button>
-            <button id="btn-main-menu" class="btn btn-secondary flex-1" onclick="closeGameOver()"><span
-                    id="btn-main-menu-text">ANA MENÜ</span></button>
-        </div>
         <div class="difficulty-container">
-            <button class="btn-difficulty" onclick="setDifficulty('EASY')" id="btn-difficulty-easy"><span
-                    id="difficulty-easy-text">KOLAY</span></button>
-            <button class="btn-difficulty active" onclick="setDifficulty('NORMAL')" id="btn-difficulty-normal"><span
-                    id="difficulty-normal-text">NORMAL</span></button>
-            <button class="btn-difficulty" onclick="setDifficulty('HARD')" id="btn-difficulty-hard"><span
-                    id="difficulty-hard-text">ZOR</span></button>
-            <button class="btn-difficulty" onclick="setDifficulty('EXTREME')" id="btn-difficulty-extreme"
+            <button class="btn-difficulty" onclick="setDifficulty('EASY')">KOLAY</button>
+            <button class="btn-difficulty active" onclick="setDifficulty('NORMAL')">NORMAL</button>
+            <button class="btn-difficulty" onclick="setDifficulty('HARD')">ZOR</button>
+            <button class="btn-difficulty" onclick="setDifficulty('EXTREME')"
                 style="border-color: #FF0000; color: #FF0000; box-shadow: 0 0 10px #FF0000;">EXTREME</button>
         </div>
 
@@ -1533,20 +1522,16 @@
         </div>
 
         <div class="flex flex-col gap-3">
-            <button id="btn-start-exp" class="btn" onclick="startGame()">DENEYİ BAŞLAT</button>
-            <button id="btn-open-settings" class="btn btn-secondary w-full mt-2" onclick="openSettings()">AYARLAR
-                ⚙️</button>
-            <div class="flex gap-2 w-full">
-                <button id="btn-open-scores" class="btn btn-secondary flex-1 mt-2"
-                    onclick="openScoreboard()">SKORLAR</button>
-                <button id="btn-open-shop" class="btn btn-secondary flex-1 mt-2" onclick="openShop()">MAĞAZA 🛒</button>
+            <button class="btn" onclick="startGame()">DENEYİ BAŞLAT</button>
+            <button class="btn btn-secondary" style="border-color: #39FF14; color: #39FF14;" onclick="openShop()">MAĞAZA
+                ⚛</button>
+            <div class="flex gap-2">
+                <button class="btn btn-secondary flex-1" onclick="openStory()">DOSYA</button>
+                <button class="btn btn-secondary flex-1" onclick="openScoreboard()">SKORLAR</button>
             </div>
-            <div class="flex gap-2 w-full">
-                <button id="btn-open-story" class="btn btn-secondary flex-1 mt-2" onclick="openStory()">HİKAYE
-                    📖</button>
-                <button id="btn-open-badges" class="btn btn-secondary flex-1 mt-2"
-                    onclick="showBadges()">ROZETLER</button>
-            </div>
+            <button class="btn btn-secondary w-full mt-2" onclick="openBadges()">ROZETLER 🎖️</button>
+            <button class="btn btn-secondary w-full mt-2" onclick="openSettings()">AYARLAR ⚙️</button>
+
             <!-- DEV TOOLS -->
             <div class="flex gap-2 justify-center mt-6 opacity-40 hover:opacity-100 transition-opacity">
                 <button
@@ -1565,8 +1550,7 @@
         <i class="fas fa-paw paw-close-btn" onclick="closeShop()"></i>
         <div class="shop-scroll-wrapper"
             style="min-height: 100vh; padding: 40px 20px; display: flex; flex-direction: column; align-items: center;">
-            <h2 id="shop-title"
-                class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">
+            <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">
                 MAĞAZA
             </h2>
 
@@ -1574,7 +1558,7 @@
                 <span>⚛ <span id="atom-display">0</span></span>
             </div>
 
-            <h2 id="powerups-title"
+            <h2
                 class="text-xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono w-full max-w-[800px]">
                 GÜÇLENDİRİCİLER</h2>
 
@@ -1583,10 +1567,9 @@
                 <div class="shop-item" onclick="buyItem('LIFE')">
                     <div class="item-icon"><img src="assets/shop_icon_life.webp" class="shop-icon-img" alt="Can"></div>
                     <div class="item-info">
-                        <div class="item-title" id="shop-life-title">EKSTRA CAN</div>
-                        <div class="item-desc" id="shop-life-desc">Öldüğünde bir şans daha verir.</div>
-                        <div class="text-xs text-gray-500 font-mono mt-1"><span id="shop-stock-label">Stok</span>: <span
-                                id="stock-life">0</span></div>
+                        <div class="item-title">EKSTRA CAN</div>
+                        <div class="item-desc">Öldüğünde bir şans daha verir.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-life">0</span></div>
                     </div>
                     <button class="buy-btn" id="btn-buy-life">500 ⚛</button>
                 </div>
@@ -1596,11 +1579,9 @@
                     <div class="item-icon"><img src="assets/shop_icon_shield.webp" class="shop-icon-img" alt="Kalkan">
                     </div>
                     <div class="item-info">
-                        <div class="item-title" id="shop-shield-title">KUANTUM KALKANI</div>
-                        <div class="item-desc" id="shop-shield-desc">İlk çarpışmayı yok sayar.</div>
-                        <div class="text-xs text-gray-500 font-mono mt-1"><span id="shop-stock-label-2">Stok</span>:
-                            <span id="stock-shield">0</span>
-                        </div>
+                        <div class="item-title">KUANTUM KALKANI</div>
+                        <div class="item-desc">İlk çarpışmayı yok sayar.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-shield">0</span></div>
                     </div>
                     <button class="buy-btn" id="btn-buy-shield">1000 ⚛</button>
                 </div>
@@ -1611,11 +1592,9 @@
                             alt="Solucan">
                     </div>
                     <div class="item-info">
-                        <div class="item-title" id="shop-wormhole-title">SOLUCAN DELİĞİ</div>
-                        <div class="item-desc" id="shop-wormhole-desc">1000 Puan ileriden başlatır.</div>
-                        <div class="text-xs text-gray-500 font-mono mt-1"><span id="shop-stock-label-3">Stok</span>:
-                            <span id="stock-wormhole">0</span>
-                        </div>
+                        <div class="item-title">SOLUCAN DELİĞİ</div>
+                        <div class="item-desc">1000 Puan ileriden başlatır.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-wormhole">0</span></div>
                     </div>
                     <button class="buy-btn" id="btn-buy-wormhole">300 ⚛</button>
                 </div>
@@ -1625,32 +1604,27 @@
                     <div class="item-icon"><img src="assets/shop_icon_booster.webp" class="shop-icon-img" alt="Booster">
                     </div>
                     <div class="item-info">
-                        <div class="item-title" id="shop-booster-title">ÇİFTE KAZANÇ</div>
-                        <div class="item-desc" id="shop-booster-desc">Bir sonraki tur 2x Atom kazandırır.</div>
-                        <div class="text-xs text-gray-500 font-mono mt-1"><span id="shop-stock-label-4">Stok</span>:
-                            <span id="stock-booster">0</span>
-                        </div>
+                        <div class="item-title">ÇİFTE KAZANÇ</div>
+                        <div class="item-desc">Bir sonraki tur 2x Atom kazandırır.</div>
+                        <div class="text-xs text-gray-500 font-mono mt-1">Stok: <span id="stock-booster">0</span></div>
                     </div>
                     <button class="buy-btn" id="btn-buy-booster">200 ⚛</button>
                 </div>
             </div>
 
-            <h2 id="universes-title"
-                class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
+            <h2 class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
                 EVRENLER</h2>
             <div class="shop-items-container" id="themes-list">
                 <!-- Temalar JS ile buraya gelecek -->
             </div>
 
-            <h2 id="accessories-title"
-                class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
+            <h2 class="text-xl text-white font-bold mb-4 mt-8 tracking-widest border-b border-gray-600 pb-2 font-mono">
                 AKSESUARLAR</h2>
             <div class="shop-items-container" id="cosmetics-list">
                 <!-- Aksesuarlar JS ile buraya gelecek -->
             </div>
 
-            <div id="shop-footer" class="text-gray-500 text-xs font-mono mt-6 text-center mb-8">BAŞLANGIÇ EKRANINDAN
-                SEÇEREK
+            <div class="text-gray-500 text-xs font-mono mt-6 text-center mb-8">BAŞLANGIÇ EKRANINDAN SEÇEREK
                 KULLANABİLİRSİNİZ</div>
 
         </div> <!-- End Wrapper -->
@@ -1659,8 +1633,7 @@
     <!-- SKOR TABLOSU EKRANI -->
     <div id="scoreboard-screen" class="screen hidden" style="justify-content: flex-start; padding-top: 50px;">
         <i class="fas fa-paw paw-close-btn" onclick="closeScoreboard()"></i>
-        <h2 id="scoreboard-title"
-            class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">LİDER
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">LİDER
             TABLOSU</h2>
 
         <div class="tab-container">
@@ -1682,8 +1655,7 @@
     <div id="badges-screen" class="screen hidden"
         style="justify-content: flex-start; padding-top: 20px; overflow: hidden;">
         <i class="fas fa-paw paw-close-btn" onclick="closeBadges()"></i>
-        <h2 id="badges-title"
-            class="text-xl text-white font-bold mb-2 tracking-widest border-b border-gray-600 pb-2 font-mono"
+        <h2 class="text-xl text-white font-bold mb-2 tracking-widest border-b border-gray-600 pb-2 font-mono"
             style="flex-shrink: 0;">
             GÖREVLER & ROZETLER
         </h2>
@@ -1704,14 +1676,13 @@
     <!-- AYARLAR EKRANI -->
     <div id="settings-screen" class="screen hidden" style="justify-content: center; align-items: center;">
         <i class="fas fa-paw paw-close-btn" onclick="closeSettings()"></i>
-        <h2 id="settings-title"
-            class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">AYARLAR
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">AYARLAR
         </h2>
 
         <div class="flex flex-col gap-6 w-full max-w-sm px-4">
             <!-- Music Volume Control -->
             <div class="flex flex-col gap-2">
-                <label class="text-[#39FF14] font-mono font-bold text-lg"><span id="music-label">MÜZİK</span>: <span
+                <label class="text-[#39FF14] font-mono font-bold text-lg">MÜZİK: <span
                         id="music-vol-display">30%</span></label>
                 <input type="range" id="music-volume-slider" min="0" max="100" value="30"
                     class="accent-[#39FF14] w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
@@ -1720,8 +1691,8 @@
 
             <!-- SFX Volume Control -->
             <div class="flex flex-col gap-2">
-                <label class="text-[#39FF14] font-mono font-bold text-lg"><span id="sfx-label">SES EFEKTLERİ</span>:
-                    <span id="sfx-vol-display">30%</span></label>
+                <label class="text-[#39FF14] font-mono font-bold text-lg">SES EFEKTLERİ: <span
+                        id="sfx-vol-display">30%</span></label>
                 <input type="range" id="sfx-volume-slider" min="0" max="100" value="30"
                     class="accent-[#39FF14] w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                     oninput="updateSfxVolume(this.value)">
@@ -1729,14 +1700,8 @@
 
             <!-- Mute Toggle -->
             <div class="flex items-center justify-between border border-gray-700 p-4 rounded bg-black/50">
-                <span id="mute-label" class="text-white font-mono text-lg">SESİ KAPAT (MUTE)</span>
+                <span class="text-white font-mono text-lg">SESİ KAPAT (MUTE)</span>
                 <button id="mute-btn" class="btn-secondary py-2 px-4" onclick="toggleMute()">AÇIK</button>
-            </div>
-
-            <!-- Language Selection -->
-            <div class="flex items-center justify-between border border-gray-700 p-4 rounded bg-black/50">
-                <span id="lang-label" class="text-white font-mono text-lg">DİL / LANGUAGE</span>
-                <button id="lang-toggle-btn" class="btn-secondary py-2 px-4" onclick="toggleLanguage()">TR</button>
             </div>
         </div>
 
@@ -1745,8 +1710,7 @@
     <div id="story-screen" class="screen hidden"
         style="justify-content: flex-start; padding-top: 20px; overflow-y: auto;">
         <i class="fas fa-paw paw-close-btn" onclick="closeStory()"></i>
-        <h2 id="story-title"
-            class="text-2xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono">DOSYA
+        <h2 class="text-2xl text-white font-bold mb-4 tracking-widest border-b border-gray-600 pb-2 font-mono">DOSYA
             #1935</h2>
 
 
@@ -1816,17 +1780,15 @@
     </div>
 
     <div id="game-over-screen" class="screen hidden" style="background: rgba(0,0,0,0.9);">
-        <h2 id="game-over-title" class="text-4xl text-white font-black mb-2 tracking-tighter">DENEY SONLANDI</h2>
+        <h2 class="text-4xl text-white font-black mb-2 tracking-tighter">DENEY SONLANDI</h2>
         <p id="death-reason" class="text-gray-400 font-mono text-sm mb-8 text-center px-4 max-w-md">...</p>
 
         <div class="text-6xl font-black text-white mb-2 font-mono" id="final-score">0000</div>
-        <p id="final-score-label" class="text-gray-600 text-xs uppercase mb-2">SON SKOR</p>
-        <p class="text-[#39FF14] text-xs uppercase mb-4 font-mono">+<span id="earned-atoms">0</span> <span
-                id="earned-atoms-label">ATOM KAZANDIN</span></p>
+        <p class="text-gray-600 text-xs uppercase mb-2">SON SKOR</p>
+        <p class="text-[#39FF14] text-xs uppercase mb-4 font-mono">+<span id="earned-atoms">0</span> ATOM KAZANDIN</p>
 
         <!-- QUICK LOADOUT UI -->
-        <p id="quick-loadout-label" class="text-gray-500 text-[10px] tracking-widest uppercase mb-2">HIZLI EKİPMAN
-            SEÇİMİ</p>
+        <p class="text-gray-500 text-[10px] tracking-widest uppercase mb-2">HIZLI EKİPMAN SEÇİMİ</p>
         <div class="loadout-container mb-6">
             <div class="loadout-item" id="quick-shield" onclick="toggleLoadout('shield')">
                 <img src="assets/shop_icon_shield.webp">
@@ -2849,7 +2811,7 @@
                     const currentGround = this.groundSegments.find(g => cat.x + cat.width > g.x && cat.x < g.x + g.width);
                     if (currentGround && cat.grounded) {
                         if (cat.color !== currentGround.type) {
-                            return { type: 'ground', reason: 'death_wrong_color' };
+                            return { type: 'ground', reason: `YANLIŞ RENK! <br>${currentGround.type === 'white' ? 'BEYAZ' : 'SİYAH'} ZEMİNE BASTIN.` };
                         }
                     }
                 }
@@ -2873,7 +2835,7 @@
                             return null; // Ölme
                         }
 
-                        return { type: 'obstacle', reason: "death_radioactive" };
+                        return { type: 'obstacle', reason: "RADYOAKTİF TEMAS!" };
                     }
                 }
 
@@ -3469,468 +3431,46 @@
             }
         } catch (e) { console.error("Skor yüklenemedi", e); }
 
-        // LOCALIZATION SYSTEM
-        const TRANSLATIONS = {
-            TR: {
-                // Menu
-                start_experiment: "DENEYİ BAŞLAT",
-                settings: "AYARLAR",
-                scoreboard: "SKORLAR",
-                shop: "MAĞAZA",
-                story: "HİKAYE",
-                badges: "ROZETLER",
-                language: "DİL",
-                // Settings
-                music_vol: "MÜZİK SESİ",
-                sfx_vol: "EFEKT SESİ",
-                mute: "SESİ KAPAT",
-                on: "AÇIK",
-                off: "KAPALI",
-                // Shop
-                unmute: "SESİ AÇ",
-
-                // Shop - Powerups
-                powerups_title: "GÜÇLENDİRİCİLER",
-                life_title: "EKSTRA CAN",
-                life_desc: "Öldüğünde bir şans daha verir.",
-                shield_title: "KUANTUM KALKANI",
-                shield_desc: "İlk çarpışmayı yok sayar.",
-                wormhole_title: "SOLUCAN DELİĞİ",
-                wormhole_desc: "1000 Puan ileriden başlatır.",
-                booster_title: "ÇİFTE KAZANÇ",
-                booster_desc: "Bir sonraki tur 2x Atom kazandırır.",
-                stock: "Stok",
-                shop_footer: "BAŞLANGIÇ EKRANINDAN SEÇEREK KULLANABİLİRSİNİZ",
-
-                // Shop - Sections
-                shop_themes: "EVRENLER",
-                shop_accessories: "AKSESUARLAR",
-                shop_hats: "Şapkalar",
-                shop_glasses: "Gözlükler",
-                shop_toys: "Oyuncaklar",
-                shop_bowls: "Kaplar",
-                btn_selected: "SEÇİLDİ",
-                btn_select: "SEÇ",
-                btn_buy: "AL",
-                btn_remove: "ÇIKAR",
-                btn_equip: "KUŞAN",
-
-                // Game Over
-                game_over_title: "DENEY SONLANDI",
-                final_score_label: "SON SKOR",
-                earned_atoms_label: "ATOM KAZANDIN",
-                quick_loadout_label: "HIZLI EKİPMAN SEÇİMİ",
-                revive_btn: "HAYATA DÖN",
-                restart_btn: "HEMEN BAŞLAT",
-                menu_btn: "ANA MENÜ",
-
-                // Themes
-                theme_city_name: "VİYANA",
-                theme_city_desc: "Karanlık ve yağmurlu...",
-                theme_lab_name: "RADYOAKTİF LABORATUVAR",
-                theme_lab_desc: "Deneyin başladığı yer.",
-                theme_cyber_name: "CYBER CITY",
-                theme_cyber_desc: "Neon ışıklı gelecek.",
-                theme_void_name: "KUANTUM BOŞLUĞU",
-                theme_void_desc: "Varoluşun sınırı.",
-
-                // Cosmetics
-                cos_tophat: "Silindir Şapka",
-                cos_party: "Parti Şapkası",
-                cos_beanie: "Bere",
-                cos_crown: "Kral Tacı",
-                cos_queen_crown: "Kraliçe Tacı",
-                cos_cool: "Havalı Gözlük",
-                cos_nerd: "Nerd Gözlük",
-                cos_monocle: "Monokl",
-                cos_heart: "Kalp Gözlük",
-                cos_yarn: "Yün Yumağı",
-                cos_mouse: "Oyuncak Fare",
-                cos_ball: "Yeşil Top",
-                cos_red_bowl: "Kırmızı Kap",
-                cos_blue_bowl: "Mavi Kap",
-                cos_golden_bowl: "Altın Kap",
-
-                // Achievements
-                ach_first_milestone_title: "İLK KİLOMETRE TAŞI",
-                ach_first_milestone_msg: "1000 Puan Barajını Geçtin!",
-                ach_quantum_leap_title: "KUANTUM SIÇRAMASI",
-                ach_quantum_leap_msg: "5000 Puan! İnanılmaz!",
-                ach_first_collapse_title: "İLK ÇÖKÜŞ",
-                ach_first_collapse_msg: "Deney ilk kez sonlandı.",
-                ach_determination_title: "KARARLILIK",
-                ach_determination_msg: "100 kez denedin!",
-
-                // Badges
-                badge_score_100_title: "Yavru Kedi",
-                badge_score_100_desc: "100 puana ulaş.",
-                badge_score_1000_title: "Deneyimli Kedi",
-                badge_score_1000_desc: "1000 puana ulaş.",
-                badge_score_5000_title: "Kuantum Ustası",
-                badge_score_5000_desc: "5000 puana ulaş.",
-                badge_score_10000_title: "Boyut Gezgini",
-                badge_score_10000_desc: "10000 puana ulaş.",
-                badge_theme_city_title: "Viyana Sakini",
-                badge_theme_city_desc: "Viyana temasında 2000 puan yap.",
-                badge_theme_lab_title: "Atom Bilimci",
-                badge_theme_lab_desc: "Laboratuvar temasında 2000 puan yap.",
-                badge_theme_cyber_title: "Siber Pençe",
-                badge_theme_cyber_desc: "Cyber City temasında 2000 puan yap.",
-                badge_theme_void_title: "Boşluk Yolcusu",
-                badge_theme_void_desc: "Void temasında 2000 puan yap.",
-                badge_collector_1_title: "Koleksiyoner I",
-                badge_collector_1_desc: "3 farklı tema sahibi ol.",
-                badge_collector_all_title: "Evrenlerin Efendisi",
-                badge_collector_all_desc: "Tüm temaları aç.",
-                badge_investor_1000_title: "Yatırımcı",
-                badge_investor_1000_desc: "Mağazada 1000 atom harca.",
-                badge_rich_cat_5000_title: "Zengin Kedi",
-                badge_rich_cat_5000_desc: "Cebinde 5000 atom biriktir.",
-
-                // Story
-                story_page_1: "Kedimiz Schrödinger, kuantum dünyasının gizemli derinliklerinde kayboldu...",
-                story_page_2: "Aynı anda hem ölü hem canlı olabileceği bu tuhaf evrende hayatta kalmalı.",
-                story_page_3: "Farklı evrenlere portallar açarak yoluna devam ediyor.",
-                story_page_4: "Atomları toplayarak güçleniyor ve yeni kıyafetler ediniyor.",
-                story_page_5: "Bu sonsuz deneyde ona rehberlik etmeye hazır mısın?",
-                btn_back_to_game: "OYUNA DÖN",
-                btn_next: "İLERİ",
-                no_data_yet: "HENÜZ VERİ YOK",
-                stock: "Stok",
-                story_scene_1_title: "1935, VİYANA.",
-                story_scene_2_title: "DENEY NESNESİ.",
-                story_scene_3_title: "SÜPERPOZİSYON.",
-                story_scene_4_title: "KIRILMA NOKTASI.",
-                story_scene_5_title: "KAÇIŞ.",
-                off: "KAPALI",
-                on: "AÇIK",
-                confirm_reset: "TÜM İLERLEME SİLİNECEK! Rozetler, skorlar, satın alımlar... Emin misin?",
-                dev_mode: "DEV MODU",
-                debug_atoms_added: "50.000 Atom Eklendi!",
-                badge_unlocked: "ROZET KAZANILDI!",
-                btn_revive: "HAYATA DÖN",
-                death_reason_default: "Bilinmeyen bir hata oluştu.",
-                death_fall: "Aşağı düştün!",
-                death_trap: "Tuzağa yakalandın!",
-                death_void: "Boşluğa düştün!",
-                death_wrong_color: "YANLIŞ RENK! <br>Yanlış zemine bastın.",
-                pet_mood_happy: "Çok Mutlu!",
-                pet_mood_content: "Memnun",
-                pet_mood_attention: "İlgi Bekliyor",
-                pet_mood_sad: "Mutsuz...",
-                death_radioactive: "RADYOAKTİF TEMAS!",
-                death_eagle: "Bir kartal tarafından yakalandın!",
-                death_shark: "Köpek balığı tarafından yenildin!",
-                death_no_oxygen: "Oksijenin bitti!",
-                toast_fish_collected: "Balık toplandı",
-                toast_bird_collected: "Kuş toplandı",
-                toast_safe_title: "GÜVENDE",
-                toast_safe_msg: "3 sn dokunulmazlık",
-                msg_speeding_up: "HIZLANIYOR...",
-                msg_experiment_starting: "DENEY BAŞLIYOR...",
-                label_air: "HAVA: ",
-                label_oxygen: "OKSİJEN: ",
-                pet_tooltip: "Bana dokun!",
-                difficulty_easy: "KOLAY",
-                difficulty_normal: "NORMAL",
-                difficulty_hard: "ZOR",
-                hi_label: "HI: "
-            },
-            EN: {
-                // Menu
-                start_experiment: "START EXPERIMENT",
-                settings: "SETTINGS",
-                shop: "SHOP",
-                scoreboard: "SCORES",
-                story: "STORY",
-                badges: "BADGES",
-                language: "LANG",
-                mute: "MUTE",
-                unmute: "UNMUTE",
-
-                // Shop - Powerups
-                powerups_title: "POWER-UPS",
-                life_title: "EXTRA LIFE",
-                life_desc: "Gives one more chance when you die.",
-                shield_title: "QUANTUM SHIELD",
-                shield_desc: "Ignores the first collision.",
-                wormhole_title: "WORMHOLE",
-                wormhole_desc: "Starts from 1000 points ahead.",
-                booster_title: "DOUBLE GAIN",
-                booster_desc: "Earn 2x Atoms in the next run.",
-                shop_footer: "SELECT FROM THE START SCREEN TO USE",
-
-                // Shop - Sections
-                shop_themes: "UNIVERSES",
-                shop_accessories: "ACCESSORIES",
-                shop_hats: "Hats",
-                shop_glasses: "Glasses",
-                shop_toys: "Toys",
-                shop_bowls: "Bowls",
-                btn_selected: "EQUIPPED",
-                btn_select: "EQUIP",
-                btn_buy: "BUY",
-                btn_remove: "REMOVE",
-                btn_equip: "EQUIP",
-
-                // Game Over
-                game_over_title: "EXPERIMENT ENDED",
-                final_score_label: "FINAL SCORE",
-                earned_atoms_label: "ATOMS EARNED",
-                quick_loadout_label: "QUICK LOADOUT SELECTION",
-                revive_btn: "REVIVE",
-                restart_btn: "RESTART NOW",
-                menu_btn: "MAIN MENU",
-
-                // Themes
-                theme_city_name: "VIENNA",
-                theme_city_desc: "Dark and rainy...",
-                theme_lab_name: "RADIOACTIVE LAB",
-                theme_lab_desc: "Where it all began.",
-                theme_cyber_name: "CYBER CITY",
-                theme_cyber_desc: "Neon-lit future.",
-                theme_void_name: "QUANTUM VOID",
-                theme_void_desc: "Edge of existence.",
-
-                // Cosmetics
-                cos_tophat: "Top Hat",
-                cos_party: "Party Hat",
-                cos_beanie: "Beanie",
-                cos_crown: "King Crown",
-                cos_queen_crown: "Queen Crown",
-                cos_cool: "Cool Glasses",
-                cos_nerd: "Nerd Glasses",
-                cos_monocle: "Monocle",
-                cos_heart: "Heart Glasses",
-                cos_yarn: "Yarn Ball",
-                cos_mouse: "Toy Mouse",
-                cos_ball: "Green Ball",
-                cos_red_bowl: "Red Bowl",
-                cos_blue_bowl: "Blue Bowl",
-                cos_golden_bowl: "Golden Bowl",
-
-                // Achievements
-                ach_first_milestone_title: "FIRST MILESTONE",
-                ach_first_milestone_msg: "Passed the 1000 point mark!",
-                ach_quantum_leap_title: "QUANTUM LEAP",
-                ach_quantum_leap_msg: "5000 Points! Incredible!",
-                ach_first_collapse_title: "FIRST COLLAPSE",
-                ach_first_collapse_msg: "Small collapse experienced.",
-                ach_determination_title: "DETERMINATION",
-                ach_determination_msg: "Tried 100 times!",
-
-                // Badges
-                badge_score_100_title: "Kitten",
-                badge_score_100_desc: "Reach 100 points.",
-                badge_score_1000_title: "Experienced Cat",
-                badge_score_1000_desc: "Reach 1000 points.",
-                badge_score_5000_title: "Quantum Master",
-                badge_score_5000_desc: "Reach 5000 points.",
-                badge_score_10000_title: "Dimension Traveler",
-                badge_score_10000_desc: "Reach 10000 points.",
-                badge_theme_city_title: "Vienna Resident",
-                badge_theme_city_desc: "Score 2000 in Vienna theme.",
-                badge_theme_lab_title: "Atomic Scientist",
-                badge_theme_lab_desc: "Score 2000 in Lab theme.",
-                badge_theme_cyber_title: "Cyber Claw",
-                badge_theme_cyber_desc: "Score 2000 in Cyber City.",
-                badge_theme_void_title: "Void Traveler",
-                badge_theme_void_desc: "Score 2000 in Void theme.",
-                badge_collector_1_title: "Collector I",
-                badge_collector_1_desc: "Own 3 different themes.",
-                badge_collector_all_title: "Master of Universes",
-                badge_collector_all_desc: "Unlock all themes.",
-                badge_investor_1000_title: "Investor",
-                badge_investor_1000_desc: "Spend 1000 atoms in shop.",
-                badge_rich_cat_5000_title: "Rich Cat",
-                badge_rich_cat_5000_desc: "Have 5000 atoms in pocket.",
-
-                // Story
-                story_page_1: "Our cat Schrödinger is lost in the mysterious depths of the quantum world...",
-                story_page_2: "In this strange universe where it can be both dead and alive at the same time, it must survive.",
-                story_page_3: "It continues its journey by opening portals to different universes.",
-                story_page_4: "By collecting atoms, it grows stronger and acquires new outfits.",
-                story_page_5: "Are you ready to guide it through this infinite experiment?",
-                btn_back_to_game: "BACK TO GAME",
-                btn_next: "NEXT",
-                no_data_yet: "NO DATA YET",
-                stock: "Stock",
-                story_scene_1_title: "1935, VIENNA.",
-                story_scene_2_title: "SUBJECT.",
-                story_scene_3_title: "SUPERPOSITION.",
-                story_scene_4_title: "BREAKING POINT.",
-                story_scene_5_title: "ESCAPE.",
-                off: "OFF",
-                on: "ON",
-                confirm_reset: "ALL PROGRESS WILL BE RESET! Badges, scores, purchases... Are you sure?",
-                dev_mode: "DEV MODE",
-                debug_atoms_added: "50,000 Atoms Added!",
-                badge_unlocked: "BADGE UNLOCKED!",
-                btn_revive: "REVIVE",
-                death_reason_default: "An unknown error occurred.",
-                death_fall: "You fell down!",
-                death_trap: "You got caught in a trap!",
-                death_void: "You fell into the void!",
-                death_wrong_color: "WRONG COLOR! <br>You stepped on the wrong ground.",
-                pet_mood_happy: "Very Happy!",
-                pet_mood_content: "Content",
-                pet_mood_attention: "Needs Attention",
-                pet_mood_sad: "Unhappy...",
-                death_radioactive: "RADIOACTIVE CONTACT!",
-                death_eagle: "You were caught by an eagle!",
-                death_shark: "You were eaten by a shark!",
-                death_no_oxygen: "Out of oxygen!",
-                toast_fish_collected: "Fish collected",
-                toast_bird_collected: "Bird collected",
-                toast_safe_title: "SAFE",
-                toast_safe_msg: "3s invulnerability",
-                msg_speeding_up: "SPEEDING UP...",
-                msg_experiment_starting: "EXPERIMENT STARTING...",
-                label_air: "AIR: ",
-                label_oxygen: "OXYGEN: ",
-                pet_tooltip: "Touch me!",
-                difficulty_easy: "EASY",
-                difficulty_normal: "NORMAL",
-                difficulty_hard: "HARD",
-                hi_label: "HI: "
-            }
-        };
-
-        window.t = (key) => {
-            const lang = economyData.lang || 'TR';
-            return TRANSLATIONS[lang][key] || key;
-        };
-
-        window.toggleLanguage = () => {
-            economyData.lang = (economyData.lang === 'TR' ? 'EN' : 'TR');
-            saveEconomy();
-            updateLocaleUI();
-            updateLocaleUI(); // Refresh locale-dependent UI elements
-            updateShopUI(); // Refresh shop items
-            if (petSystem) petSystem.lastInteraction = Date.now();
-        };
-
-        window.updateLocaleUI = () => {
-            const map = {
-                '#btn-start-exp': 'start_experiment',
-                '#btn-open-settings': 'settings',
-                '#btn-open-shop': 'shop',
-                '#btn-open-scores': 'scoreboard',
-                '#btn-open-story': 'story',
-                '#btn-open-badges': 'badges',
-                '#lang-label': 'language',
-                '#mute-label': 'mute',
-                '#shop-title': 'shop',
-                '#powerups-title': 'powerups_title',
-                '#universes-title': 'shop_themes',
-                '#accessories-title': 'shop_accessories',
-                '#shop-life-title': 'life_title',
-                '#shop-life-desc': 'life_desc',
-                '#shop-shield-title': 'shield_title',
-                '#shop-shield-desc': 'shield_desc',
-                '#shop-wormhole-title': 'wormhole_title',
-                '#shop-wormhole-desc': 'wormhole_desc',
-                '#shop-booster-title': 'booster_title',
-                '#shop-booster-desc': 'booster_desc',
-                '#shop-footer': 'shop_footer',
-                '#game-over-title': 'game_over_title',
-                '#final-score-label': 'final_score_label',
-                '#earned-atoms-label': 'earned_atoms_label',
-                '#loadout-label': 'quick_loadout_label',
-                '#btn-restart': 'restart_btn',
-                '#btn-menu': 'menu_btn',
-                '#pet-tooltip': 'pet_tooltip',
-                '#difficulty-easy-text': 'difficulty_easy',
-                '#difficulty-normal-text': 'difficulty_normal',
-                '#difficulty-hard-text': 'difficulty_hard',
-                '#btn-revive-main-text': 'btn_revive'
-            };
-
-            for (const [selector, key] of Object.entries(map)) {
-                const el = document.querySelector(selector);
-                if (el) {
-                    if (selector === '#btn-open-settings') el.innerHTML = `${t('settings')} ⚙️`;
-                    else if (selector === '#btn-open-shop') el.innerHTML = `${t('shop')} 🛒`;
-                    else if (selector === '#btn-open-scores') el.innerHTML = `${t('scoreboard')} 🏆`;
-                    else if (selector === '#btn-open-story') el.innerHTML = `${t('story')} 📖`;
-                    else if (selector === '#btn-open-badges') el.innerHTML = `${t('badges')} 🎨`;
-                    else el.innerText = t(key);
-                }
-            }
-
-            // Update Stok labels
-            document.querySelectorAll('[id^="shop-stock-label"]').forEach(el => el.innerText = t('stock'));
-
-            // Update Tabs
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                const diff = btn.id.replace('tab-', '').toLowerCase();
-                const key = (diff === 'easy' ? 'easy' : diff === 'normal' ? 'normal' : diff === 'hard' ? 'hard' : 'extreme');
-                btn.innerText = t(key);
-            });
-
-            // Update Language Toggle Text
-            const langToggle = document.getElementById('lang-toggle-btn');
-            if (langToggle) langToggle.innerText = economyData.lang === 'TR' ? 'TÜRKÇE' : 'ENGLISH';
-
-            // Update Mute Toggle Text
-            const muteBtn = document.getElementById('mute-toggle-btn');
-            if (muteBtn) {
-                const isMuted = (window.audioManager && audioManager.isMuted);
-                muteBtn.innerText = isMuted ? t('unmute') : t('mute');
-            }
-
-            // Update Story Content
-            for (let i = 1; i <= 5; i++) {
-                const sceneEl = document.getElementById('scene-' + i);
-                if (sceneEl) {
-                    const caption = sceneEl.querySelector('.story-caption');
-                    if (caption) {
-                        caption.innerHTML = `<span class="text-[#39FF14] font-bold">${t('story_scene_' + i + '_title')}</span><br>${t('story_page_' + i)}`;
-                    }
-                }
-            }
-        };
-
 
         // SHOP & ECONOMY SYSTEM
         const COSMETICS = {
             hat: {
-                tophat: { name: "cos_tophat", cost: 1000, icon: "🎩" },
-                party: { name: "cos_party", cost: 500, icon: "🥳" },
-                cowboy: { name: "cos_cowboy", cost: 1500, icon: "🤠" },
-                beanie: { name: "cos_beanie", cost: 800, icon: "🔴" },
-                king_crown: { name: "cos_king_crown", cost: 5000, icon: "👑" },
-                queen_crown: { name: "cos_queen_crown", cost: 5000, icon: "👸" }
+                tophat: { name: "Sihirbaz Şapkası", cost: 1000, icon: "🎩" },
+                party: { name: "Parti Şapkası", cost: 500, icon: "🥳" },
+                cowboy: { name: "Kovboy Şapkası", cost: 1500, icon: "🤠" },
+                beanie: { name: "Kırmızı Bere", cost: 800, icon: "🔴" },
+                king_crown: { name: "Kral Tacı", cost: 5000, icon: "👑" },
+                queen_crown: { name: "Kraliçe Tacı", cost: 5000, icon: "👸" }
             },
             glasses: {
-                cool: { name: "cos_cool", cost: 1200, icon: "😎" },
-                monocle: { name: "cos_monocle", cost: 2000, icon: "🧐" },
-                nerd: { name: "cos_nerd", cost: 900, icon: "🤓" },
-                heart: { name: "cos_heart", cost: 1100, icon: "😍" }
+                cool: { name: "Havalı Gözlük", cost: 1200, icon: "😎" },
+                monocle: { name: "Monokl", cost: 2000, icon: "🧐" },
+                nerd: { name: "Nerd Gözlük", cost: 900, icon: "🤓" },
+                heart: { name: "Kalp Gözlük", cost: 1100, icon: "😍" }
             },
             toy: {
-                yarn: { name: "cos_yarn", cost: 600, icon: "🧶" },
-                mouse: { name: "cos_mouse", cost: 750, icon: "🐭" },
-                ball: { name: "cos_ball", cost: 400, icon: "🎾" }
+                yarn: { name: "Yün Yumağı", cost: 600, icon: "🧶" },
+                mouse: { name: "Oyuncak Fare", cost: 750, icon: "🐭" },
+                ball: { name: "Renkli Top", cost: 400, icon: "🎾" }
             },
             bowl: {
-                red_bowl: { name: "cos_red_bowl", cost: 300, icon: "🥣" },
-                blue_bowl: { name: "cos_blue_bowl", cost: 300, icon: "🥣" },
-                golden_bowl: { name: "cos_golden_bowl", cost: 2500, icon: "🏆" }
+                red_bowl: { name: "Kırmızı Kap", cost: 300, icon: "🥣" },
+                blue_bowl: { name: "Mavi Kap", cost: 300, icon: "🥣" },
+                golden_bowl: { name: "Altın Kap", cost: 2500, icon: "🏆" }
             }
         };
 
         const THEMES = {
-            CITY: { name: "theme_city_name", cost: 0, desc: "theme_city_desc", color: "#888", icon: "fa-city", img: "assets/noir.webp", bgImg: "assets/Noir_plan.webp" },
-            LAB: { name: "theme_lab_name", cost: 2000, desc: "theme_lab_desc", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp", bgImg: "assets/Radyoaktif_Lab.webp" },
-            MATRIX: { name: "theme_matrix_name", cost: 5000, desc: "theme_matrix_desc", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp", bgImg: "assets/Simülasyon_plan.webp" },
-            SYNTHWAVE: { name: "theme_synthwave_name", cost: 8000, desc: "theme_synthwave_desc", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp", bgImg: "assets/Neon_Gelecek.webp" },
-            VOID: { name: "theme_void_name", cost: 15000, desc: "theme_void_desc", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp", bgImg: "assets/Kuantum_plan.webp" },
-            EGYPT: { name: "theme_egypt_name", cost: 20000, desc: "theme_egypt_desc", color: "#F4D03F", icon: "fa-pyramid", img: "assets/mısırr.webp", bgImg: "assets/mısır_plan.webp" },
-            FOREST: { name: "theme_forest_name", cost: 25000, desc: "theme_forest_desc", color: "#2ECC71", icon: "fa-tree", img: "assets/ormann.webp", bgImg: "assets/orman_plan.webp" },
-            ISLAND: { name: "theme_island_name", cost: 30000, desc: "theme_island_desc", color: "#5DADE2", icon: "fa-cloud", img: "assets/adaa.webp", bgImg: "assets/ada_plan.webp" },
-            ORIENTAL: { name: "theme_oriental_name", cost: 35000, desc: "theme_oriental_desc", color: "#E74C3C", icon: "fa-torii-gate", img: "assets/chınes.webp", bgImg: "assets/chınes_plan.webp" },
-            RUINS: { name: "theme_ruins_name", cost: 40000, desc: "theme_ruins_desc", color: "#7F8C8D", icon: "fa-dungeon", img: "assets/bina.webp", bgImg: "assets/yıkım_plan.webp" }
+            CITY: { name: "VİYANA 1935", cost: 0, desc: "Klasik Noir Şehir", color: "#888", icon: "fa-city", img: "assets/noir.webp", bgImg: "assets/Noir_plan.webp" },
+            LAB: { name: "RADYOAKTİF LAB", cost: 2000, desc: "Toksik Atık Bölgesi", color: "#39FF14", icon: "fa-radiation", img: "assets/laboratuvar.webp", bgImg: "assets/Radyoaktif_Lab.webp" },
+            MATRIX: { name: "SİMÜLASYON", cost: 5000, desc: "Gerçekliğin Kodları", color: "#00FF00", icon: "fa-terminal", img: "assets/simülasyon.webp", bgImg: "assets/Simülasyon_plan.webp" },
+            SYNTHWAVE: { name: "NEON GELECEK", cost: 8000, desc: "Retro-Fütüristik Günbatımı", color: "#FF00FF", icon: "fa-sun", img: "assets/neon.webp", bgImg: "assets/Neon_Gelecek.webp" },
+            VOID: { name: "KUANTUM BOŞLUĞU", cost: 15000, desc: "Evrenin Dokusu", color: "#9D00FF", icon: "fa-infinity", img: "assets/Kuantum.webp", bgImg: "assets/Kuantum_plan.webp" },
+            EGYPT: { name: "ANTİK MISIR", cost: 20000, desc: "Piramitlerin Gizemi", color: "#F4D03F", icon: "fa-pyramid", img: "assets/mısırr.webp", bgImg: "assets/mısır_plan.webp" },
+            FOREST: { name: "MİSTİK ORMAN", cost: 25000, desc: "Büyülü Doğa", color: "#2ECC71", icon: "fa-tree", img: "assets/ormann.webp", bgImg: "assets/orman_plan.webp" },
+            ISLAND: { name: "UÇAN ADA", cost: 30000, desc: "Gökyüzü Krallığı", color: "#5DADE2", icon: "fa-cloud", img: "assets/adaa.webp", bgImg: "assets/ada_plan.webp" },
+            ORIENTAL: { name: "YASAK ŞEHİR", cost: 35000, desc: "Doğunun İncisi", color: "#E74C3C", icon: "fa-torii-gate", img: "assets/chınes.webp", bgImg: "assets/chınes_plan.webp" },
+            RUINS: { name: "YIKILMIŞ DÜNYA", cost: 40000, desc: "Kıyamet Sonrası", color: "#7F8C8D", icon: "fa-dungeon", img: "assets/bina.webp", bgImg: "assets/yıkım_plan.webp" }
         };
 
         let economyData = {
@@ -3940,9 +3480,8 @@
             highScore: { EASY: 0, NORMAL: 0, HARD: 0, EXTREME: 0 },
             ownedThemes: ['CITY'],
             equippedTheme: 'CITY',
-            lang: 'TR', // Default Language
             ownedCosmetics: ['none'],
-            equippedCosmetics: { hat: 'none', glasses: 'none', toy: 'none', bowl: 'none' },
+            equippedCosmetics: { hat: 'none', glasses: 'none' },
             // Achievements
             unlockedAchievements: [],
             unlockedBadges: [], // Rozetler için yeni dizi
@@ -3977,81 +3516,82 @@
 
         // ACHIEVEMENTS CONSTANTS
         const ACHIEVEMENTS = {
-            FIRST_MILESTONE: { id: 'FIRST_MILESTONE', title: "ach_first_milestone_title", msg: "ach_first_milestone_msg", reward: 100, icon: "fa-flag-checkered" },
-            QUANTUM_LEAP: { id: 'QUANTUM_LEAP', title: "ach_quantum_leap_title", msg: "ach_quantum_leap_msg", reward: 500, icon: "fa-rocket" },
-            FIRST_COLLAPSE: { id: 'FIRST_COLLAPSE', title: "ach_first_collapse_title", msg: "ach_first_collapse_msg", reward: 50, icon: "fa-skull" },
-            DETERMINATION: { id: 'DETERMINATION', title: "ach_determination_title", msg: "ach_determination_msg", reward: 200, icon: "fa-rotate-right" }
+            FIRST_MILESTONE: { id: 'FIRST_MILESTONE', title: "İLK KİLOMETRE", msg: "1000 Puan Barajı Aşıldı!", reward: 100, icon: "fa-flag-checkered" },
+            QUANTUM_LEAP: { id: 'QUANTUM_LEAP', title: "KUANTUM ATLAYIŞI", msg: "5000 Puan! Efsanevi!", reward: 500, icon: "fa-rocket" },
+            FIRST_COLLAPSE: { id: 'FIRST_COLLAPSE', title: "İLK ÇÖKÜŞ", msg: "Her Deney Başarılı Olmaz.", reward: 50, icon: "fa-skull" },
+            DETERMINATION: { id: 'DETERMINATION', title: "KARARLILIK", msg: "10 Kez Oynadın!", reward: 200, icon: "fa-rotate-right" }
         };
 
         // --- EXPANDED BADGES DEFINITION (60+ Items) ---
         const BADGES = [
             // A) MESAFE & SKOR
-            { id: 'score_100', title: 'badge_score_100_title', desc: 'badge_score_100_desc', icon: 'fa-baby', targetScore: 100, category: 'DISTANCE' },
-            { id: 'score_1000', title: 'badge_score_1000_title', desc: 'badge_score_1000_desc', icon: 'fa-flag', targetScore: 1000, category: 'DISTANCE' },
-            { id: 'score_5000', title: 'badge_score_5000_title', desc: 'badge_score_5000_desc', icon: 'fa-person-running', targetScore: 5000, category: 'DISTANCE' },
-            { id: 'score_10000', title: 'badge_score_10000_title', desc: 'badge_score_10000_desc', icon: 'fa-road', targetScore: 10000, category: 'DISTANCE' },
-            { id: 'score_25000', title: 'badge_score_25000_title', desc: 'badge_score_25000_desc', icon: 'fa-map-location-dot', targetScore: 25000, category: 'DISTANCE' },
-            { id: 'score_50000', title: 'badge_score_50000_title', desc: 'badge_score_50000_desc', icon: 'fa-rocket', targetScore: 50000, category: 'DISTANCE' },
-            { id: 'total_score_100k', title: 'badge_total_score_100k_title', desc: 'badge_total_score_100k_desc', icon: 'fa-hourglass-half', targetTotalScore: 100000, category: 'DISTANCE' },
-            { id: 'single_10000', title: 'badge_single_10000_title', desc: 'badge_single_10000_desc', icon: 'fa-infinity', targetScore: 10000, category: 'DISTANCE' },
-            { id: 'peak_15000', title: 'badge_peak_15000_title', desc: 'badge_peak_15000_desc', icon: 'fa-mountain', targetScore: 15000, category: 'DISTANCE' },
+            { id: 'score_100', title: 'İLK ADIM', desc: '100 puana ulaş.', icon: 'fa-baby', targetScore: 100, category: 'DISTANCE' },
+            { id: 'score_1000', title: 'İLK KİLOMETRE', desc: '1.000 puana ulaş.', icon: 'fa-flag', targetScore: 1000, category: 'DISTANCE' },
+            { id: 'score_5000', title: 'MARATON KOŞUCUSU', desc: '5.000 puana ulaş.', icon: 'fa-person-running', targetScore: 5000, category: 'DISTANCE' },
+            { id: 'score_10000', title: 'UZUN MESAFE', desc: '10.000 puana ulaş.', icon: 'fa-road', targetScore: 10000, category: 'DISTANCE' },
+            { id: 'score_25000', title: 'EFSANE YOLCULUK', desc: '25.000 puana ulaş.', icon: 'fa-map-location-dot', targetScore: 25000, category: 'DISTANCE' },
+            { id: 'score_50000', title: 'KUANTUM ATLAYIŞI', desc: '50.000 puana ulaş.', icon: 'fa-rocket', targetScore: 50000, category: 'DISTANCE' },
+            { id: 'total_score_100k', title: 'ZAMAN YOLCUSU', desc: 'Toplam 100.000 kariyer puanı yap.', icon: 'fa-hourglass-half', targetTotalScore: 100000, category: 'DISTANCE' },
+            { id: 'single_10000', title: 'SONSUZ KOŞUCU', desc: 'Tek seferde 10.000 puan yap (ZOR mod değilse bile).', icon: 'fa-infinity', targetScore: 10000, category: 'DISTANCE' }, // check logic same
+            { id: 'peak_15000', title: 'ZİRVE', desc: 'Tek oyunda 15.000+ puan yap.', icon: 'fa-mountain', targetScore: 15000, category: 'DISTANCE' },
+            // "Mükemmeliyetçi" requires logic per diff, will simplify to "Win hard w/ 5k" for now or custom logic
 
             // B) HAYATTA KALMA
-            { id: 'first_death', title: 'badge_first_death_title', desc: 'badge_first_death_desc', icon: 'fa-skull', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 1 },
-            { id: 'nine_lives', title: 'badge_nine_lives_title', desc: 'badge_nine_lives_desc', icon: 'fa-cat', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 9 },
-            { id: 'immortal_5k', title: 'badge_immortal_5k_title', desc: 'badge_immortal_5k_desc', icon: 'fa-heart-pulse', category: 'SURVIVAL', targetScore: 5000, noRevive: true },
-            { id: 'ghost_3', title: 'badge_ghost_3_title', desc: 'badge_ghost_3_desc', icon: 'fa-shield-cat', category: 'SURVIVAL', customCheck: (s) => s.totalShieldsUsed >= 3 },
-            { id: 'wormhole_10', title: 'badge_wormhole_10_title', desc: 'badge_wormhole_10_desc', icon: 'fa-worm', category: 'SURVIVAL', customCheck: (s) => s.totalWormholesUsed >= 10 },
-            { id: 'revive_5', title: 'badge_revive_5_title', desc: 'badge_revive_5_desc', icon: 'fa-suitcase-medical', category: 'SURVIVAL', customCheck: (s) => s.totalRevives >= 5 },
-            { id: 'survivor_combo', title: 'badge_survivor_combo_title', desc: 'badge_survivor_combo_desc', icon: 'fa-kit-medical', category: 'SURVIVAL', customCheck: (s, run) => run.usedShield && run.usedWormhole && run.usedBooster },
-            { id: 'obstacle_100', title: 'badge_obstacle_100_title', desc: 'badge_obstacle_100_desc', icon: 'fa-person-hurdles', category: 'SURVIVAL', customCheck: (s, run) => run.obstaclesPassed >= 100 },
+            { id: 'first_death', title: 'İLK CAN KAYBI', desc: 'İlk kez öl.', icon: 'fa-skull', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 1 },
+            { id: 'nine_lives', title: 'DOKUZ CANLI KEDİ', desc: 'Toplam 9 kez öl.', icon: 'fa-cat', category: 'SURVIVAL', customCheck: (s) => s.totalDeaths >= 9 },
+            { id: 'immortal_5k', title: 'ÖLÜMSÜZ', desc: '5.000 puanı hiç ölmeden geç (Revive kullanmadan).', icon: 'fa-heart-pulse', category: 'SURVIVAL', targetScore: 5000, noRevive: true },
+            { id: 'ghost_3', title: 'HAYALET', desc: 'Kalkan kullanarak 3 kez kurtul (Toplam).', icon: 'fa-shield-cat', category: 'SURVIVAL', customCheck: (s) => s.totalShieldsUsed >= 3 },
+            { id: 'wormhole_10', title: 'ZAMAN GEZGİNİ', desc: 'Wormhole ile 10 oyun başlat.', icon: 'fa-worm', category: 'SURVIVAL', customCheck: (s) => s.totalWormholesUsed >= 10 },
+            { id: 'revive_5', title: 'İKİNCİ ŞANS', desc: 'Revive ile 5 kez hayata dön (Toplam).', icon: 'fa-suitcase-medical', category: 'SURVIVAL', customCheck: (s) => s.totalRevives >= 5 },
+            { id: 'survivor_combo', title: 'SURVIVOR', desc: 'Aynı oyunda Shield, Wormhole ve Booster kullan.', icon: 'fa-kit-medical', category: 'SURVIVAL', customCheck: (s, run) => run.usedShield && run.usedWormhole && run.usedBooster },
+            { id: 'obstacle_100', title: 'DAYANIKLI', desc: 'Tek oyunda 100 engel geç.', icon: 'fa-person-hurdles', category: 'SURVIVAL', customCheck: (s, run) => run.obstaclesPassed >= 100 },
 
             // C) TEKNİK USTALIK
-            { id: 'fast_fingers', title: 'badge_fast_fingers_title', desc: 'badge_fast_fingers_desc', icon: 'fa-bolt', category: 'TECH', customCheck: (s, run) => run.maxClicksPerSecond >= 5 },
-            { id: 'color_world', title: 'badge_color_world_title', desc: 'badge_color_world_desc', icon: 'fa-palette', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 100 },
-            { id: 'color_master', title: 'badge_color_master_title', desc: 'badge_color_master_desc', icon: 'fa-brush', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 1000 },
-            { id: 'speed_demon', title: 'badge_speed_demon_title', desc: 'badge_speed_demon_desc', icon: 'fa-gauge-high', category: 'TECH', customCheck: (s, run) => run.maxSpeedReached >= 20 },
-            { id: 'careful_easy', title: 'badge_careful_easy_title', desc: 'badge_careful_easy_desc', icon: 'fa-feather', category: 'TECH', customCheck: (s, run) => run.difficulty === 'EASY' && run.score >= 5000 && run.revives === 0 },
-            { id: 'hard_journey', title: 'badge_hard_journey_title', desc: 'badge_hard_journey_desc', icon: 'fa-skull-crossbones', category: 'TECH', customCheck: (s, run) => run.difficulty === 'HARD' && run.score >= 5000 && run.revives === 0 },
-            { id: 'brave', title: 'badge_brave_title', desc: 'badge_brave_desc', icon: 'fa-fist-raised', category: 'TECH', customCheck: (s, run) => run.score >= 3000 && !run.usedLoadout },
+            { id: 'fast_fingers', title: 'HIZLI PARMAKLAR', desc: '1 saniyede 5 kez renk değiştir.', icon: 'fa-bolt', category: 'TECH', customCheck: (s, run) => run.maxClicksPerSecond >= 5 },
+            { id: 'color_world', title: 'RENKLİ DÜNYA', desc: 'Toplam 100 kez renk değiştir.', icon: 'fa-palette', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 100 },
+            { id: 'color_master', title: 'RENK CAMBAZI', desc: 'Toplam 1.000 kez renk değiştir.', icon: 'fa-brush', category: 'TECH', customCheck: (s) => s.totalColorSwitches >= 1000 },
+            { id: 'speed_demon', title: 'HIZ CANAVARI', desc: 'Maksimum hıza (20+) ulaş.', icon: 'fa-gauge-high', category: 'TECH', customCheck: (s, run) => run.maxSpeedReached >= 20 },
+            { id: 'careful_easy', title: 'YAVAŞ VE DİKKATLİ', desc: 'KOLAY modda ölmeden 5.000 puan.', icon: 'fa-feather', category: 'TECH', customCheck: (s, run) => run.difficulty === 'EASY' && run.score >= 5000 && run.revives === 0 },
+            { id: 'hard_journey', title: 'ZOR YOLCULUK', desc: 'ZOR modda ölmeden 5.000 puan.', icon: 'fa-skull-crossbones', category: 'TECH', customCheck: (s, run) => run.difficulty === 'HARD' && run.score >= 5000 && run.revives === 0 },
+            { id: 'brave', title: 'CESUR', desc: 'Hiç power-up kullanmadan 3.000 puan yap (Loadout boş).', icon: 'fa-fist-raised', category: 'TECH', customCheck: (s, run) => run.score >= 3000 && !run.usedLoadout },
 
             // D) TEMA KEŞFİ
-            { id: 'theme_vienna', title: 'badge_theme_vienna_title', desc: 'badge_theme_vienna_desc', icon: 'fa-city', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('CITY') },
-            { id: 'theme_lab', title: 'badge_theme_lab_title', desc: 'badge_theme_lab_desc', icon: 'fa-flask', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('LAB') },
-            { id: 'theme_matrix', title: 'badge_theme_matrix_title', desc: 'badge_theme_matrix_desc', icon: 'fa-terminal', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('MATRIX') },
-            { id: 'theme_neon', title: 'badge_theme_neon_title', desc: 'badge_theme_neon_desc', icon: 'fa-sun', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('SYNTHWAVE') },
-            { id: 'theme_void', title: 'badge_theme_void_title', desc: 'badge_theme_void_desc', icon: 'fa-infinity', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('VOID') },
-            { id: 'theme_egypt', title: 'badge_theme_egypt_title', desc: 'badge_theme_egypt_desc', icon: 'fa-pyramid', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('EGYPT') },
-            { id: 'theme_forest', title: 'badge_theme_forest_title', desc: 'badge_theme_forest_desc', icon: 'fa-tree', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('FOREST') },
-            { id: 'theme_island', title: 'badge_theme_island_title', desc: 'badge_theme_island_desc', icon: 'fa-cloud', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('ISLAND') },
-            { id: 'theme_oriental', title: 'badge_theme_oriental_title', desc: 'badge_theme_oriental_desc', icon: 'fa-torii-gate', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('ORIENTAL') },
-            { id: 'theme_ruins', title: 'badge_theme_ruins_title', desc: 'badge_theme_ruins_desc', icon: 'fa-dungeon', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('RUINS') },
-            { id: 'theme_collector', title: 'badge_theme_collector_title', desc: 'badge_theme_collector_desc', icon: 'fa-layer-group', category: 'THEME', customCheck: (s) => s.ownedThemes.length >= 5 },
-            { id: 'versatile', title: 'badge_versatile_title', desc: 'badge_versatile_desc', icon: 'fa-shuffle', category: 'THEME', customCheck: (s) => s.playedThemes && s.playedThemes.length >= 5 },
+            { id: 'theme_vienna', title: 'VİYANA GEZGİNİ', desc: 'Viyana temasının sahibi ol.', icon: 'fa-city', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('CITY') },
+            { id: 'theme_lab', title: 'RADYASYON UZMANI', desc: 'Lab temasının sahibi ol.', icon: 'fa-flask', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('LAB') },
+            { id: 'theme_matrix', title: 'GERÇEKLİK KIRICI', desc: 'Matrix temasının sahibi ol.', icon: 'fa-terminal', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('MATRIX') },
+            { id: 'theme_neon', title: 'NEON RÜYALARI', desc: 'Synthwave temasının sahibi ol.', icon: 'fa-sun', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('SYNTHWAVE') },
+            { id: 'theme_void', title: 'BOŞLUK GEZGİNİ', desc: 'Void temasının sahibi ol.', icon: 'fa-infinity', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('VOID') },
+            { id: 'theme_egypt', title: 'ANTİK KÂŞİF', desc: 'Antik Mısır temasının sahibi ol.', icon: 'fa-pyramid', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('EGYPT') },
+            { id: 'theme_forest', title: 'DOĞA KORUYUCUSU', desc: 'Mistik Orman temasının sahibi ol.', icon: 'fa-tree', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('FOREST') },
+            { id: 'theme_island', title: 'GÖKYÜZÜ HAKİMİ', desc: 'Uçan Ada temasının sahibi ol.', icon: 'fa-cloud', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('ISLAND') },
+            { id: 'theme_oriental', title: 'DOĞU BİLGESİ', desc: 'Yasak Şehir temasının sahibi ol.', icon: 'fa-torii-gate', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('ORIENTAL') },
+            { id: 'theme_ruins', title: 'HURDA AVCISI', desc: 'Yıkılmış Dünya temasının sahibi ol.', icon: 'fa-dungeon', category: 'THEME', customCheck: (s) => s.ownedThemes.includes('RUINS') },
+            { id: 'theme_collector', title: 'EVREN KOLEKSİYONCUSU', desc: 'Tüm temaların sahibi ol.', icon: 'fa-layer-group', category: 'THEME', customCheck: (s) => s.ownedThemes.length >= 5 },
+            { id: 'versatile', title: 'ÇOK YÖNLÜ', desc: '5 farklı temada oyun oyna.', icon: 'fa-shuffle', category: 'THEME', customCheck: (s) => s.playedThemes && s.playedThemes.length >= 5 },
 
             // E) EKONOMİ
-            { id: 'first_shop', title: 'badge_first_shop_title', desc: 'badge_first_shop_desc', icon: 'fa-cart-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 1 },
-            { id: 'shopaholic', title: 'badge_shopaholic_title', desc: 'badge_shopaholic_desc', icon: 'fa-bags-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 10 },
-            { id: 'rich', title: 'badge_rich_title', desc: 'badge_rich_desc', icon: 'fa-sack-dollar', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 5000 },
-            { id: 'quantum_rich', title: 'badge_quantum_rich_title', desc: 'badge_quantum_rich_desc', icon: 'fa-coins', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 25000 },
-            { id: 'emperor', title: 'badge_emperor_title', desc: 'badge_emperor_desc', icon: 'fa-crown', category: 'ECONOMY', customCheck: (s) => s.totalAtomsEarned >= 100000 },
-            { id: 'generous', title: 'badge_generous_title', desc: 'badge_generous_desc', icon: 'fa-hand-holding-dollar', category: 'ECONOMY', customCheck: (s) => s.totalAtomsSpent >= 50000 },
-            { id: 'collector_power', title: 'badge_collector_power_title', desc: 'badge_collector_power_desc', icon: 'fa-box-open', category: 'ECONOMY', customCheck: (s) => s.boughtShield && s.boughtWormhole && s.boughtBooster && s.boughtLife },
-            { id: 'prepared', title: 'badge_prepared_title', desc: 'badge_prepared_desc', icon: 'fa-warehouse', category: 'ECONOMY', customCheck: (s) => s.inventory.shield >= 10 && s.inventory.wormhole >= 10 && s.inventory.booster >= 10 },
-            { id: 'consumer', title: 'badge_consumer_title', desc: 'badge_consumer_desc', icon: 'fa-recycle', category: 'ECONOMY', customCheck: (s) => (s.totalShieldsUsed + s.totalWormholesUsed + s.totalBoostersUsed) >= 100 },
+            { id: 'first_shop', title: 'İLK ALIŞVERİŞ', desc: 'Mağazadan bir şey satın al.', icon: 'fa-cart-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 1 },
+            { id: 'shopaholic', title: 'ALIŞVERİŞ ÇILGINI', desc: '10 item satın al.', icon: 'fa-bags-shopping', category: 'ECONOMY', customCheck: (s) => s.totalItemsBought >= 10 },
+            { id: 'rich', title: 'ZENGİN', desc: '5.000 atom biriktir (Cüzdan).', icon: 'fa-sack-dollar', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 5000 },
+            { id: 'quantum_rich', title: 'KUANTUM ZENGİNİ', desc: '25.000 atom biriktir (Cüzdan).', icon: 'fa-coins', category: 'ECONOMY', customCheck: (s) => s.currentAtoms >= 25000 },
+            { id: 'emperor', title: 'ATOM İMPARATORU', desc: 'Toplam 100.000 atom kazan (Kariyer).', icon: 'fa-crown', category: 'ECONOMY', customCheck: (s) => s.totalAtomsEarned >= 100000 },
+            { id: 'generous', title: 'CÖMERT', desc: '50.000 atom harca.', icon: 'fa-hand-holding-dollar', category: 'ECONOMY', customCheck: (s) => s.totalAtomsSpent >= 50000 },
+            { id: 'collector_power', title: 'KOLEKSİYONCU', desc: 'Her power-up tipinden en az 1 tane al.', icon: 'fa-box-open', category: 'ECONOMY', customCheck: (s) => s.boughtShield && s.boughtWormhole && s.boughtBooster && s.boughtLife },
+            { id: 'prepared', title: 'HAZIRLIKLI', desc: 'Stokta 10 shield, 10 wormhole, 10 booster olsun.', icon: 'fa-warehouse', category: 'ECONOMY', customCheck: (s) => s.inventory.shield >= 10 && s.inventory.wormhole >= 10 && s.inventory.booster >= 10 },
+            { id: 'consumer', title: 'TÜKETİCİ', desc: 'Toplam 100 item kullan.', icon: 'fa-recycle', category: 'ECONOMY', customCheck: (s) => (s.totalShieldsUsed + s.totalWormholesUsed + s.totalBoostersUsed) >= 100 },
 
             // F) SOSYAL & ÖZEL
-            { id: 'curious', title: 'badge_curious_title', desc: 'badge_curious_desc', icon: 'fa-eye', category: 'SOCIAL', customCheck: (s) => s.visitedShop && s.visitedScores && s.visitedStory },
-            { id: 'patient', title: 'badge_patient_title', desc: 'badge_patient_desc', icon: 'fa-calendar-check', category: 'SOCIAL', customCheck: (s) => s.consecutiveDays >= 7 },
-            { id: 'marathon', title: 'badge_marathon_title', desc: 'badge_marathon_desc', icon: 'fa-stopwatch', category: 'SOCIAL', customCheck: (s) => (s.sessionTime && s.sessionTime >= 3600) || (s.currentSessionTime && s.currentSessionTime >= 3600) },
-            { id: 'night_owl', title: 'badge_night_owl_title', desc: 'badge_night_owl_desc', icon: 'fa-moon', category: 'SOCIAL', customCheck: (s, run) => run.hour >= 0 && run.hour < 4 },
-            { id: 'lucky', title: 'badge_lucky_title', desc: 'badge_lucky_desc', icon: 'fa-clover', category: 'SOCIAL', customCheck: (s, run) => run.isFriday13 },
+            { id: 'curious', title: 'MERAKLI', desc: 'Mağaza, Skorlar ve Hikaye ekranlarını ziyaret et.', icon: 'fa-eye', category: 'SOCIAL', customCheck: (s) => s.visitedShop && s.visitedScores && s.visitedStory },
+            { id: 'patient', title: 'SABIRLI', desc: '7 gün üst üste giriş yap.', icon: 'fa-calendar-check', category: 'SOCIAL', customCheck: (s) => s.consecutiveDays >= 7 },
+            { id: 'marathon', title: 'MARATON', desc: 'Tek oturumda 1 saat oyna (Toplam süre).', icon: 'fa-stopwatch', category: 'SOCIAL', customCheck: (s) => (s.sessionTime && s.sessionTime >= 3600) || (s.currentSessionTime && s.currentSessionTime >= 3600) },
+            { id: 'night_owl', title: 'GECE KUŞU', desc: '00:00 - 04:00 arası oyun oyna.', icon: 'fa-moon', category: 'SOCIAL', customCheck: (s, run) => run.hour >= 0 && run.hour < 4 },
+            { id: 'lucky', title: 'ŞANSLI', desc: 'Ayın 13\'ü ve Cuma günü oyun oyna.', icon: 'fa-clover', category: 'SOCIAL', customCheck: (s, run) => run.isFriday13 },
 
             // G) GİZLİ
-            { id: 'respect', title: 'badge_respect_title', desc: 'badge_respect_desc', icon: 'fa-user-graduate', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'ERWIN' },
-            { id: 'honor_1935', title: 'badge_honor_1935_title', desc: 'badge_honor_1935_desc', icon: 'fa-award', category: 'SECRET', customCheck: (s, run) => Math.floor(run.score) === 1935 },
-            { id: 'cat_love', title: 'badge_cat_love_title', desc: 'badge_cat_love_desc', icon: 'fa-heart', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'KEDI' && s.totalGames >= 50 },
-            { id: 'quantum_leap_sec', title: 'badge_quantum_leap_sec_title', desc: 'badge_quantum_leap_sec_desc', icon: 'fa-forward', category: 'SECRET', customCheck: (s, run) => run.maxObstaclesPerSecond >= 3 }
+            { id: 'respect', title: 'SCHRÖDINGER\'E SAYGI', desc: 'İsmini "ERWIN" yap ve oyna.', icon: 'fa-user-graduate', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'ERWIN' },
+            { id: 'honor_1935', title: '1935 ONURU', desc: 'Tam olarak 1935 skor yapıp öl.', icon: 'fa-award', category: 'SECRET', customCheck: (s, run) => Math.floor(run.score) === 1935 },
+            { id: 'cat_love', title: 'KEDİ SEVGİSİ', desc: 'İsmini "KEDİ" yapıp 50 oyun oyna.', icon: 'fa-heart', category: 'SECRET', customCheck: (s, run) => run.playerName.toUpperCase() === 'KEDI' && s.totalGames >= 50 },
+            { id: 'quantum_leap_sec', title: 'KUANTUM SIÇRAMASI', desc: '1 saniyede 3 engel geç.', icon: 'fa-forward', category: 'SECRET', customCheck: (s, run) => run.maxObstaclesPerSecond >= 3 }
         ];
 
         // Loadout State
@@ -4077,7 +3617,6 @@
                 // Init Achievement Data if missing
                 if (!economyData.unlockedAchievements) economyData.unlockedAchievements = [];
                 if (!economyData.unlockedBadges) economyData.unlockedBadges = [];
-                if (!economyData.lang) economyData.lang = 'TR';
                 if (!economyData.ownedCosmetics) economyData.ownedCosmetics = ['none'];
                 if (!economyData.equippedCosmetics) economyData.equippedCosmetics = { hat: 'none', glasses: 'none', toy: 'none', bowl: 'none' };
                 if (!economyData.equippedCosmetics.toy) economyData.equippedCosmetics.toy = 'none';
@@ -4171,7 +3710,7 @@
 
         // DEV TOOLS
         window.resetProgress = () => {
-            if (confirm(t('confirm_reset'))) {
+            if (confirm("TÜM İLERLEME SİLİNECEK! Rozetler, skorlar, satın alımlar... Emin misin?")) {
                 localStorage.removeItem('schrodinger_economy_v3');
                 localStorage.removeItem('schrodinger_economy');
                 localStorage.removeItem('schrodinger_leaderboard');
@@ -4183,7 +3722,7 @@
             economyData.atoms += 50000;
             saveEconomy();
             updateShopUI();
-            showToast(t('dev_mode'), t('debug_atoms_added'), "fa-radiation");
+            showToast("DEV MODU", "50.000 Atom Eklendi!", "fa-radiation");
         };
 
         // ACHIEVEMENT SYSTEM
@@ -4202,7 +3741,7 @@
             }
 
             // Notify
-            showToast(t(ach.title), t(ach.msg), ach.icon);
+            showToast(ach.title, ach.msg, ach.icon);
             // Also show mini reward text if needed, but toast covers it.
         }
 
@@ -4321,7 +3860,7 @@
 
                 if (unlocked) {
                     economyData.unlockedBadges.push(badge.id);
-                    showToast(t('badge_unlocked'), t(badge.title), badge.icon);
+                    showToast("ROZET KAZANILDI!", badge.title, badge.icon);
                     newUnlock = true;
                 }
             });
@@ -4382,7 +3921,7 @@
 
                 if (unlocked) {
                     economyData.unlockedBadges.push(badge.id);
-                    showToast(t('badge_unlocked'), t(badge.title), badge.icon);
+                    showToast("ROZET KAZANILDI!", badge.title, badge.icon);
                     newUnlock = true;
                 }
             });
@@ -4430,7 +3969,7 @@
 
             // Mute
             const isMuted = audioManager.isMuted;
-            muteBtn.innerText = isMuted ? t('off') : t('on');
+            muteBtn.innerText = isMuted ? "KAPALI" : "AÇIK";
             muteBtn.style.color = isMuted ? "red" : "#39FF14";
 
             document.getElementById('start-screen').classList.add('hidden');
@@ -4463,7 +4002,7 @@
             audioManager.setMute(newState);
 
             const muteBtn = document.getElementById('mute-btn');
-            muteBtn.innerText = newState ? t('off') : t('on');
+            muteBtn.innerText = newState ? "KAPALI" : "AÇIK";
             muteBtn.style.color = newState ? "red" : "#39FF14";
 
             // Also update slider visual if needed or leave as is (slider shows 'potential' volume)
@@ -4485,8 +4024,8 @@
                         <i class="fa-solid ${badge.icon}"></i>
                     </div>
                     <div class="badge-info">
-                        <div class="badge-title" style="${isUnlocked ? '' : 'color:#555;'}">${t(badge.title)}</div>
-                        <div class="badge-desc">${t(badge.desc)}</div>
+                        <div class="badge-title" style="${isUnlocked ? '' : 'color:#555;'}">${badge.title}</div>
+                        <div class="badge-desc">${badge.desc}</div>
                     </div>
                 `;
 
@@ -4609,10 +4148,10 @@
 
                 if (moodBar) moodBar.style.width = this.mood + '%';
 
-                if (this.mood > 90) tooltip.innerText = t('pet_mood_happy');
-                else if (this.mood > 50) tooltip.innerText = t('pet_mood_content');
-                else if (this.mood > 20) tooltip.innerText = t('pet_mood_attention');
-                else tooltip.innerText = t('pet_mood_sad');
+                if (this.mood > 90) tooltip.innerText = "Çok Mutlu!";
+                else if (this.mood > 50) tooltip.innerText = "Memnun";
+                else if (this.mood > 20) tooltip.innerText = "İlgi Bekliyor";
+                else tooltip.innerText = "Mutsuz...";
             }
 
             showHeart() {
@@ -4939,7 +4478,7 @@
                     ctx.stroke();
                 }
 
-                // 6. AĞIZ / Esneme
+                // 6. AĞIZ / ESNEME
                 if (this.isYawning) {
                     // Esneme (Açık Ağız)
                     const progress = this.yawnTimer / 60; // 0 -> 2
@@ -5544,7 +5083,7 @@
                     player.setAtmosferMode(false);
                     player.isInvulnerable = true;
                     player.invulnerableTimer = 3000;
-                    if (window.showToast) showToast(t('toast_safe_title'), t('toast_safe_msg'), "fa-shield");
+                    if (window.showToast) showToast("GÜVENDE", "3 sn dokunulmazlık", "fa-shield");
                 }
 
                 gameMode = GAME_MODES.NORMAL;
@@ -5614,7 +5153,7 @@
                         if (b.type.atoms > 0) {
                             economyData.atoms += b.type.atoms;
                             atomsClaimedThisRun += b.type.atoms;
-                            if (window.showToast) showToast(`+${b.type.atoms} ATOM`, t('toast_bird_collected'), "fa-atom");
+                            if (window.showToast) showToast(`+${b.type.atoms} ATOM`, "Kuş toplandı", "fa-atom");
                             saveEconomy();
                             // Optional: add floating atom text too
                             this.addFloatingText(b.x, b.y - 20, `+${b.type.atoms} ATOM`, '#ffea00');
@@ -5644,7 +5183,7 @@
                         player.y < e.y + e.height &&
                         player.y + player.height > e.y
                     ) {
-                        gameOver('death_eagle');
+                        gameOver("Bir kartal tarafından yakalandın!");
                         return;
                     }
                     if (e.x < -200) this.eagles.splice(i, 1);
@@ -5680,7 +5219,7 @@
                     ctx.fillStyle = "#333";
                     ctx.font = "bold 24px 'Courier Prime'";
                     ctx.textAlign = "center";
-                    ctx.fillText(`${t('label_air')}${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+                    ctx.fillText(`AIR: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
 
                     // Floating Texts
                     ctx.font = "bold 20px 'Courier Prime'";
@@ -5768,7 +5307,7 @@
                     // Post-Portal Invulnerability (3 Seconds)
                     player.isInvulnerable = true;
                     player.invulnerableTimer = 3000;
-                    if (window.showToast) showToast(t('toast_safe_title'), t('toast_safe_msg'), "fa-shield");
+                    if (window.showToast) showToast("GÜVENDE", "3 sn dokunulmazlık", "fa-shield");
                 }
 
                 // Switch back explicitly if managed by global
@@ -5852,12 +5391,12 @@
                         if (f.type.time > 0 && !this.isExiting) {
                             this.timer += f.type.time;
                             // Visual Feedback
-                            if (window.showToast) showToast(`OXYGEN +${f.type.time}s`, t('toast_fish_collected'), "fa-water");
+                            if (window.showToast) showToast(`OXYGEN +${f.type.time}s`, "Balık toplandı", "fa-water");
                         }
                         if (f.type.score > 0) {
                             score += f.type.score;
                             // Visual Feedback
-                            if (window.showToast) showToast(`+${f.type.score} PUAN`, t('toast_fish_collected'), "fa-fish");
+                            if (window.showToast) showToast(`+${f.type.score} PUAN`, "Balık toplandı", "fa-fish");
                         }
 
                         // Audio
@@ -5896,7 +5435,7 @@
                         player.y + player.height > s.y
                     ) {
                         // GAME OVER!
-                        gameOver('death_shark');
+                        gameOver("Köpek balığı tarafından yenildin!");
                         return;
                     }
 
@@ -5970,7 +5509,7 @@
                     ctx.fillStyle = "#fff";
                     ctx.font = "bold 24px 'Courier Prime'";
                     ctx.textAlign = "center";
-                    ctx.fillText(`${t('label_oxygen')}${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
+                    ctx.fillText(`OXYGEN: ${Math.ceil(this.timer)}s`, WIDTH / 2, 100);
                 }
 
                 ctx.restore();
@@ -6045,7 +5584,7 @@
 
             // Intro Message
             const gameMsgEl = document.getElementById('game-message');
-            gameMsgEl.innerHTML = `<span class="text-xl font-bold text-white bg-black/70 px-6 py-2 border-l-4 border-white tracking-widest font-mono">${t('msg_experiment_starting')}</span>`;
+            gameMsgEl.innerHTML = `<span class="text-xl font-bold text-white bg-black/70 px-6 py-2 border-l-4 border-white tracking-widest font-mono">DENEY BAŞLIYOR...</span>`;
             gameMsgEl.style.opacity = 1;
             setTimeout(() => { gameMsgEl.style.opacity = 0; }, 2000);
 
@@ -6236,7 +5775,7 @@
 
             if (frames % settings.accelInterval === 0 && speed < settings.speedMax) {
                 speed += 1;
-                showMessage(t('msg_speeding_up'));
+                showMessage("HIZLANIYOR...");
             }
 
             score += (1 * settings.scoreMultiplier);
@@ -6434,7 +5973,7 @@
 
                 // Revive Logic - Only allow ONE revive per game
                 if (economyData.extraLives > 0 && !hasRevivedThisGame) {
-                    btnRevive.innerText = `${t('btn_revive')} (${economyData.extraLives} ❤️)`;
+                    btnRevive.innerText = `HAYATA DÖN (${economyData.extraLives} ❤️)`;
                     btnRevive.classList.remove('hidden');
                 } else {
                     btnRevive.classList.add('hidden');
@@ -6663,11 +6202,11 @@
             const nextBtn = document.getElementById('btn-next-story');
             if (nextBtn) {
                 if (currentStoryPage === totalStoryPages) {
-                    nextBtn.innerText = t('btn_back_to_game');
+                    nextBtn.innerText = "OYUNA DÖN";
                     nextBtn.onclick = closeStory;
                     nextBtn.classList.add('btn-secondary'); // Make it look different
                 } else {
-                    nextBtn.innerText = t('btn_next');
+                    nextBtn.innerText = "İLERİ";
                     nextBtn.onclick = () => changeStoryPage(1);
                     nextBtn.classList.remove('btn-secondary');
                 }
@@ -6706,7 +6245,7 @@
                 container.innerHTML = "";
                 const scores = leaderboardData[diff] || [];
                 if (scores.length === 0) {
-                    container.innerHTML = `<div class='text-center text-gray-500 font-mono mt-10'>${t('no_data_yet')}</div>`;
+                    container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
                 } else {
                     scores.forEach((item, index) => {
                         const row = document.createElement('div');
@@ -6735,9 +6274,6 @@
         window.updateShopUI = () => {
             if (atomDisplayEl) atomDisplayEl.innerText = economyData.atoms;
 
-            // Trigger overall locale update for static shop elements
-            updateLocaleUI();
-
             // Update Buttons
             if (btnBuyLife) btnBuyLife.disabled = economyData.atoms < 500;
             if (btnBuyShield) btnBuyShield.disabled = economyData.atoms < 1000;
@@ -6765,9 +6301,9 @@
 
                     let btnHtml = "";
                     if (isEquipped) {
-                        btnHtml = `<button class="btn-secondary" style="color:${theme.color}; border-color:${theme.color}" disabled>${t('btn_selected')}</button>`;
+                        btnHtml = `<button class="btn-secondary" style="color:${theme.color}; border-color:${theme.color}" disabled>SEÇİLDİ</button>`;
                     } else if (isOwned) {
-                        btnHtml = `<button class="btn-secondary" onclick="equipTheme('${key}')">${t('btn_select')}</button>`;
+                        btnHtml = `<button class="btn-secondary" onclick="equipTheme('${key}')">SEÇ</button>`;
                     } else {
                         btnHtml = `<button class="buy-btn" onclick="buyTheme('${key}')" style="color:${theme.color}">${theme.cost} ⚛</button>`;
                     }
@@ -6779,8 +6315,8 @@
                     item.innerHTML = `
                             <div class="mb-4">${iconHtml}</div>
                             <div class="item-info">
-                                <div class="item-title" style="color:${theme.color}">${t(theme.name)}</div>
-                                <div class="item-desc">${t(theme.desc)}</div>
+                                <div class="item-title" style="color:${theme.color}">${theme.name}</div>
+                                <div class="item-desc">${theme.desc}</div>
                             </div>
                             ${btnHtml}
                         `;
@@ -6794,12 +6330,12 @@
             if (cosList) {
                 cosList.innerHTML = "";
                 ['hat', 'glasses', 'toy', 'bowl'].forEach(category => {
-                    const sectionKey = { hat: 'shop_hats', glasses: 'shop_glasses', toy: 'shop_toys', bowl: 'shop_bowls' }[category];
+                    const sectionTitle = { hat: 'Şapkalar', glasses: 'Gözlükler', toy: 'Oyuncaklar', bowl: 'Kaplar' }[category];
                     const sectionHeader = document.createElement('h3');
                     sectionHeader.style.gridColumn = "1 / -1";
                     sectionHeader.style.color = "#fff";
                     sectionHeader.style.marginTop = "20px";
-                    sectionHeader.innerText = t(sectionKey);
+                    sectionHeader.innerText = sectionTitle;
                     cosList.appendChild(sectionHeader);
 
                     Object.keys(COSMETICS[category]).forEach(key => {
@@ -6813,9 +6349,9 @@
 
                         let btnHtml = "";
                         if (isEquipped) {
-                            btnHtml = `<button class="btn-secondary" style="color:#39FF14; border-color:#39FF14" onclick="window.toggleCosmetic('${category}', 'none')">${t('btn_remove')}</button>`;
+                            btnHtml = `<button class="btn-secondary" style="color:#39FF14; border-color:#39FF14" onclick="window.toggleCosmetic('${category}', 'none')">ÇIKAR</button>`;
                         } else if (isOwned) {
-                            btnHtml = `<button class="btn-secondary" onclick="window.toggleCosmetic('${category}', '${key}')">${t('btn_equip')}</button>`;
+                            btnHtml = `<button class="btn-secondary" onclick="window.toggleCosmetic('${category}', '${key}')">KUŞAN</button>`;
                         } else {
                             btnHtml = `<button class="buy-btn" onclick="window.buyCosmetic('${category}', '${key}')">${itemData.cost} ⚛</button>`;
                         }
@@ -6825,7 +6361,7 @@
                                 <div class="item-icon">${itemData.icon}</div>
                             </div>
                             <div class="item-info">
-                                <div class="item-title">${t(itemData.name)}</div>
+                                <div class="item-title">${itemData.name}</div>
                             </div>
                             ${btnHtml}
                         `;
