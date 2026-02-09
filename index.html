@@ -215,10 +215,21 @@
             TABLOSU</h2>
 
         <!-- LEADERSHIP TYPE TOGGLE -->
-        <div class="tab-container mb-4">
-            <div class="tab-btn active" onclick="setLeaderboardSource('LOCAL')" id="source-LOCAL">YEREL</div>
-            <div class="tab-btn" onclick="setLeaderboardSource('GLOBAL')" id="source-GLOBAL">KÜRESEL 🌍</div>
+        <div class="tab-container mb-6 p-2 bg-white/5 rounded-lg border border-white/10">
+            <div class="tab-btn source-tab active" onclick="setLeaderboardSource('LOCAL')" id="source-LOCAL"
+                style="flex: 1; text-align: center;">YEREL</div>
+            <div class="tab-btn source-tab" onclick="setLeaderboardSource('GLOBAL')" id="source-GLOBAL"
+                style="flex: 1; text-align: center;">KÜRESEL 🌍</div>
         </div>
+
+        <style>
+            .source-tab.active {
+                background: rgba(57, 255, 20, 0.2) !important;
+                border-bottom: 2px solid #39FF14 !important;
+                color: #39FF14 !important;
+                box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.1);
+            }
+        </style>
 
         <div class="tab-container">
             <div class="tab-btn" onclick="showLeaderboardTab('EASY')" id="tab-EASY">KOLAY</div>

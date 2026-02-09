@@ -4,12 +4,13 @@
 // --- FIREBASE INTEGRATION ---
 // Geliştirici: Lütfen kendi Firebase yapılandırmanızı aşağıya ekleyin.
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAdYgkUTDLXNCCrFYErK8qMY2zbILEkvdA",
+    authDomain: "schrodinger-game.firebaseapp.com",
+    projectId: "schrodinger-game",
+    storageBucket: "schrodinger-game.firebasestorage.app",
+    messagingSenderId: "1051956586638",
+    appId: "1:1051956586638:web:320608c6054f2b5816c1df",
+    measurementId: "G-QTQ6M3ZR66"
 };
 
 let db = null;
@@ -4551,20 +4552,22 @@ window.showLeaderboardTab = (diff) => {
         }
 
         db.collection("global_leaderboard")
-            .where("difficulty", "==", diff)
             .orderBy("score", "desc")
-            .limit(10)
+            .limit(50)
             .get()
             .then((querySnapshot) => {
                 const globalScores = [];
                 querySnapshot.forEach((doc) => {
-                    globalScores.push(doc.data());
+                    const data = doc.data();
+                    if (data.difficulty === diff) {
+                        globalScores.push(data);
+                    }
                 });
-                renderLeaderboard(container, globalScores);
+                renderLeaderboard(container, globalScores.slice(0, 10));
             })
             .catch((error) => {
                 console.error("Global veri hatası:", error);
-                container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>VERİ ÇEKİLEMEDİ</div>";
+                container.innerHTML = `<div class='text-center text-gray-500 font-mono mt-10'>VERİ ÇEKİLEMEDİ<br><span class='text-[10px]'>${error.message.substring(0, 30)}...</span></div>`;
             });
     }
 };
