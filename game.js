@@ -1,6 +1,54 @@
 // GLOBALS
 // isPlaying, gameTime, score are defined later, removing duplicate declarations here to fix lint errors
 
+// --- FIREBASE INTEGRATION ---
+// Geliştirici: Lütfen kendi Firebase yapılandırmanızı aşağıya ekleyin.
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+let db = null;
+let auth = null;
+let currentUser = null;
+let leaderboardSource = 'LOCAL'; // 'LOCAL' or 'GLOBAL'
+
+function initFirebase() {
+    if (typeof firebase === 'undefined') {
+        console.warn("Firebase SDK not loaded. Global features disabled.");
+        return;
+    }
+
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+
+        // Anonymous login to track specific users on global leaderboard
+        auth.signInAnonymously()
+            .then((user) => {
+                currentUser = user.user;
+                console.log("Kuantum Girişi Başarılı:", currentUser.uid);
+            })
+            .catch((error) => {
+                console.error("Giriş Hatası:", error);
+            });
+    } catch (e) {
+        console.error("Firebase Başlatılamadı:", e);
+    }
+}
+
+// Global scope initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFirebase);
+} else {
+    initFirebase();
+}
+
 // WEBP SUPPORT CHECK (Step 8) - WRAPPED IN TRY-CATCH
 let supportsWebP = true;
 try {
@@ -4301,19 +4349,36 @@ function checkDailyLogin() {
 
 function saveScoreToLeaderboard(newScore) {
     const list = leaderboardData[currentDifficulty];
+    const name = playerNameInput.value || "KEDI";
+    const date = new Date().toLocaleDateString();
+
     list.push({
-        name: playerNameInput.value || "KEDI",
+        name: name,
         score: newScore,
-        date: new Date().toLocaleDateString()
+        date: date
     });
 
     // Sort Descending
     list.sort((a, b) => b.score - a.score);
 
-    // Keep Top 5
+    // Keep Top 5 Local
     leaderboardData[currentDifficulty] = list.slice(0, 5);
-
     saveData();
+
+    // --- FIREBASE GLOBAL PUSH ---
+    if (db && currentUser) {
+        db.collection("global_leaderboard").add({
+            name: name,
+            score: newScore,
+            difficulty: currentDifficulty,
+            uid: currentUser.uid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            console.log("Global skora eklendi!");
+        }).catch((err) => {
+            console.error("Global skor hatası:", err);
+        });
+    }
 }
 
 // WAKE LOCK LOGIC (Step 12)
@@ -4452,32 +4517,77 @@ window.closeScoreboard = () => {
     startScreen.classList.remove('hidden');
 };
 
+window.setLeaderboardSource = (source) => {
+    leaderboardSource = source;
+    document.querySelectorAll('[id^="source-"]').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('source-' + source);
+    if (activeBtn) activeBtn.classList.add('active');
+    showLeaderboardTab(currentDifficulty);
+    if (window.audioManager) window.audioManager.playMenuClick();
+};
+
 window.showLeaderboardTab = (diff) => {
+    currentDifficulty = diff; // Sync difficulty
     // Tab Buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn[id^="tab-"]').forEach(btn => btn.classList.remove('active'));
     const tabBtn = document.getElementById('tab-' + diff);
     if (tabBtn) tabBtn.classList.add('active');
 
     // List Content
     const container = document.getElementById('leaderboard-list');
-    if (container) {
-        container.innerHTML = "";
-        const scores = leaderboardData[diff] || [];
-        if (scores.length === 0) {
-            container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
-        } else {
-            scores.forEach((item, index) => {
-                const row = document.createElement('div');
-                row.className = 'score-row';
-                row.innerHTML = `
-                        <span>${index + 1}. ${item.name}</span>
-                        <span>${Math.floor(item.score).toString().padStart(5, '0')}</span>
-                    `;
-                container.appendChild(row);
-            });
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (leaderboardSource === 'LOCAL') {
+        renderLeaderboard(container, leaderboardData[diff] || []);
+    } else {
+        // GLOBAL FIREBASE FETCH
+        container.innerHTML = "<div class='text-center text-[#39FF14] font-mono mt-10 animate-pulse'>KUANTUM VERİLERİ ÇEKİLİYOR...</div>";
+
+        if (!db) {
+            container.innerHTML = "<div class='text-center text-red-500 font-mono mt-10'>FIREBASE BAĞLANTISI YOK</div>";
+            return;
         }
+
+        db.collection("global_leaderboard")
+            .where("difficulty", "==", diff)
+            .orderBy("score", "desc")
+            .limit(10)
+            .get()
+            .then((querySnapshot) => {
+                const globalScores = [];
+                querySnapshot.forEach((doc) => {
+                    globalScores.push(doc.data());
+                });
+                renderLeaderboard(container, globalScores);
+            })
+            .catch((error) => {
+                console.error("Global veri hatası:", error);
+                container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>VERİ ÇEKİLEMEDİ</div>";
+            });
     }
 };
+
+function renderLeaderboard(container, scores) {
+    container.innerHTML = "";
+    if (scores.length === 0) {
+        container.innerHTML = "<div class='text-center text-gray-500 font-mono mt-10'>HENÜZ VERİ YOK</div>";
+    } else {
+        scores.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'score-row';
+            row.innerHTML = `
+                <span class="flex items-center gap-2">
+                    <span class="text-xs text-gray-600">#${index + 1}</span>
+                    ${item.name}
+                </span>
+                <span class="font-bold text-[#39FF14]">${Math.floor(item.score).toString().padStart(5, '0')}</span>
+            `;
+            container.appendChild(row);
+        });
+    }
+}
 
 window.openShop = () => {
     economyData.stats.visitedShop = true;

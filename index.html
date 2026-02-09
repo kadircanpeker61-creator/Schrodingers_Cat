@@ -214,6 +214,12 @@
         <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">LİDER
             TABLOSU</h2>
 
+        <!-- LEADERSHIP TYPE TOGGLE -->
+        <div class="tab-container mb-4">
+            <div class="tab-btn active" onclick="setLeaderboardSource('LOCAL')" id="source-LOCAL">YEREL</div>
+            <div class="tab-btn" onclick="setLeaderboardSource('GLOBAL')" id="source-GLOBAL">KÜRESEL 🌍</div>
+        </div>
+
         <div class="tab-container">
             <div class="tab-btn" onclick="showLeaderboardTab('EASY')" id="tab-EASY">KOLAY</div>
             <div class="tab-btn active" onclick="showLeaderboardTab('NORMAL')" id="tab-NORMAL">NORMAL</div>
@@ -388,6 +394,11 @@
         <button class="text-gray-500 mt-4 text-xs uppercase hover:text-white font-mono" onclick="showMenu()">ANA
             MENÜ</button>
     </div>
+
+    <!-- FIREBASE SDK (COMPAT) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script src="game.min.js"></script>
 
