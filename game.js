@@ -1004,12 +1004,13 @@ class ObstacleManager {
 
         // Obstacle Collision
         for (let obs of this.obstacles) {
-            // Basit AABB çarpışma testi (Kare)
+            // AABB çarpışma testi - Hitbox padding eklendi (daha adil çarpışma)
+            const padding = 3; // Her taraftan 3px tolerans
             if (
-                cat.x < obs.x + obs.width &&
-                cat.x + cat.width > obs.x &&
-                cat.y < obs.y + obs.height &&
-                cat.y + cat.height > obs.y
+                cat.x + padding < obs.x + obs.width - padding &&
+                cat.x + cat.width - padding > obs.x + padding &&
+                cat.y + padding < obs.y + obs.height - padding &&
+                cat.y + cat.height - padding > obs.y + padding
             ) {
                 // HIT!
                 if (activePowerups.shield) {
@@ -3363,11 +3364,16 @@ class AtmosferMode {
         for (let i = this.eagles.length - 1; i >= 0; i--) {
             let e = this.eagles[i];
             e.update(dt);
+
+            // Hitbox padding for fairer collision (shrink both player and eagle hitbox)
+            const playerPadding = 4;  // Player hitbox shrink
+            const eaglePadding = 6;  // Eagle hitbox shrink (kartal daha büyük görünüyor ama gerçek gövde daha küçük)
+
             if (!player.isInvulnerable &&
-                player.x < e.x + e.width &&
-                player.x + player.width > e.x &&
-                player.y < e.y + e.height &&
-                player.y + player.height > e.y
+                player.x + playerPadding < e.x + e.width - eaglePadding &&
+                player.x + player.width - playerPadding > e.x + eaglePadding &&
+                player.y + playerPadding < e.y + e.height - eaglePadding &&
+                player.y + player.height - playerPadding > e.y + eaglePadding
             ) {
                 gameOver("Bir kartal tarafından yakalandın!");
                 return;
