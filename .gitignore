@@ -1,0 +1,10 @@
+node_modules/
+android/app/build/
+android/.gradle/
+android/build/
+www/
+*.apk
+*.jks
+game.min.js
+.DS_Store
+Thumbs.db

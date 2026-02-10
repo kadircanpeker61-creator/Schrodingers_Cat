@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Schrodingers Cat</string>
+    <string name="title_activity_main">Schrodingers Cat</string>
+    <string name="package_name">com.kadir.schrodingerscat</string>
+    <string name="custom_url_scheme">com.kadir.schrodingerscat</string>
+</resources>
