@@ -1,0 +1,122 @@
+/* --- QUANTUM EYE (STEALTH GAME) --- */
+.quantum-eye {
+    width: 120px;
+    height: 80px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s ease;
+}
+
+.eye-lid {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    background: #0a0a15;
+    z-index: 2;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.eye-lid.top {
+    top: 0;
+    border-radius: 60px 60px 0 0;
+    transform-origin: top;
+}
+
+.eye-lid.bottom {
+    bottom: 0;
+    border-radius: 0 0 60px 60px;
+    transform-origin: bottom;
+}
+
+.quantum-eye.open .eye-lid.top {
+    transform: scaleY(0.1);
+}
+
+.quantum-eye.open .eye-lid.bottom {
+    transform: scaleY(0.1);
+}
+
+.eye-ball {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #0ff 0%, #008888 70%, #000 100%);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.iris {
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #fff 0%, #0ff 40%, transparent 70%);
+    border-radius: 50%;
+    animation: eye-scan 4s infinite ease-in-out;
+}
+
+.pupil {
+    width: 15px;
+    height: 15px;
+    background: #000;
+    border-radius: 50%;
+    position: absolute;
+}
+
+@keyframes eye-scan {
+
+    0%,
+    100% {
+        transform: translate(-10px, -2px);
+    }
+
+    50% {
+        transform: translate(10px, 2px);
+    }
+}
+
+.quantum-eye.open {
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.8);
+}
+
+.quantum-eye.observing {
+    animation: eye-angry 0.2s infinite alternate;
+}
+
+.quantum-eye.blinking .eye-lid.top {
+    transform: scaleY(0.5);
+}
+
+.quantum-eye.blinking .eye-lid.bottom {
+    transform: scaleY(0.5);
+}
+
+@keyframes eye-angry {
+    from {
+        transform: scale(1);
+        filter: hue-rotate(0deg);
+    }
+
+    to {
+        transform: scale(1.1);
+        filter: hue-rotate(-50deg) brightness(1.5);
+    }
+}
+
+#stealth-progress {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+/* Progress track and icons */
+.progress-track .fa-cat {
+    transition: left 0.1s linear;
+}
+
+#stealth-control {
+    touch-action: none;
+    /* Pointer olayları için kritik */
+}

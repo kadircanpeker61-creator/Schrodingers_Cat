@@ -12,6 +12,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="stealth_styles.css">
 
 
 </head>
@@ -108,6 +109,7 @@
                 <button class="btn btn-secondary flex-1" onclick="openScoreboard()">SKORLAR</button>
             </div>
             <button class="btn btn-secondary w-full mt-2" onclick="openBadges()">ROZETLER 🎖️</button>
+            <button class="btn btn-secondary w-full mt-2" onclick="openArcade()">ARCADE 🕹️</button>
             <button class="btn btn-secondary w-full mt-2" onclick="openSettings()">AYARLAR ⚙️</button>
 
             <!-- DEV TOOLS -->
@@ -387,6 +389,142 @@
         <button class="btn" onclick="resetGame()">HEMEN BAŞLAT</button>
         <button class="text-gray-500 mt-4 text-xs uppercase hover:text-white font-mono" onclick="showMenu()">ANA
             MENÜ</button>
+    </div>
+
+    <!-- ARCADE ANA EKRANI -->
+    <div id="arcade-screen" class="screen hidden" style="justify-content: flex-start; padding-top: 50px;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeArcade()"></i>
+        <h2 class="text-2xl text-white font-bold mb-6 tracking-widest border-b border-gray-600 pb-2 font-mono">KUANTUM
+            ARCADE</h2>
+
+        <div class="shop-items-container">
+            <!-- Quantum Flip Card -->
+            <div class="shop-item" onclick="openFlipGame()">
+                <div class="item-icon"><i class="fa-solid fa-coins text-yellow-500"></i></div>
+                <div class="item-info">
+                    <div class="item-title">KUANTUM YAZI-TURA</div>
+                    <div class="item-desc">Kedi canlı mı ölü mü? Tahmin et ve Atom kazan.</div>
+                </div>
+                <button class="buy-btn">OYNA</button>
+            </div>
+
+            <!-- Quantum Boxes Card -->
+            <div class="shop-item" onclick="openBoxesGame()">
+                <div class="item-icon"><i class="fa-solid fa-box-open text-orange-600"></i></div>
+                <div class="item-info">
+                    <div class="item-title">KUANTUM KUTULARI</div>
+                    <div class="item-desc">3 Kutu, 1 ödül. Şansına güveniyor musun?</div>
+                </div>
+                <button class="buy-btn">OYNA</button>
+            </div>
+
+            <!-- Kuantum Gözlemi Card (New) -->
+            <div class="shop-item" onclick="openStealthGame()">
+                <div class="item-icon"><i class="fa-solid fa-eye text-cyan-400"></i></div>
+                <div class="item-info">
+                    <div class="item-title">KUANTUM GÖZLEMİ</div>
+                    <div class="item-desc">Gözlem altındayken dur, yoksa fark edilirsin!</div>
+                </div>
+                <button class="buy-btn">OYNA</button>
+            </div>
+        </div>
+        <div class="text-gray-500 text-xs font-mono mt-4">DAHA FAZLA OYUN YAKINDA...</div>
+    </div>
+
+    <!-- KUANTUM YAZI-TURA OYUNU -->
+    <div id="flip-game-screen" class="screen hidden" style="background: rgba(0,0,0,0.95); justify-content: center;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeFlipGame()"></i>
+        <div class="flex flex-col items-center gap-6">
+            <h2 class="text-2xl text-white font-bold tracking-widest font-mono">YAZI MI TURA MI?</h2>
+
+            <div id="coin-container" class="w-40 h-40 relative perspective-1000">
+                <div id="coin" class="w-full h-full relative transition-transform duration-1000 preserve-3d">
+                    <div
+                        class="coin-front absolute w-full h-full backface-hidden flex items-center justify-center bg-gray-800 border-4 border-yellow-500 rounded-full">
+                        <span class="text-6xl">😺</span>
+                    </div>
+                    <div
+                        class="coin-back absolute w-full h-full backface-hidden rotate-y-180 flex items-center justify-center bg-gray-800 border-4 border-gray-500 rounded-full">
+                        <span class="text-6xl">💀</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button class="btn btn-secondary border-yellow-500 text-yellow-500" onclick="playFlip('ALIVE')">CANLI
+                    (YAZI)</button>
+                <button class="btn btn-secondary border-gray-500 text-gray-500" onclick="playFlip('DEAD')">ÖLÜ
+                    (TURA)</button>
+            </div>
+
+            <div class="text-sm text-gray-400 font-mono">BAHİS: 50 ⚛ | KAZANÇ: 100 ⚛</div>
+        </div>
+    </div>
+
+    <!-- KUANTUM KUTULARI OYUNU -->
+    <div id="boxes-game-screen" class="screen hidden" style="background: rgba(0,0,0,0.95); justify-content: center;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeBoxesGame()"></i>
+        <h2 class="text-2xl text-white font-bold mb-10 tracking-widest font-mono text-center">DOĞRU KUTUYU SEÇ</h2>
+
+        <div class="flex gap-8 justify-center items-end h-40">
+            <div class="quantum-box cursor-pointer hover:scale-110 transition-transform" onclick="selectBox(0)">
+                <i class="fa-solid fa-box text-6xl text-orange-800"></i>
+                <div class="box-label text-center text-xs mt-2 text-gray-500">I</div>
+            </div>
+            <div class="quantum-box cursor-pointer hover:scale-110 transition-transform" onclick="selectBox(1)">
+                <i class="fa-solid fa-box text-6xl text-orange-800"></i>
+                <div class="box-label text-center text-xs mt-2 text-gray-500">II</div>
+            </div>
+            <div class="quantum-box cursor-pointer hover:scale-110 transition-transform" onclick="selectBox(2)">
+                <i class="fa-solid fa-box text-6xl text-orange-800"></i>
+                <div class="box-label text-center text-xs mt-2 text-gray-500">III</div>
+            </div>
+        </div>
+
+        <div class="text-sm text-gray-400 font-mono mt-12 text-center px-4">
+            BİRİNDE ÖDÜL, BİRİNDE ZEHİR, BİRİ BOŞ.<br>
+            GİRİŞ: 30 ⚛
+        </div>
+    </div>
+
+    <!-- KUANTUM GÖZLEMİ (STEALTH) OYUNU -->
+    <div id="stealth-game-screen" class="screen hidden"
+        style="background: radial-gradient(circle, #050510 0%, #000 100%); flex-direction: column; justify-content: space-between; padding: 40px 20px;">
+        <i class="fas fa-paw paw-close-btn" onclick="closeStealthGame()"></i>
+
+        <div class="text-center">
+            <h2 class="text-xl text-cyan-400 font-bold tracking-widest font-mono mb-2">KUANTUM GÖZLEMİ</h2>
+            <p class="text-[10px] text-gray-500 font-mono">GÖZLEM ALTINDAYKEN DUR (BASILI TUT)</p>
+        </div>
+
+        <div id="quantum-eye-container" class="relative flex justify-center items-center h-48">
+            <div id="quantum-eye" class="quantum-eye closed">
+                <div class="eye-lid top"></div>
+                <div class="eye-ball">
+                    <div class="iris"></div>
+                    <div class="pupil"></div>
+                </div>
+                <div class="eye-lid bottom"></div>
+            </div>
+            <div id="observation-warning"
+                class="absolute bottom-0 text-red-500 font-bold font-mono opacity-0 transition-opacity">YAKALANDIN!
+            </div>
+        </div>
+
+        <div class="w-full max-w-sm mx-auto space-y-6">
+            <div class="progress-track h-4 bg-gray-900 border border-gray-800 rounded-full relative overflow-hidden">
+                <div id="stealth-progress"
+                    class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 transition-all duration-300"
+                    style="width: 0%"></div>
+                <i class="fa-solid fa-cat absolute top-1/2 -translate-y-1/2 text-xs text-white"
+                    style="left: 0%; transform: translate(-50%, -50%);" id="stealth-cat-icon"></i>
+            </div>
+
+            <div id="stealth-control"
+                class="w-full h-20 bg-cyan-900/20 border-2 border-dashed border-cyan-500/30 rounded-2xl flex items-center justify-center text-cyan-400 font-mono text-sm uppercase cursor-pointer select-none active:bg-cyan-500/20 transition-colors">
+                BASILI TUT: DUR / BIRAK: KOŞ
+            </div>
+        </div>
     </div>
 
     <script src="game.js"></script>
